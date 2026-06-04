@@ -64,6 +64,7 @@ canvas#bg {
 @keyframes blink   { 0%,100% { opacity:1 } 50% { opacity:0 } }
 @keyframes rotate  { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }
 @keyframes shake   { 0%,100% { transform:translateX(0) } 25% { transform:translateX(-8px) } 75% { transform:translateX(8px) } }
+
 /* =====================================================
    PAGES.CSS — Page system, Onboarding, Landing
    ===================================================== */
@@ -298,6 +299,7 @@ canvas#bg {
   .stat-item:last-child { border-bottom: none; }
   #typewriter { font-size: clamp(1.8rem, 8vw, 2.8rem); }
 }
+
 /* =====================================================
    NAV.CSS — Main app shell, navigation bar, tabs
    ===================================================== */
@@ -444,6 +446,7 @@ canvas#bg {
   .app-nav { height: 55px; }
   .app-content { padding-top: 55px; padding-bottom: 60px; }
 }
+
 /* =====================================================
    CHAIN.CSS — Chain tab, compose panel, form elements
    ===================================================== */
@@ -779,6 +782,7 @@ canvas#bg {
   .chain-container { flex-direction: column; }
   .compose-panel   { position: static; }
 }
+
 /* =====================================================
    TABS.CSS — Tree, Humanity, Book of Life,
               Challenges, Origins, Modals
@@ -1088,9 +1092,473 @@ canvas#bg {
 }
 
   </style>
+</head>
+<body>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+<!-- ── Persistent background canvas ──────────────────── -->
+<canvas id="bg"></canvas>
+<div id="cursor"></div>
+<div id="cursor-trail"></div>
+
+<!-- ── Immersive read mode overlay ───────────────────── -->
+<div id="immersive">
+  <canvas id="im-canvas"></canvas>
+  <div class="im-content">
+    <div class="im-meta" id="im-meta"></div>
+    <div class="im-text" id="im-text"></div>
+  </div>
+  <button class="im-close" onclick="closeImmersive()">× CLOSE</button>
+  <button class="im-sound" onclick="toggleSound()">♫ SOUND</button>
+</div>
+
+<!-- ── Submit particle animation overlay ─────────────── -->
+<div class="submit-anim" id="submit-anim">
+  <canvas id="submit-canvas"></canvas>
+  <div class="submit-text" id="submit-text">Your words are being sealed...</div>
+</div>
+
+<!-- ── Invite modal ───────────────────────────────────── -->
+<div id="invite-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeInvite()">×</button>
+    <h3>INVITE YOUR FAMILY</h3>
+    <p>Share this link and your family joins your chain automatically</p>
+    <div class="link-box">
+      <span id="invite-link">legacychain.app/?famille=Doe</span>
+      <button class="btn-copy" id="copy-btn" onclick="copyLink()">COPY</button>
+    </div>
+    <div class="share-btns">
+      <button class="btn-wa" onclick="shareWA()">WhatsApp</button>
+    </div>
+    <div id="qr-display"></div>
+  </div>
+</div>
+
+<!-- ── Upgrade modal ──────────────────────────────────── -->
+<div id="upgrade-modal">
+  <div class="upgrade-box">
+    <button class="modal-close" onclick="document.getElementById('upgrade-modal').classList.remove('open')">×</button>
+    <h3>✦ VOICE FOUNDER</h3>
+    <p style="font-size:.78rem;color:rgba(239,246,255,.5);margin-top:.5rem">One payment. Eternal access.</p>
+    <div class="price">$10 <span>once · forever</span></div>
+    <div class="upgrade-features">
+      <div class="upgrade-feat">Unlimited messages</div>
+      <div class="upgrade-feat">Audio messages (3 min)</div>
+      <div class="upgrade-feat">Video messages (60 sec)</div>
+      <div class="upgrade-feat">Photo attachments</div>
+      <div class="upgrade-feat">500 character limit</div>
+      <div class="upgrade-feat">PDF Family Book export</div>
+      <div class="upgrade-feat">Full family tree + mural</div>
+      <div class="upgrade-feat">Golden "Founding Voice of Humanity" badge ✨</div>
+    </div>
+    <button class="btn-upgrade" onclick="simulateUpgrade()">UNLOCK FOREVER — $10</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     ONBOARDING PAGE
+     ══════════════════════════════════════════════════════ -->
+<div class="page active" id="onboarding">
+  <canvas id="ob-canvas"></canvas>
+  <!-- FIX: removed stray class="btn" (undefined class) -->
+  <button id="ob-skip" onclick="skipOnboarding()">SKIP →</button>
+  <div id="ob-text">
+    <h1 id="ob-title">FAMILLE</h1>
+    <p id="ob-sub">Each family deserves to travel through time</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     LANDING PAGE
+     ══════════════════════════════════════════════════════ -->
+<div class="page" id="landing">
+
+  <!-- Hero section -->
+  <div class="landing-hero">
+    <div class="landing-eyebrow">HÉRITAGE · CHAÎNE · ∞</div>
+
+    <div id="typewriter"><span></span></div>
+
+    <p class="landing-sub">
+      A chest of words for those who will come.<br>
+      Each family carries its own chain — a continuous thread<br>of memory, woven across generations.
+    </p>
+
+    <div class="auth-btns">
+      <button class="btn-fb" onclick="loginFB()">
+        <div class="fb-icon">f</div>
+        <span>Continue with Facebook</span>
+      </button>
+      <button class="btn-guest" onclick="loginGuest()">
+        Continue as guest
+        <span style="opacity:.4;font-size:.65rem;margin-left:.4rem">· unverified</span>
+      </button>
+    </div>
+
+    <!-- Feature pills -->
+    <div class="landing-features">
+      <div class="feature-pill"><div class="feature-pill-dot"></div>Time-locked messages</div>
+      <div class="feature-pill"><div class="feature-pill-dot"></div>Birth capsules</div>
+      <div class="feature-pill"><div class="feature-pill-dot"></div>Family tree</div>
+      <div class="feature-pill"><div class="feature-pill-dot"></div>Book of Life</div>
+    </div>
+  </div>
+
+  <!-- Stats band -->
+  <div class="landing-stats">
+    <div class="stat-item">
+      <div class="stat-number"><span id="cnt-families">0</span></div>
+      <div class="stat-label">Families</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number"><span id="cnt-messages">0</span></div>
+      <div class="stat-label">Messages sealed</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number"><span id="cnt-capsules">0</span></div>
+      <div class="stat-label">Capsules opening this year</div>
+    </div>
+  </div>
+
+  <div class="landing-footer-stamp">A BLOCKCHAIN OF LOVE · SEALED IN LIGHT</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MAIN APP
+     ══════════════════════════════════════════════════════ -->
+<div class="page" id="app">
+
+  <!-- Navigation -->
+  <nav class="app-nav">
+    <div class="nav-logo">⬡ LEGACYCHAIN</div>
+    <div class="nav-tabs">
+      <button class="nav-tab active"  onclick="switchTab('chain',this)">CHAIN</button>
+      <button class="nav-tab"         onclick="switchTab('tree',this)">TREE</button>
+      <button class="nav-tab"         onclick="switchTab('origins',this)">ORIGINS</button>
+      <button class="nav-tab"         onclick="switchTab('challenges',this)">CHALLENGES</button>
+      <button class="nav-tab"         onclick="switchTab('book',this)">BOOK OF LIFE</button>
+      <button class="nav-tab"         onclick="switchTab('humanity',this)">VOICES OF HUMANITY</button>
+    </div>
+    <div class="nav-right">
+      <div class="user-badge">
+        <div class="user-avatar" id="nav-avatar">J</div>
+        <span id="nav-name">Jean Doe</span>
+        <span class="premium-badge" id="premium-badge" style="display:none">✦ FOUNDER</span>
+      </div>
+      <button class="btn-invite" onclick="openInvite()">+ INVITE FAMILY</button>
+    </div>
+  </nav>
+
+  <div class="app-content">
+
+    <!-- ════════════ CHAIN TAB ════════════ -->
+    <div class="tab-content active" id="tab-chain">
+      <div class="section-header">
+        <div class="section-title">FAMILY CHAIN</div>
+        <div class="section-sub" id="chain-family-name">THE DOE FAMILY · EST. 2024</div>
+      </div>
+      <div class="chain-container">
+
+        <!-- Timeline (injected by renderChain()) -->
+        <div class="chain-timeline" id="chain-timeline">
+          <div class="timeline-spine"></div>
+        </div>
+
+        <!-- Compose panel -->
+        <div class="chain-compose-col">
+          <div class="compose-panel">
+            <div class="compose-panel-header">
+              <div class="compose-panel-icon">⬡</div>
+              <h3>SEAL A MESSAGE</h3>
+            </div>
+
+            <div class="form-group">
+              <label>MESSAGE TYPE</label>
+              <select class="form-select" id="msg-type" onchange="updateMsgType()">
+                <option value="standard">Standard message</option>
+                <option value="birth">Birth message 👶</option>
+                <option value="capsule">Collective capsule</option>
+              </select>
+            </div>
+
+            <!-- Birth fields (shown when type = birth) -->
+            <div class="form-group" id="birth-fields" style="display:none">
+              <label>BABY'S NAME</label>
+              <input type="text" class="form-input" id="baby-name" placeholder="Lucas...">
+              <label style="margin-top:.5rem">DATE OF BIRTH</label>
+              <input type="date" class="form-input" id="baby-dob">
+              <div id="birth-preview" style="font-size:.72rem;color:var(--amber);margin-top:.5rem;line-height:1.6"></div>
+            </div>
+
+            <!-- Capsule fields (shown when type = capsule) -->
+            <div class="form-group" id="capsule-fields" style="display:none">
+              <label>CAPSULE NAME</label>
+              <input type="text" class="form-input" id="capsule-name" placeholder="Family reunion 2030...">
+              <label style="margin-top:.5rem">OPEN ON</label>
+              <input type="date" class="form-input" id="capsule-date">
+            </div>
+
+            <div class="form-group">
+              <label>YOUR MESSAGE</label>
+              <textarea class="form-textarea" id="msg-text" maxlength="300"
+                placeholder="Write something that will last forever..."
+                oninput="updateCharCount()"></textarea>
+              <div class="char-count"><span id="char-count">0</span>/300</div>
+            </div>
+
+            <div class="form-group" id="emotion-group">
+              <label>EMOTION</label>
+              <div class="emotion-picker" id="emotion-picker">
+                <button class="emotion-btn hope selected"    onclick="selectEmotion('hope',this)">HOPE</button>
+                <button class="emotion-btn love"             onclick="selectEmotion('love',this)">LOVE</button>
+                <button class="emotion-btn wisdom"           onclick="selectEmotion('wisdom',this)">WISDOM</button>
+                <button class="emotion-btn memory"           onclick="selectEmotion('memory',this)">MEMORY</button>
+                <button class="emotion-btn warning"          onclick="selectEmotion('warning',this)">WARNING</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>UNLOCK YEAR <span style="opacity:.5">(optional time-lock)</span></label>
+              <input type="number" class="form-input" id="unlock-year" placeholder="e.g. 2040" min="2025" max="2100">
+            </div>
+
+            <div class="moderation-warning" id="mod-warning"></div>
+            <button class="btn-submit" onclick="submitMessage()">⬡ SEAL THIS MESSAGE</button>
+          </div>
+
+          <!-- Premium upsell card -->
+          <div class="premium-upsell" onclick="document.getElementById('upgrade-modal').classList.add('open')">
+            <div class="premium-upsell-icon">✦</div>
+            <div class="premium-upsell-text">
+              <div class="premium-upsell-title">UNLOCK PREMIUM — $10 FOREVER</div>
+              <div class="premium-upsell-sub">Unlimited messages · Audio · Video · PDF export</div>
+            </div>
+            <div class="premium-upsell-arrow">→</div>
+          </div>
+        </div><!-- /.chain-compose-col -->
+      </div><!-- /.chain-container -->
+    </div><!-- /#tab-chain -->
+
+    <!-- ════════════ TREE TAB ════════════ -->
+    <div class="tab-content" id="tab-tree">
+      <div class="section-title">FAMILY TREE</div>
+      <div class="section-sub">Your lineage, visualised across time</div>
+
+      <!-- SVG injected by renderTree() -->
+      <div id="tree-svg-container"></div>
+
+      <button class="add-member-btn" onclick="toggleAddMember()">+ ADD FAMILY MEMBER</button>
+
+      <div class="member-panel" id="member-panel">
+        <h4>NEW MEMBER</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+          <div class="form-group"><label>FIRST NAME</label><input type="text" class="form-input" id="new-firstname" placeholder="Marie"></div>
+          <div class="form-group"><label>LAST NAME</label><input type="text" class="form-input" id="new-lastname" placeholder="Doe"></div>
+          <div class="form-group"><label>BIRTH YEAR</label><input type="number" class="form-input" id="new-birth" placeholder="1985"></div>
+          <div class="form-group">
+            <label>RELATIONSHIP</label>
+            <select class="form-select" id="new-relation">
+              <option>Parent</option>
+              <option>Child</option>
+              <option>Sibling</option>
+              <option>Grandparent</option>
+              <option>Grandchild</option>
+              <option>Partner</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-submit" onclick="addMember()">ADD TO TREE</button>
+      </div>
+    </div>
+
+    <!-- ════════════ ORIGINS TAB ════════════ -->
+    <div class="tab-content" id="tab-origins">
+      <div class="section-title">ORIGINS & DNA</div>
+      <div class="section-sub">Your family's roots across the world</div>
+
+      <div class="dna-warning">
+        <strong>⚠ NON-CERTIFIED DATA</strong>
+        These origins are manually entered based on family traditions or personal estimates. They may be inaccurate. For absolute certainty, use a certified DNA test (23andMe, Ancestry, MyHeritage). Only a DNA test is 100% reliable.
+      </div>
+
+      <div class="origins-grid">
+        <!-- Left: input form -->
+        <div>
+          <div class="form-group">
+            <label>ADD ORIGIN</label>
+            <div id="origin-rows">
+              <div class="origin-row">
+                <input type="text"   class="form-input" placeholder="France"  id="or-0-country">
+                <input type="number" class="form-input" placeholder="%" id="or-0-pct" min="0" max="100" onchange="updateTotal()">
+                <span style="color:var(--teal);font-size:.8rem">%</span>
+              </div>
+              <div class="origin-row">
+                <input type="text"   class="form-input" placeholder="Senegal" id="or-1-country">
+                <input type="number" class="form-input" placeholder="%" id="or-1-pct" min="0" max="100" onchange="updateTotal()">
+                <span style="color:var(--teal);font-size:.8rem">%</span>
+              </div>
+              <div class="origin-row">
+                <input type="text"   class="form-input" placeholder="Vietnam" id="or-2-country">
+                <input type="number" class="form-input" placeholder="%" id="or-2-pct" min="0" max="100" onchange="updateTotal()">
+                <span style="color:var(--teal);font-size:.8rem">%</span>
+              </div>
+            </div>
+            <!-- FIX: moved hover styles to CSS; replaced inline onmouseover/onmouseout -->
+            <button class="btn-answer" onclick="addOriginRow()">+ ADD ORIGIN</button>
+            <div class="total-bar total-low" id="origin-total">⚠ Total: 0% — incomplete</div>
+          </div>
+          <div style="font-size:.7rem;color:rgba(239,246,255,.3);margin-top:1rem;line-height:1.7">
+            Discover your true origins →<br>
+            <a href="https://www.23andme.com" style="color:rgba(0,255,209,.4);text-decoration:none;letter-spacing:.05em">23andMe</a> ·
+            <a href="https://www.ancestry.com" style="color:rgba(0,255,209,.4);text-decoration:none;letter-spacing:.05em">Ancestry</a>
+          </div>
+        </div>
+
+        <!-- Right: donut chart -->
+        <div>
+          <div style="background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:1.5rem;text-align:center">
+            <div style="font-size:.65rem;color:rgba(239,246,255,.4);letter-spacing:.2em;margin-bottom:1rem">ORIGIN DISTRIBUTION</div>
+            <canvas id="origin-chart" width="200" height="200" style="max-width:200px;margin:0 auto;display:block"></canvas>
+            <div id="origin-legend" style="margin-top:1rem;font-size:.7rem;color:rgba(239,246,255,.5);text-align:left"></div>
+            <!-- FIX: was "margin-top.75rem" (missing colon) → corrected to inline style -->
+            <div style="font-size:.6rem;color:rgba(255,179,71,.3);margin-top:.75rem;letter-spacing:.1em">ESTIMATED ORIGINS · NOT CERTIFIED</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Family Pact -->
+      <div class="pacte-card" style="margin-top:2rem">
+        <div class="section-title" style="margin-bottom:.5rem">FAMILY PACT</div>
+        <p style="font-size:.7rem;color:rgba(239,246,255,.4);margin-bottom:1.5rem;letter-spacing:.1em">Sign your commitment to future generations</p>
+        <p class="pacte-text">"I, <span id="pacte-name" style="color:var(--teal)">Jean</span>, commit to presenting LegacyChain to my children before the age of 60 and to transmitting our family name and access to our chain."</p>
+        <div class="pacte-signers" id="pacte-signers">
+          <div class="signer">🛡 Marie · 2024</div>
+          <div class="signer">🛡 Robert · 2024</div>
+        </div>
+        <button class="btn-submit" style="max-width:280px;margin:0 auto" onclick="signPacte()">🛡 SIGN THE FAMILY PACT</button>
+      </div>
+    </div>
+
+    <!-- ════════════ CHALLENGES TAB ════════════ -->
+    <div class="tab-content" id="tab-challenges">
+      <div class="section-title">INTERGENERATIONAL CHALLENGES</div>
+      <div class="section-sub">Questions that echo through the decades</div>
+
+      <!-- Challenges injected by renderChallenges() -->
+      <div id="challenges-container"></div>
+
+      <!-- Create challenge -->
+      <div style="margin-top:2rem;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:1.5rem">
+        <div style="font-size:.75rem;letter-spacing:.15em;color:var(--teal);margin-bottom:1rem">CREATE A CHALLENGE</div>
+        <textarea class="form-textarea" id="new-challenge" placeholder="What question should echo through generations?" style="min-height:80px"></textarea>
+        <button class="btn-submit" style="margin-top:.75rem" onclick="createChallenge()">SEAL THIS CHALLENGE</button>
+      </div>
+    </div>
+
+    <!-- ════════════ BOOK OF LIFE TAB ════════════ -->
+    <div class="tab-content" id="tab-book">
+      <div class="section-title">BOOK OF LIFE</div>
+      <div class="section-sub">Your digital legacy — 6 chapters</div>
+
+      <!-- Stepper and progress injected by initBook() -->
+      <div class="stepper" id="stepper"></div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:16.6%"></div></div>
+      <div id="chapters-container"></div>
+    </div>
+
+    <!-- ════════════ VOICES OF HUMANITY TAB ════════════ -->
+    <div class="tab-content" id="tab-humanity">
+      <div class="humanity-hero">
+        <div class="humanity-title">VOICES OF HUMANITY</div>
+        <p class="humanity-sub">What our era wants to say to those who will come after us</p>
+        <div style="font-size:.75rem;color:rgba(239,246,255,.4);letter-spacing:.1em">
+          <span id="h-voices">0</span> voices · <span id="h-countries">0</span> countries · era 2025
+        </div>
+      </div>
+
+      <div style="padding:0 2rem">
+
+        <!-- Typewriter block -->
+        <div class="typewriter-block">
+          <div class="typewriter-label">WHAT OTHERS HAVE ALREADY LEFT...</div>
+          <div class="tw-country" id="tw-country"></div>
+          <div class="tw-text" id="tw-text"><span id="tw-cursor"></span></div>
+          <button class="btn-write" onclick="scrollToCompose()">→ Write yours</button>
+        </div>
+
+        <div class="humanity-cols">
+          <!-- Left: masonry wall -->
+          <div>
+            <div class="wall-title">VOICES OF THE WORLD</div>
+            <div class="masonry-wall" id="masonry-wall"></div>
+          </div>
+
+          <!-- Right: compose panel -->
+          <div id="compose-humanity">
+            <div class="compose-panel" style="position:sticky;top:80px">
+              <h3>LEAVE YOUR VOICE FOR THE FUTURE</h3>
+
+              <div class="form-group">
+                <label>YOUR NAME <span style="opacity:.5">(optional)</span></label>
+                <input type="text" class="form-input" id="h-name" placeholder="A voice from Australia">
+              </div>
+
+              <div class="form-group">
+                <label>COUNTRY</label>
+                <input type="text" class="form-input" id="h-country" placeholder="Australia" value="Australia">
+              </div>
+
+              <div class="form-group">
+                <label>TO WHOM</label>
+                <select class="form-select" id="h-to">
+                  <option>To future generations</option>
+                  <option>To my unknown descendants</option>
+                  <option>To humanity in 2100</option>
+                  <option>To whoever reads this</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>YOUR MESSAGE</label>
+                <!-- FIX: removed duplicate id="h-message" attribute -->
+                <textarea class="form-textarea" id="h-message" maxlength="300"
+                  oninput="updateHCharCount()"
+                  placeholder="I live in a world where..."></textarea>
+                <div class="char-count"><span id="h-char">0</span>/300</div>
+              </div>
+
+              <div class="form-group">
+                <label>EMOTION</label>
+                <div class="emotion-picker" id="h-emotion-picker">
+                  <button class="emotion-btn hope selected"  onclick="selectHEmotion('hope',this)">HOPE</button>
+                  <button class="emotion-btn love"           onclick="selectHEmotion('love',this)">LOVE</button>
+                  <button class="emotion-btn wisdom"         onclick="selectHEmotion('wisdom',this)">WISDOM</button>
+                  <button class="emotion-btn"                onclick="selectHEmotion('peace',this)">PEACE</button>
+                  <button class="emotion-btn warning"        onclick="selectHEmotion('warning',this)">WARNING</button>
+                  <button class="emotion-btn memory"         onclick="selectHEmotion('memory',this)">MEMORY</button>
+                </div>
+              </div>
+
+              <div class="moderation-warning" id="h-mod-warning"></div>
+              <button class="btn-submit" onclick="submitHumanityMsg()">⬡ SEAL YOUR VOICE</button>
+              <div style="font-size:.65rem;color:rgba(239,246,255,.2);text-align:center;margin-top:.75rem;line-height:1.6">
+                Your message will be reviewed by AI before publication.<br>We never post anything on your profile.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.app-content -->
+</div><!-- /#app -->
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 /* =====================================================
    data.js — App state + all static seed data
@@ -1241,6 +1709,7 @@ const FLAG_MAP = {
   Nigeria: '🇳🇬', India: '🇮🇳', Canada: '🇨🇦',
   Ukraine: '🇺🇦', China: '🇨🇳', Argentina: '🇦🇷', Senegal: '🇸🇳',
 };
+
 /* =====================================================
    canvas.js — All canvas / particle / animation effects
    ===================================================== */
@@ -1472,6 +1941,7 @@ function startImmersiveBg() {
   }
   drawImmersive();
 }
+
 /* =====================================================
    auth.js — Onboarding skip, Landing, Login, App init
    ===================================================== */
@@ -1588,6 +2058,7 @@ function switchTab(name, btn) {
   document.getElementById('tab-' + name).classList.add('active');
   btn.classList.add('active');
 }
+
 /* =====================================================
    chain.js — Family chain tab: render, compose, immersive
    ===================================================== */
@@ -1797,6 +2268,7 @@ function toggleSound() {
     ni++;
   }, 2000);
 }
+
 /* =====================================================
    tabs.js — Tree, Humanity, Challenges, Book of Life,
              Origins, Invite modal, Upgrade modal
