@@ -1900,7 +1900,8 @@ const FLAG_MAP = {
     if (t < 300) {
       requestAnimationFrame(drawOnboarding);
     } else {
-      setTimeout(skipOnboarding, 1000);
+      // Only go to landing if user hasn't already logged in
+      if (!state.user) setTimeout(skipOnboarding, 1000);
     }
   }
   drawOnboarding();
@@ -1991,6 +1992,8 @@ function startImmersiveBg() {
 
 // ── Onboarding ────────────────────────────────────────
 function skipOnboarding() {
+  // Don't show landing if user already entered the app
+  if (state.user) return;
   const ob = document.getElementById('onboarding');
   ob.style.opacity = '0';
   setTimeout(() => {
