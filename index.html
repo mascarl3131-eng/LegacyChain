@@ -2002,7 +2002,9 @@ function skipOnboarding() {
 // ── Landing ───────────────────────────────────────────
 function showLanding() {
   const l = document.getElementById('landing');
-  l.style.display = 'flex';
+  l.style.display  = 'flex';
+  l.style.zIndex   = '2';
+  l.classList.add('active');
   setTimeout(() => l.style.opacity = '1', 50);
   typewriterEffect();
   animateCounters();
@@ -2064,12 +2066,22 @@ function loginGuest() {
 }
 
 function enterApp() {
-  document.getElementById('landing').style.opacity = '0';
+  const landing = document.getElementById('landing');
+  const app     = document.getElementById('app');
+  // Fade out landing
+  landing.style.opacity = '0';
+  landing.style.transition = 'opacity .6s';
   setTimeout(() => {
-    document.getElementById('landing').style.display = 'none';
-    const app = document.getElementById('app');
-    app.style.display = 'block';
-    setTimeout(() => app.style.opacity = '1', 50);
+    // Fully hide landing (remove from stacking context)
+    landing.classList.remove('active');
+    landing.style.display = 'none';
+    landing.style.zIndex  = '-1';
+    // Show app
+    app.style.display  = 'block';
+    app.style.opacity  = '0';
+    app.style.zIndex   = '2';
+    app.classList.add('active');
+    setTimeout(() => { app.style.opacity = '1'; }, 50);
     initApp();
   }, 600);
 }
