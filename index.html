@@ -1,0 +1,2245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LegacyChain</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+/* =====================================================
+   BASE.CSS — Reset, CSS Variables, Body, Scrollbar
+   ===================================================== */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --void:         #04030A;
+  --teal:         #00FFD1;
+  --amber:        #FFB347;
+  --violet:       #C084FC;
+  --text:         #EFF6FF;
+  --danger:       #FF2D55;
+  --glass:        rgba(0,255,209,0.05);
+  --glass-border: rgba(0,255,209,0.15);
+}
+
+body {
+  background: var(--void);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,255,209,.2); border-radius: 2px; }
+
+/* ── Custom cursor ── */
+#cursor {
+  position: fixed; width: 20px; height: 20px; border-radius: 50%;
+  background: radial-gradient(circle, var(--teal) 0%, transparent 70%);
+  pointer-events: none; z-index: 9999;
+  transform: translate(-50%,-50%); transition: transform .1s;
+  mix-blend-mode: screen;
+}
+#cursor-trail {
+  position: fixed; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--teal); opacity: .4;
+  pointer-events: none; z-index: 9998;
+  transform: translate(-50%,-50%);
+  transition: left .15s, top .15s;
+  mix-blend-mode: screen;
+}
+
+/* ── Background canvas ── */
+canvas#bg {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0; pointer-events: none;
+}
+
+/* ── Animations ── */
+@keyframes blink   { 0%,100% { opacity:1 } 50% { opacity:0 } }
+@keyframes rotate  { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }
+@keyframes shake   { 0%,100% { transform:translateX(0) } 25% { transform:translateX(-8px) } 75% { transform:translateX(8px) } }
+/* =====================================================
+   PAGES.CSS — Page system, Onboarding, Landing
+   ===================================================== */
+
+/* ── Page system ── */
+.page {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  overflow-y: auto; z-index: 1;
+  display: none; opacity: 0;
+  transition: opacity .6s;
+}
+.page.active { display: block; opacity: 1; }
+
+/* ════════════════════════════════════════════════════
+   ONBOARDING
+   ════════════════════════════════════════════════════ */
+#onboarding {
+  z-index: 100; background: var(--void);
+  display: flex; align-items: center;
+  justify-content: center; flex-direction: column;
+}
+#onboarding.active { display: flex; }
+#ob-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+#ob-text {
+  position: relative; z-index: 2;
+  text-align: center; font-family: 'Cinzel Decorative', serif;
+}
+#ob-text h1 {
+  font-size: clamp(2rem,6vw,5rem);
+  color: var(--teal);
+  text-shadow: 0 0 40px rgba(0,255,209,.4);
+  letter-spacing: .1em;
+}
+#ob-text p {
+  font-family: 'DM Mono', monospace;
+  color: rgba(239,246,255,.6);
+  margin-top: 1rem; font-size: .9rem;
+}
+#ob-skip {
+  position: absolute; top: 2rem; right: 2rem; z-index: 10;
+  background: transparent; border: 1px solid var(--glass-border);
+  color: var(--teal); font-family: 'DM Mono', monospace;
+  font-size: .8rem; padding: .5rem 1rem; border-radius: 4px;
+  cursor: none; letter-spacing: .1em; transition: background .3s;
+}
+#ob-skip:hover { background: var(--glass); }
+
+/* ════════════════════════════════════════════════════
+   LANDING — full redesign
+   ════════════════════════════════════════════════════ */
+#landing {
+  display: flex; flex-direction: column;
+  min-height: 100vh; overflow-x: hidden;
+}
+#landing.active { display: flex; }
+
+/* ── Hero ── */
+.landing-hero {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 100vh; padding: 4rem 2rem 2rem;
+  text-align: center;
+}
+
+/* Subtle radial glow behind hero text */
+.landing-hero::before {
+  content: '';
+  position: absolute; top: 30%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px; height: 600px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,255,209,.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Eyebrow tag */
+.landing-eyebrow {
+  display: flex; align-items: center; gap: .6rem;
+  font-size: .65rem; letter-spacing: .35em;
+  color: var(--teal); opacity: .8;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(0,255,209,.2);
+  padding: .4rem 1rem; border-radius: 20px;
+  background: rgba(0,255,209,.04);
+}
+.landing-eyebrow::before,
+.landing-eyebrow::after { content: '✦'; font-size: .5rem; opacity: .6; }
+
+/* Typewriter headline */
+#typewriter {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(2.2rem, 5.5vw, 4.5rem);
+  color: var(--text);
+  line-height: 1.15;
+  min-height: 1.3em;
+  text-shadow: 0 0 80px rgba(0,255,209,.15);
+  letter-spacing: .02em;
+}
+#typewriter span {
+  border-right: 2px solid var(--teal);
+  animation: blink 1s infinite;
+}
+
+/* Subline */
+.landing-sub {
+  font-size: .9rem; color: rgba(239,246,255,.45);
+  margin: 1.75rem auto 2.75rem;
+  max-width: 480px; line-height: 1.9;
+  letter-spacing: .02em;
+}
+
+/* ── Auth buttons — card style ── */
+.auth-btns {
+  display: flex; flex-direction: column; gap: .75rem;
+  width: 100%; max-width: 380px; margin: 0 auto;
+}
+
+.btn-fb {
+  display: flex; align-items: center; justify-content: center;
+  gap: .85rem; padding: 1rem 1.5rem;
+  background: rgba(0,255,209,.06);
+  border: 1px solid rgba(0,255,209,.25);
+  border-radius: 10px; color: var(--text);
+  font-family: 'DM Mono', monospace; font-size: .85rem;
+  letter-spacing: .06em; cursor: none; transition: all .35s;
+  backdrop-filter: blur(12px);
+  position: relative; overflow: hidden;
+}
+/* Shimmer line at top */
+.btn-fb::before {
+  content: '';
+  position: absolute; top: 0; left: -100%; width: 100%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--teal), transparent);
+  transition: left .5s;
+}
+.btn-fb:hover::before { left: 100%; }
+.btn-fb:hover {
+  background: rgba(0,255,209,.12);
+  border-color: var(--teal);
+  box-shadow: 0 0 28px rgba(0,255,209,.12), inset 0 0 20px rgba(0,255,209,.03);
+  transform: translateY(-1px);
+}
+.btn-fb .fb-icon {
+  width: 22px; height: 22px; background: var(--teal);
+  border-radius: 5px; display: flex; align-items: center;
+  justify-content: center; font-weight: 700;
+  color: var(--void); font-size: .9rem; flex-shrink: 0;
+}
+
+.btn-guest {
+  background: transparent;
+  border: 1px solid rgba(239,246,255,.1);
+  color: rgba(239,246,255,.4); padding: .8rem;
+  border-radius: 10px; font-family: 'DM Mono', monospace;
+  font-size: .75rem; cursor: none; letter-spacing: .08em;
+  transition: all .3s;
+}
+.btn-guest:hover {
+  border-color: rgba(239,246,255,.25);
+  color: rgba(239,246,255,.7);
+  background: rgba(239,246,255,.03);
+}
+
+/* ── Stats band ── */
+.landing-stats {
+  width: 100%; margin-top: 3.5rem;
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+}
+.stat-item {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 1.5rem 1rem; gap: .3rem;
+  border-right: 1px solid var(--glass-border);
+  transition: background .3s;
+}
+.stat-item:last-child { border-right: none; }
+.stat-item:hover { background: rgba(0,255,209,.03); }
+
+.stat-number {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  color: var(--teal);
+  text-shadow: 0 0 20px rgba(0,255,209,.3);
+  line-height: 1;
+}
+.stat-label {
+  font-size: .65rem; letter-spacing: .2em;
+  color: rgba(239,246,255,.35);
+  text-transform: uppercase;
+}
+
+/* ── Features strip (3 pills under stats) ── */
+.landing-features {
+  display: flex; gap: 1rem; justify-content: center;
+  flex-wrap: wrap; padding: 2rem 2rem 1rem;
+  z-index: 2; position: relative;
+}
+.feature-pill {
+  display: flex; align-items: center; gap: .5rem;
+  font-size: .7rem; letter-spacing: .1em;
+  color: rgba(239,246,255,.4);
+  border: 1px solid var(--glass-border);
+  padding: .45rem .9rem; border-radius: 20px;
+  background: var(--glass); backdrop-filter: blur(8px);
+  transition: all .3s;
+}
+.feature-pill:hover {
+  border-color: rgba(0,255,209,.3);
+  color: rgba(239,246,255,.7);
+}
+.feature-pill-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--teal); opacity: .7; flex-shrink: 0;
+}
+
+/* ── Footer stamp ── */
+.landing-footer-stamp {
+  font-size: .6rem; letter-spacing: .25em;
+  color: rgba(0,255,209,.2);
+  text-align: center;
+  padding: 1.5rem 2rem 2rem;
+  z-index: 2; position: relative;
+}
+
+/* ── Responsive ── */
+@media (max-width: 500px) {
+  .landing-stats { grid-template-columns: 1fr; }
+  .stat-item { border-right: none; border-bottom: 1px solid var(--glass-border); }
+  .stat-item:last-child { border-bottom: none; }
+  #typewriter { font-size: clamp(1.8rem, 8vw, 2.8rem); }
+}
+/* =====================================================
+   NAV.CSS — Main app shell, navigation bar, tabs
+   ===================================================== */
+
+/* ── App container ── */
+#app        { display: none; }
+#app.active { display: block; }
+
+.app-content { padding-top: 65px; min-height: 100vh; }
+
+.tab-content        { display: none; padding: 2.5rem; }
+.tab-content.active { display: block; }
+
+/* ── Navigation bar ── */
+.app-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  height: 65px;
+  padding: 0 1.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(4,3,10,.85);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+/* ── Logo ── */
+.nav-logo {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: .95rem; color: var(--teal); letter-spacing: .15em;
+  flex-shrink: 0;
+  text-shadow: 0 0 20px rgba(0,255,209,.3);
+}
+
+/* ── Tab group (center) ── */
+.nav-tabs {
+  display: flex; gap: .15rem;
+  background: rgba(0,0,0,.2);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px; padding: .25rem;
+}
+
+.nav-tab {
+  background: transparent; border: none;
+  color: rgba(239,246,255,.38);
+  font-family: 'DM Mono', monospace;
+  font-size: .65rem; letter-spacing: .1em;
+  padding: .45rem .7rem; border-radius: 5px;
+  cursor: none; transition: all .25s;
+  white-space: nowrap;
+  position: relative;
+}
+.nav-tab:hover { color: rgba(239,246,255,.7); background: rgba(255,255,255,.04); }
+.nav-tab.active {
+  color: var(--teal);
+  background: rgba(0,255,209,.1);
+  box-shadow: 0 0 12px rgba(0,255,209,.08);
+}
+/* Active tab indicator dot */
+.nav-tab.active::after {
+  content: '';
+  position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 6px var(--teal);
+}
+
+/* ── Right side ── */
+.nav-right { display: flex; align-items: center; gap: .75rem; flex-shrink: 0; }
+
+.user-badge {
+  display: flex; align-items: center; gap: .5rem;
+  font-size: .72rem; color: rgba(239,246,255,.55);
+  padding: .3rem .6rem;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  transition: all .3s;
+}
+.user-badge:hover {
+  border-color: var(--glass-border);
+  background: var(--glass);
+}
+
+.user-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--teal), var(--violet));
+  display: flex; align-items: center; justify-content: center;
+  font-size: .7rem; font-weight: 700; color: var(--void);
+  flex-shrink: 0;
+  box-shadow: 0 0 10px rgba(0,255,209,.2);
+}
+
+.btn-invite {
+  background: transparent;
+  border: 1px solid rgba(0,255,209,.3);
+  color: var(--teal); font-family: 'DM Mono', monospace;
+  font-size: .65rem; letter-spacing: .1em;
+  padding: .45rem .9rem; border-radius: 6px;
+  cursor: none; transition: all .3s;
+}
+.btn-invite:hover {
+  background: rgba(0,255,209,.08);
+  box-shadow: 0 0 14px rgba(0,255,209,.1);
+}
+
+.premium-badge {
+  background: linear-gradient(135deg, var(--amber), #ff6b35);
+  color: var(--void); font-size: .58rem; padding: .2rem .5rem;
+  border-radius: 3px; font-weight: 700; letter-spacing: .1em;
+}
+
+/* ── Shared section headers ── */
+.section-header { margin-bottom: 2rem; }
+
+.section-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.1rem; color: var(--teal);
+  letter-spacing: .15em; margin-bottom: .4rem;
+}
+.section-sub {
+  font-size: .72rem; color: rgba(239,246,255,.35);
+  letter-spacing: .1em;
+}
+
+/* ── Responsive: hide text labels, show icon pills on small screens ── */
+@media (max-width: 900px) {
+  .nav-tabs { gap: .1rem; padding: .2rem; }
+  .nav-tab  { font-size: .6rem; padding: .4rem .5rem; letter-spacing: .05em; }
+  .nav-tab.active::after { display: none; }
+  #nav-name { display: none; }
+}
+
+@media (max-width: 680px) {
+  .app-nav { padding: 0 1rem; }
+  .tab-content { padding: 1.25rem; }
+  /* Tabs wrap below nav on very small screens */
+  .nav-tabs {
+    position: fixed; bottom: 0; left: 0; right: 0; top: auto;
+    border-radius: 0; border: none;
+    border-top: 1px solid var(--glass-border);
+    background: rgba(4,3,10,.95);
+    padding: .4rem .5rem;
+    justify-content: space-around;
+    overflow-x: auto;
+  }
+  .app-nav { height: 55px; }
+  .app-content { padding-top: 55px; padding-bottom: 60px; }
+}
+/* =====================================================
+   CHAIN.CSS — Chain tab, compose panel, form elements
+   ===================================================== */
+
+/* ── Chain layout ── */
+.chain-container { display: flex; gap: 2.5rem; align-items: flex-start; flex-wrap: wrap; }
+.chain-timeline  { flex: 1.4; min-width: 320px; position: relative; }
+.chain-compose-col { flex: 1; min-width: 300px; }
+
+/* ── Timeline spine ── */
+.timeline-spine {
+  position: absolute; left: 19px; top: 0; bottom: 0; width: 2px;
+  background: linear-gradient(to bottom,
+    rgba(0,255,209,.4) 0%,
+    rgba(0,255,209,.15) 60%,
+    transparent 100%);
+}
+
+/* ── Message nodes — alternating layout ── */
+.msg-node {
+  position: relative;
+  margin-bottom: 2.5rem;
+  padding-left: 52px;
+  animation: fadeSlideIn .4s ease both;
+}
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Year marker on the spine */
+.msg-year-marker {
+  position: absolute; left: 0; top: .6rem;
+  display: flex; align-items: center; gap: 8px;
+}
+.msg-dot {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid var(--teal); background: var(--void);
+  box-shadow: 0 0 12px rgba(0,255,209,.5);
+  flex-shrink: 0; z-index: 1;
+  transition: transform .2s;
+}
+.msg-node:hover .msg-dot { transform: scale(1.25); }
+
+.msg-dot.hope    { border-color: var(--teal);   box-shadow: 0 0 12px rgba(0,255,209,.5); }
+.msg-dot.love    { border-color: #ff6b9d;        box-shadow: 0 0 12px rgba(255,107,157,.5); }
+.msg-dot.wisdom  { border-color: var(--violet);  box-shadow: 0 0 12px rgba(192,132,252,.5); }
+.msg-dot.memory  { border-color: var(--amber);   box-shadow: 0 0 12px rgba(255,179,71,.5); }
+.msg-dot.warning { border-color: var(--danger);  box-shadow: 0 0 12px rgba(255,45,85,.5); }
+
+/* ── Message cards ── */
+.msg-card {
+  background: rgba(4,3,10,.6);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px; padding: 1.4rem 1.5rem;
+  backdrop-filter: blur(16px);
+  transition: all .3s;
+  position: relative; overflow: hidden;
+}
+/* Colored left accent bar */
+.msg-card::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; bottom: 0; width: 3px;
+  background: var(--teal); opacity: .5;
+  border-radius: 14px 0 0 14px;
+}
+/* Top shimmer */
+.msg-card::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--teal), transparent);
+  opacity: .25;
+}
+.msg-card:hover {
+  border-color: rgba(0,255,209,.28);
+  box-shadow: 0 8px 32px rgba(0,0,0,.4), 0 0 0 1px rgba(0,255,209,.08);
+  transform: translateY(-2px);
+  background: rgba(0,255,209,.03);
+}
+
+/* Emotion-specific left bar + border */
+.msg-card.hope   { border-color: rgba(0,255,209,.18); }
+.msg-card.hope::before   { background: var(--teal); }
+.msg-card.love   { border-color: rgba(255,107,157,.18); }
+.msg-card.love::before   { background: #ff6b9d; }
+.msg-card.love::after    { background: linear-gradient(90deg,transparent,#ff6b9d,transparent); }
+.msg-card.wisdom { border-color: rgba(192,132,252,.18); }
+.msg-card.wisdom::before { background: var(--violet); }
+.msg-card.wisdom::after  { background: linear-gradient(90deg,transparent,var(--violet),transparent); }
+.msg-card.memory { border-color: rgba(255,179,71,.18); }
+.msg-card.memory::before { background: var(--amber); }
+.msg-card.memory::after  { background: linear-gradient(90deg,transparent,var(--amber),transparent); }
+.msg-card.warning { border-color: rgba(255,45,85,.18); }
+.msg-card.warning::before { background: var(--danger); }
+.msg-card.birth  { border-color: rgba(255,179,71,.35); background: rgba(255,179,71,.04); }
+
+/* ── Card header ── */
+.msg-meta {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-bottom: .9rem;
+}
+.msg-author-block { display: flex; align-items: center; gap: .5rem; }
+.msg-author-init {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--teal), var(--violet));
+  display: flex; align-items: center; justify-content: center;
+  font-size: .65rem; font-weight: 700; color: var(--void);
+  flex-shrink: 0;
+}
+.msg-author { font-size: .8rem; color: var(--text); letter-spacing: .05em; font-weight: 500; }
+.msg-year   { font-size: .65rem; color: rgba(239,246,255,.25); letter-spacing: .08em; }
+
+/* ── Message body ── */
+.msg-text {
+  font-size: .87rem; line-height: 1.75;
+  color: rgba(239,246,255,.75);
+  margin-bottom: .9rem;
+}
+
+/* ── Card footer ── */
+.msg-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .5rem;
+  padding-top: .75rem;
+  border-top: 1px solid rgba(255,255,255,.05);
+}
+.msg-emotion {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-size: .6rem; letter-spacing: .12em;
+  padding: .2rem .65rem; border-radius: 20px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--glass-border);
+  color: rgba(239,246,255,.4);
+}
+.msg-emotion-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--teal); flex-shrink: 0;
+}
+.msg-card.love .msg-emotion-dot    { background: #ff6b9d; }
+.msg-card.wisdom .msg-emotion-dot  { background: var(--violet); }
+.msg-card.memory .msg-emotion-dot  { background: var(--amber); }
+.msg-card.warning .msg-emotion-dot { background: var(--danger); }
+
+.msg-actions { display: flex; gap: .4rem; }
+.msg-btn {
+  background: transparent; border: 1px solid rgba(255,255,255,.07);
+  color: rgba(239,246,255,.35); font-family: 'DM Mono', monospace;
+  font-size: .62rem; padding: .3rem .65rem; border-radius: 5px;
+  cursor: none; transition: all .25s; letter-spacing: .05em;
+}
+.msg-btn:hover { border-color: var(--teal); color: var(--teal); background: rgba(0,255,209,.05); }
+
+/* Lock tag */
+.msg-lock {
+  font-size: .62rem; color: rgba(239,246,255,.25);
+  letter-spacing: .08em; display: flex; align-items: center; gap: .3rem;
+}
+
+/* Birth / capsule badges */
+.birth-badge {
+  display: inline-flex; align-items: center; gap: .4rem;
+  background: rgba(255,179,71,.08); border: 1px solid rgba(255,179,71,.25);
+  color: var(--amber); font-size: .68rem; padding: .3rem .75rem;
+  border-radius: 20px; margin-bottom: .75rem; letter-spacing: .05em;
+}
+.birth-delivery {
+  font-size: .72rem; color: rgba(255,179,71,.6);
+  margin-top: .4rem; font-style: italic; line-height: 1.6;
+}
+
+/* Empty state */
+.chain-empty {
+  text-align: center; padding: 4rem 2rem;
+  color: rgba(239,246,255,.2);
+}
+.chain-empty-icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: .4; }
+.chain-empty-text { font-size: .8rem; letter-spacing: .1em; line-height: 1.8; }
+
+/* ════════════════════════════════════════════════════
+   COMPOSE PANEL
+   ════════════════════════════════════════════════════ */
+.compose-panel {
+  background: rgba(4,3,10,.7);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px; padding: 1.75rem;
+  backdrop-filter: blur(24px);
+  position: sticky; top: 80px;
+}
+.compose-panel-header {
+  display: flex; align-items: center; gap: .6rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+.compose-panel-icon {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: rgba(0,255,209,.1); border: 1px solid rgba(0,255,209,.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .85rem;
+}
+.compose-panel h3 {
+  font-size: .75rem; letter-spacing: .2em;
+  color: var(--teal); flex: 1;
+}
+
+/* Premium upsell card */
+.premium-upsell {
+  margin-top: 1rem;
+  background: rgba(255,179,71,.04);
+  border: 1px solid rgba(255,179,71,.2);
+  border-radius: 12px; padding: 1rem 1.25rem;
+  display: flex; align-items: center; gap: .75rem;
+  cursor: none; transition: all .3s;
+}
+.premium-upsell:hover {
+  background: rgba(255,179,71,.08);
+  border-color: rgba(255,179,71,.35);
+}
+.premium-upsell-icon { font-size: 1.1rem; flex-shrink: 0; }
+.premium-upsell-text { flex: 1; }
+.premium-upsell-title {
+  font-size: .72rem; color: var(--amber); letter-spacing: .1em; font-weight: 500;
+}
+.premium-upsell-sub {
+  font-size: .62rem; color: rgba(255,179,71,.45); margin-top: .2rem; letter-spacing: .05em;
+}
+.premium-upsell-arrow {
+  font-size: .8rem; color: rgba(255,179,71,.4); flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════════════
+   FORM ELEMENTS (shared across tabs)
+   ════════════════════════════════════════════════════ */
+.form-group       { margin-bottom: 1.1rem; }
+.form-group label {
+  display: block; font-size: .67rem;
+  color: rgba(239,246,255,.4); letter-spacing: .12em;
+  margin-bottom: .45rem; text-transform: uppercase;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+  width: 100%;
+  background: rgba(4,3,10,.5);
+  border: 1px solid rgba(255,255,255,.08);
+  color: var(--text); font-family: 'DM Mono', monospace;
+  font-size: .82rem; padding: .65rem .9rem;
+  border-radius: 8px; outline: none;
+  transition: border-color .25s, box-shadow .25s;
+}
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+  border-color: rgba(0,255,209,.4);
+  box-shadow: 0 0 0 3px rgba(0,255,209,.06);
+}
+.form-input::placeholder,
+.form-textarea::placeholder { color: rgba(239,246,255,.18); }
+.form-select option { background: #0a0818; }
+.form-textarea { resize: vertical; min-height: 100px; line-height: 1.65; }
+
+/* Emotion picker */
+.emotion-picker { display: flex; gap: .4rem; flex-wrap: wrap; }
+.emotion-btn {
+  background: transparent; border: 1px solid rgba(255,255,255,.08);
+  color: rgba(239,246,255,.4); font-family: 'DM Mono', monospace;
+  font-size: .62rem; padding: .32rem .75rem; border-radius: 20px;
+  cursor: none; transition: all .25s; letter-spacing: .06em;
+}
+.emotion-btn:hover { border-color: var(--glass-border); color: rgba(239,246,255,.7); }
+.emotion-btn.selected,
+.emotion-btn.hope.selected     { border-color: var(--teal);   color: var(--teal);   background: rgba(0,255,209,.08); }
+.emotion-btn.love.selected     { border-color: #ff6b9d;        color: #ff6b9d;        background: rgba(255,107,157,.08); }
+.emotion-btn.wisdom.selected   { border-color: var(--violet);  color: var(--violet);  background: rgba(192,132,252,.08); }
+.emotion-btn.memory.selected   { border-color: var(--amber);   color: var(--amber);   background: rgba(255,179,71,.08); }
+.emotion-btn.warning.selected  { border-color: var(--danger);  color: var(--danger);  background: rgba(255,45,85,.08); }
+
+/* Char counter */
+.char-count { text-align: right; font-size: .62rem; color: rgba(239,246,255,.25); margin-top: .35rem; }
+
+/* Submit button */
+.btn-submit {
+  width: 100%; padding: .9rem;
+  background: transparent;
+  border: 1px solid var(--teal); color: var(--teal);
+  font-family: 'DM Mono', monospace; font-size: .8rem;
+  letter-spacing: .2em; border-radius: 10px;
+  cursor: none; transition: all .35s; margin-top: .5rem;
+  position: relative; overflow: hidden;
+}
+.btn-submit::before {
+  content: '';
+  position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0,255,209,.08), transparent);
+  transition: left .5s;
+}
+.btn-submit:hover::before { left: 100%; }
+.btn-submit:hover {
+  background: rgba(0,255,209,.08);
+  box-shadow: 0 0 24px rgba(0,255,209,.12);
+}
+
+/* Moderation warning */
+.moderation-warning {
+  background: rgba(255,45,85,.06);
+  border: 1px solid rgba(255,45,85,.25);
+  color: var(--danger); font-size: .75rem; padding: .9rem 1rem;
+  border-radius: 8px; margin-top: .75rem;
+  display: none; line-height: 1.6; text-align: center;
+}
+
+/* Shake animation */
+.shake { animation: shake .4s; }
+
+/* Submit overlay */
+.submit-anim {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 200; display: none;
+  align-items: center; justify-content: center;
+  background: rgba(4,3,10,.92);
+}
+.submit-anim.show { display: flex; }
+#submit-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.submit-text {
+  position: relative; z-index: 1; text-align: center;
+  font-family: 'Cinzel Decorative', serif; color: var(--teal);
+  font-size: 1.1rem; text-shadow: 0 0 30px rgba(0,255,209,.5);
+  letter-spacing: .1em;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .chain-container { flex-direction: column; }
+  .compose-panel   { position: static; }
+}
+/* =====================================================
+   TABS.CSS — Tree, Humanity, Book of Life,
+              Challenges, Origins, Modals
+   ===================================================== */
+
+/* =====================================================
+   TREE TAB
+   ===================================================== */
+#tree-svg-container {
+  width: 100%; overflow-x: auto;
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 16px; padding: 1rem;
+}
+.tree-node           { cursor: none; transition: all .3s; }
+.tree-node:hover circle { filter: brightness(1.3); }
+
+.add-member-btn {
+  margin-top: 1rem; background: transparent;
+  border: 1px solid var(--glass-border); color: rgba(239,246,255,.5);
+  font-family: 'DM Mono', monospace; font-size: .75rem;
+  padding: .6rem 1.2rem; border-radius: 6px;
+  cursor: none; letter-spacing: .1em; transition: all .3s;
+}
+.add-member-btn:hover { border-color: var(--teal); color: var(--teal); }
+
+.member-panel {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 12px; padding: 1.25rem; margin-top: 1rem; display: none;
+}
+.member-panel.visible { display: block; }
+.member-panel h4      { font-size: .8rem; color: var(--teal); letter-spacing: .15em; margin-bottom: 1rem; }
+
+/* =====================================================
+   HUMANITY TAB
+   ===================================================== */
+.humanity-hero {
+  text-align: center; padding: 3rem 1rem 2rem;
+  border-bottom: 1px solid var(--glass-border); margin-bottom: 2rem;
+}
+.humanity-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(1.5rem,4vw,3rem); color: var(--text);
+  letter-spacing: .15em; margin-bottom: .75rem;
+}
+.humanity-sub {
+  font-size: .8rem; color: rgba(239,246,255,.4);
+  letter-spacing: .1em; max-width: 600px; margin: 0 auto 1.5rem;
+}
+.globe-placeholder {
+  width: 200px; height: 200px; border-radius: 50%;
+  margin: 0 auto 1.5rem; position: relative;
+  overflow: hidden; border: 1px solid rgba(0,255,209,.2);
+}
+.globe-placeholder canvas { width: 100%; height: 100%; }
+
+/* Typewriter block */
+.typewriter-block {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;
+  text-align: center; backdrop-filter: blur(10px);
+}
+.typewriter-label { font-size: .65rem; color: rgba(0,255,209,.5); letter-spacing: .2em; margin-bottom: 1rem; }
+.tw-country       { font-size: .7rem; color: rgba(0,255,209,.6); letter-spacing: .1em; margin-bottom: .5rem; }
+.tw-text          { font-size: .9rem; color: rgba(239,246,255,.85); line-height: 1.8; min-height: 3em; }
+#tw-cursor {
+  display: inline-block; width: 2px; height: 1em;
+  background: var(--teal); vertical-align: middle; animation: blink 1s infinite;
+}
+
+.btn-write {
+  background: transparent; border: none;
+  color: rgba(0,255,209,.5); font-family: 'DM Mono', monospace;
+  font-size: .7rem; letter-spacing: .1em; cursor: none;
+  margin-top: .75rem; text-decoration: underline;
+  text-underline-offset: 3px; transition: color .3s;
+}
+.btn-write:hover { color: var(--teal); }
+
+/* Columns */
+.humanity-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
+@media (max-width: 700px) { .humanity-cols { grid-template-columns: 1fr; } }
+
+.wall-title  { font-size: .7rem; letter-spacing: .2em; color: rgba(239,246,255,.5); margin-bottom: 1rem; }
+.masonry-wall { columns: 1; gap: 1rem; }
+
+/* Voice cards */
+.voice-card {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 10px; padding: 1rem; margin-bottom: 1rem;
+  break-inside: avoid; transition: all .3s; position: relative; overflow: hidden;
+}
+.voice-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; opacity: .6; }
+.voice-card.hope::before    { background: var(--teal); }
+.voice-card.wisdom::before  { background: var(--violet); }
+.voice-card.love::before    { background: #ff6b9d; }
+.voice-card.memory::before  { background: var(--amber); }
+.voice-card.warning::before { background: var(--danger); }
+.voice-card.peace::before   { background: #7dd3fc; }
+.voice-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.3); }
+
+.voice-flag   { position: absolute; top: .75rem; right: .75rem; font-size: 1rem; }
+.voice-author { font-size: .7rem; color: rgba(0,255,209,.7); letter-spacing: .1em; margin-bottom: .4rem; }
+.voice-text   { font-size: .8rem; line-height: 1.7; color: rgba(239,246,255,.8); }
+.voice-footer { display: flex; align-items: center; justify-content: space-between; margin-top: .75rem; }
+.voice-emotion {
+  font-size: .6rem; letter-spacing: .1em; color: rgba(239,246,255,.3);
+  border: 1px solid var(--glass-border); padding: .15rem .5rem; border-radius: 3px;
+}
+.voice-like {
+  background: transparent; border: none;
+  color: rgba(239,246,255,.3); font-family: 'DM Mono', monospace;
+  font-size: .7rem; cursor: none; transition: all .3s;
+}
+.voice-like:hover,
+.voice-like.liked { color: #ff6b9d; }
+
+.translate-badge { display: inline-block; font-size: .6rem; color: rgba(239,246,255,.3); margin-top: .3rem; letter-spacing: .05em; }
+
+/* =====================================================
+   BOOK OF LIFE TAB
+   ===================================================== */
+.stepper       { display: flex; gap: .5rem; margin-bottom: 2rem; flex-wrap: wrap; }
+.step-dot {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1px solid var(--glass-border); color: rgba(239,246,255,.3);
+  font-family: 'DM Mono', monospace; font-size: .7rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: none; transition: all .3s;
+}
+.step-dot.done   { border-color: var(--teal); color: var(--teal); background: rgba(0,255,209,.1); }
+.step-dot.active { border-color: var(--teal); color: var(--void); background: var(--teal); }
+
+.progress-bar  { height: 2px; background: var(--glass-border); border-radius: 1px; margin-bottom: 2rem; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--teal); transition: width .5s; box-shadow: 0 0 8px rgba(0,255,209,.5); }
+
+.chapter        { display: none; }
+.chapter.active { display: block; }
+.chapter-title  { font-family: 'Cinzel Decorative', serif; font-size: 1rem; color: var(--teal); margin-bottom: .5rem; letter-spacing: .1em; }
+.chapter-sub    { font-size: .75rem; color: rgba(239,246,255,.4); margin-bottom: 1.5rem; line-height: 1.7; }
+
+.step-btns { display: flex; gap: 1rem; margin-top: 1.5rem; }
+.btn-next, .btn-prev {
+  flex: 1; padding: .75rem; background: transparent;
+  font-family: 'DM Mono', monospace; font-size: .75rem;
+  letter-spacing: .15em; border-radius: 6px; cursor: none; transition: all .3s;
+}
+.btn-next { border: 1px solid var(--teal); color: var(--teal); }
+.btn-next:hover { background: rgba(0,255,209,.1); }
+.btn-prev { border: 1px solid var(--glass-border); color: rgba(239,246,255,.4); }
+.btn-prev:hover { border-color: rgba(239,246,255,.3); color: var(--text); }
+
+/* =====================================================
+   CHALLENGES TAB
+   ===================================================== */
+.challenge-card {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem;
+}
+.challenge-q { font-size: .9rem; color: var(--text); margin-bottom: 1rem; line-height: 1.6; }
+
+.decade-label  { font-size: .65rem; letter-spacing: .2em; padding: .2rem .6rem; border-radius: 3px; display: inline-block; margin-bottom: .5rem; }
+.decade-2020s  { background: rgba(0,255,209,.1);   color: var(--teal);   border: 1px solid rgba(0,255,209,.2); }
+.decade-2030s  { background: rgba(192,132,252,.1); color: var(--violet); border: 1px solid rgba(192,132,252,.2); }
+.decade-2040s  { background: rgba(255,179,71,.1);  color: var(--amber);  border: 1px solid rgba(255,179,71,.2); }
+
+.answer-item   { padding: .75rem 0; border-top: 1px solid var(--glass-border); }
+.answer-author { font-size: .7rem; color: rgba(239,246,255,.4); margin-bottom: .3rem; }
+.answer-text   { font-size: .82rem; line-height: 1.6; color: rgba(239,246,255,.8); }
+
+.btn-answer {
+  background: transparent; border: 1px solid var(--glass-border);
+  color: rgba(239,246,255,.5); font-family: 'DM Mono', monospace;
+  font-size: .7rem; padding: .4rem .8rem; border-radius: 4px;
+  cursor: none; margin-top: .75rem; transition: all .3s; letter-spacing: .1em;
+}
+.btn-answer:hover { border-color: var(--teal); color: var(--teal); }
+
+.answer-form      { margin-top: .75rem; display: none; }
+.answer-form.open { display: block; }
+
+/* =====================================================
+   ORIGINS TAB
+   ===================================================== */
+.dna-warning {
+  border: 1px solid rgba(255,179,71,.4); background: rgba(255,179,71,.06);
+  border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;
+  font-size: .75rem; line-height: 1.7; color: rgba(255,179,71,.8);
+}
+.dna-warning strong { color: var(--amber); display: block; margin-bottom: .3rem; }
+
+.origins-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 600px) { .origins-grid { grid-template-columns: 1fr; } }
+
+.origin-row                   { display: flex; gap: .5rem; align-items: center; margin-bottom: .5rem; }
+.origin-row input[type=text]  { flex: 1; }
+.origin-row input[type=number]{ width: 70px; }
+
+.total-bar  { margin-top: 1rem; padding: .75rem; border-radius: 6px; font-size: .75rem; letter-spacing: .1em; transition: all .3s; text-align: center; }
+.total-ok   { background: rgba(0,255,209,.08);  border: 1px solid rgba(0,255,209,.2);  color: var(--teal); }
+.total-low  { background: rgba(255,179,71,.08); border: 1px solid rgba(255,179,71,.2); color: var(--amber); }
+.total-over { background: rgba(255,45,85,.08);  border: 1px solid rgba(255,45,85,.2);  color: var(--danger); }
+
+/* ── Family Pact ── */
+.pacte-card {
+  background: linear-gradient(135deg, rgba(0,255,209,.05), rgba(192,132,252,.05));
+  border: 1px solid rgba(0,255,209,.2); border-radius: 16px;
+  padding: 2rem; text-align: center; margin-top: 2rem;
+}
+.pacte-text    { font-style: italic; font-size: .85rem; line-height: 1.9; color: rgba(239,246,255,.7); margin-bottom: 1.5rem; }
+.pacte-signers { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.signer {
+  font-size: .7rem; color: var(--teal);
+  background: rgba(0,255,209,.1); border: 1px solid rgba(0,255,209,.2);
+  padding: .3rem .7rem; border-radius: 20px;
+  display: flex; align-items: center; gap: .3rem;
+}
+
+/* =====================================================
+   MODALS — Immersive, Invite, Upgrade
+   ===================================================== */
+
+/* Immersive read mode */
+#immersive {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 150; background: rgba(4,3,10,.98);
+  display: none; align-items: center; justify-content: center; flex-direction: column;
+}
+#immersive.open { display: flex; }
+#im-canvas      { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.im-content     { position: relative; z-index: 2; text-align: center; max-width: 600px; padding: 2rem; }
+.im-meta        { font-size: .75rem; color: var(--teal); letter-spacing: .2em; margin-bottom: 1.5rem; }
+.im-text {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(1.2rem,3vw,2rem); color: var(--text);
+  line-height: 1.8; text-shadow: 0 0 40px rgba(239,246,255,.1);
+}
+.im-close {
+  position: absolute; top: 2rem; right: 2rem;
+  background: transparent; border: 1px solid var(--glass-border);
+  color: rgba(239,246,255,.4); font-family: 'DM Mono', monospace;
+  font-size: .8rem; padding: .4rem .8rem; border-radius: 4px;
+  cursor: none; z-index: 3; transition: all .3s;
+}
+.im-close:hover { border-color: var(--teal); color: var(--teal); }
+.im-sound {
+  position: absolute; bottom: 2rem; right: 2rem;
+  background: transparent; border: 1px solid var(--glass-border);
+  color: rgba(239,246,255,.4); font-family: 'DM Mono', monospace;
+  font-size: .7rem; padding: .4rem .8rem; border-radius: 4px;
+  cursor: none; z-index: 3; transition: all .3s; letter-spacing: .1em;
+}
+.im-sound:hover { border-color: var(--amber); color: var(--amber); }
+
+/* Invite modal */
+#invite-modal           { position: fixed; top:0; left:0; width:100%; height:100%; z-index:160; background:rgba(4,3,10,.9); display:none; align-items:center; justify-content:center; }
+#invite-modal.open      { display: flex; }
+
+.modal-box      { background: #0a0818; border: 1px solid var(--glass-border); border-radius: 16px; padding: 2rem; max-width: 400px; width: 90%; position: relative; }
+.modal-box h3   { font-family: 'Cinzel Decorative', serif; color: var(--teal); font-size: 1rem; margin-bottom: .5rem; letter-spacing: .1em; }
+.modal-box p    { font-size: .75rem; color: rgba(239,246,255,.5); margin-bottom: 1.5rem; line-height: 1.7; }
+.modal-close    { position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; color: rgba(239,246,255,.4); cursor: none; font-size: 1.2rem; transition: color .3s; }
+.modal-close:hover { color: var(--text); }
+
+.link-box {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 6px; padding: .6rem .8rem; font-size: .75rem;
+  color: var(--teal); margin-bottom: .75rem; letter-spacing: .05em;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.btn-copy { background: transparent; border: 1px solid var(--glass-border); color: rgba(239,246,255,.5); font-family: 'DM Mono', monospace; font-size: .65rem; padding: .3rem .6rem; border-radius: 3px; cursor: none; letter-spacing: .1em; transition: all .3s; }
+.btn-copy:hover,
+.btn-copy.copied { border-color: var(--teal); color: var(--teal); }
+
+.share-btns { display: flex; gap: .5rem; }
+.btn-wa     { flex: 1; background: rgba(37,211,102,.08); border: 1px solid rgba(37,211,102,.2); color: #25d366; font-family: 'DM Mono', monospace; font-size: .7rem; padding: .6rem; border-radius: 6px; cursor: none; letter-spacing: .1em; transition: all .3s; }
+.btn-wa:hover { background: rgba(37,211,102,.15); }
+
+#qr-display canvas { border: 1px solid var(--glass-border); border-radius: 8px; padding: .5rem; background: rgba(255,255,255,.05); }
+#qr-display { margin-top: 1rem; text-align: center; }
+
+/* Upgrade modal */
+#upgrade-modal       { position: fixed; top:0; left:0; width:100%; height:100%; z-index:160; background:rgba(4,3,10,.9); display:none; align-items:center; justify-content:center; }
+#upgrade-modal.open  { display: flex; }
+
+.upgrade-box    { background: #0a0818; border: 1px solid rgba(255,179,71,.3); border-radius: 16px; padding: 2rem; max-width: 420px; width: 90%; position: relative; text-align: center; }
+.upgrade-box h3 { font-family: 'Cinzel Decorative', serif; color: var(--amber); font-size: 1.1rem; letter-spacing: .1em; margin-bottom: .5rem; }
+.upgrade-box .price { font-size: 2.5rem; color: var(--text); font-weight: 500; margin: 1rem 0; }
+.upgrade-box .price span { font-size: .8rem; color: rgba(239,246,255,.4); }
+
+.upgrade-features { text-align: left; margin: 1rem 0; display: flex; flex-direction: column; gap: .4rem; }
+.upgrade-feat { font-size: .78rem; color: rgba(239,246,255,.7); padding: .3rem 0; border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; gap: .5rem; }
+.upgrade-feat::before { content: '✦'; color: var(--amber); font-size: .6rem; }
+
+.btn-upgrade { width: 100%; padding: .9rem; background: linear-gradient(135deg, rgba(255,179,71,.2), rgba(192,132,252,.2)); border: 1px solid var(--amber); color: var(--amber); font-family: 'DM Mono', monospace; font-size: .85rem; letter-spacing: .2em; border-radius: 8px; cursor: none; transition: all .4s; margin-top: 1rem; }
+.btn-upgrade:hover { background: linear-gradient(135deg, rgba(255,179,71,.3), rgba(192,132,252,.3)); box-shadow: 0 0 30px rgba(255,179,71,.2); }
+
+/* =====================================================
+   MISC UTILITIES
+   ===================================================== */
+.tag-premium { font-size: .6rem; color: var(--amber); border: 1px solid rgba(255,179,71,.3); padding: .1rem .4rem; border-radius: 3px; margin-left: .3rem; vertical-align: middle; }
+
+.tooltip { position: relative; }
+.tooltip:hover::after {
+  content: attr(data-tip); position: absolute; bottom: calc(100% + 5px); left: 50%; transform: translateX(-50%);
+  background: #1a1630; border: 1px solid var(--glass-border); color: var(--text); font-size: .65rem;
+  padding: .3rem .6rem; border-radius: 4px; white-space: nowrap; z-index: 10; pointer-events: none;
+}
+
+  </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+/* =====================================================
+   data.js — App state + all static seed data
+   ===================================================== */
+
+// ── Global app state ──────────────────────────────────
+let state = {
+  user:             null,
+  isPremium:        false,
+  familyName:       'Doe',
+  selectedEmotion:  'hope',
+  hEmotion:         'hope',
+  messages:         [],
+  humanityMessages: [],
+  treeMembers:      [],
+  bookData:         {},
+  currentChapter:   0,
+  pacte:            false,
+  originRows:       3,
+  challenges:       [],
+  soundOn:          false,
+  audioCtx:         null,
+};
+
+// ── Demo chain messages ───────────────────────────────
+const DEMO_MESSAGES = [
+  {
+    author: 'Marie', year: 1987,
+    text: "To whoever reads this: I planted an oak tree the day you were born. I hope it's still standing, taller than any of us ever dreamed.",
+    emotion: 'hope', unlockYear: null, type: 'standard',
+  },
+  {
+    author: 'Robert', year: 2001,
+    text: "When the towers fell, I held your grandmother's hand and I thought of all of you, unborn. I wanted a world without fear for you. Did we manage it?",
+    emotion: 'memory', unlockYear: null, type: 'standard',
+  },
+  {
+    author: 'Jean', year: 2024,
+    text: "To Lucas, my firstborn. You made me understand that love is not something you feel — it's something you do, every single day.",
+    emotion: 'love', unlockYear: null, type: 'birth', baby: 'Lucas', deliveryYear: 2042,
+  },
+  {
+    author: 'Sophie', year: 2024,
+    text: "I've sealed this message to be opened on our 50th family reunion. If you're reading this in 2074 — the family is still here. That's enough.",
+    emotion: 'wisdom', unlockYear: 2074, type: 'standard',
+  },
+];
+
+// ── Demo humanity voices ──────────────────────────────
+const DEMO_HUMANITY = [
+  { author: 'A voice from Senegal',   country: 'Senegal',   flag: '🇸🇳', text: "I live in a world where we still fight for food. I hope you've solved that.", emotion: 'hope',    year: 2025, likes: 47  },
+  { author: 'A voice from Japan',     country: 'Japan',     flag: '🇯🇵', text: "My daughter was just born. I entrust her to you. Take care of her.",           emotion: 'love',    year: 2025, likes: 89  },
+  { author: 'A voice from Ukraine',   country: 'Ukraine',   flag: '🇺🇦', text: "We were crossing a war. I hope you no longer know this.",                       emotion: 'hope',    year: 2025, likes: 134 },
+  { author: 'A voice from Brazil',    country: 'Brazil',    flag: '🇧🇷', text: "The forest I loved as a child is disappearing. I hope you managed to keep it.", emotion: 'warning', year: 2025, likes: 62  },
+  { author: 'A voice from Australia', country: 'Australia', flag: '🇦🇺', text: "The oceans were rising slowly. How are they where you are?",                    emotion: 'wisdom',  year: 2025, likes: 31  },
+  { author: 'A voice from Nigeria',   country: 'Nigeria',   flag: '🇳🇬', text: "I'm young and I'm scared and I'm hopeful. Both at once. Do you understand?",    emotion: 'hope',    year: 2025, likes: 78  },
+];
+
+// ── Typewriter messages (Humanity tab) ───────────────
+const TW_MESSAGES = [
+  { country: "A voice from Senegal · 2025",   text: "I live in a world where we still fight for food. I hope you've solved that." },
+  { country: "A voice from Japan · 2025",     text: "My daughter was just born. I entrust her to you. Take care of her." },
+  { country: "A voice from France · 2025",    text: "We were afraid of the future. Did you find peace?" },
+  { country: "A voice from Ukraine · 2025",   text: "We were crossing a war. I hope you no longer know this." },
+  { country: "A voice from Australia · 2025", text: "The oceans were rising slowly. How are they where you are?" },
+  { country: "A voice from Canada · 2025",    text: "I loved someone with all my soul. Does love still exist where you are?" },
+  { country: "A voice from India · 2025",     text: "We were 8 billion. How many are you now?" },
+  { country: "A voice from Nigeria · 2025",   text: "I'm young and scared and hopeful. Both at once. You understand?" },
+];
+
+// ── Intergenerational challenges ──────────────────────
+const CHALLENGES_SEED = [
+  { q: "What is happiness to you?",                answers: [{ author: "Marie",  year: 2024, text: "Happiness is a quiet Sunday morning with no plan and nowhere to be." }] },
+  { q: "What advice would you give your younger self?", answers: [{ author: "Robert", year: 2024, text: "Stop waiting. Everything you want is waiting for you to be brave enough to ask." }] },
+  { q: "Your era in 3 words?",                     answers: [{ author: "Sophie", year: 2024, text: "Anxious. Connected. Searching." }] },
+  { q: "What do you hope for your descendants?",   answers: [{ author: "Jean",   year: 2024, text: "That they live in a world where kindness is unremarkable because it's ordinary." }] },
+];
+
+// ── Book of Life chapters ──────────────────────────────
+const BOOK_CHAPTERS = [
+  {
+    title: "WHO I AM", sub: "Your origins, your childhood, what built you",
+    fields: [
+      { l: "Date and place of birth",  p: "15 March 1985, Paris..." },
+      { l: "My childhood in a few words", p: "A summer that lasted forever..." },
+      { l: "What built me",             p: "The day I realized that..." },
+    ],
+  },
+  {
+    title: "MY VALUES", sub: "What you believe, what guides you",
+    fields: [
+      { l: "My 3 most important values", p: "Honesty, courage, kindness..." },
+      { l: "What I believe deeply",      p: "I believe that every human..." },
+      { l: "What I regret",              p: "Not having said 'I love you' more..." },
+    ],
+  },
+  {
+    title: "MY LIFE ADVICE", sub: "Wisdom for those who follow",
+    fields: [
+      { l: "To my children",                   p: "Never stop learning..." },
+      { l: "To my grandchildren",              p: "The world you inherit..." },
+      { l: "To generations I will never see",  p: "By the time you read this..." },
+    ],
+  },
+  {
+    title: "MY TREASURES", sub: "What you love, what changed you",
+    fields: [
+      { l: "My favourite recipe",            p: "Grandmother's tart..." },
+      { l: "The song that defines me & why", p: "Because the first time I heard..." },
+      { l: "The book that changed me",       p: "It made me see the world differently..." },
+      { l: "The place where I feel at home", p: "There's a bench by the river..." },
+    ],
+  },
+  {
+    title: "PERSONAL LETTERS", sub: "Words for each member of your family",
+    fields: [
+      { l: "A letter to someone you love", p: "Dear [Name], there are things I've never said..." },
+    ],
+  },
+  {
+    title: "MY LEGACY", sub: "What you leave behind",
+    fields: [
+      { l: "What I'm most proud of",              p: "That I kept my word..." },
+      { l: "What I'd like to be remembered for",  p: "Someone who showed up..." },
+      { l: "My last words",                       p: "If you're reading this, know that..." },
+    ],
+  },
+];
+
+// ── Family tree seed data ──────────────────────────────
+const TREE_SEED = [
+  { id: 1, name: "Robert Doe", birth: 1952, x: 180, y: 60  },
+  { id: 2, name: "Irène Doe",  birth: 1955, x: 360, y: 60  },
+  { id: 3, name: "Jean Doe",   birth: 1982, x: 120, y: 180 },
+  { id: 4, name: "Marie Doe",  birth: 1985, x: 300, y: 180 },
+  { id: 5, name: "Sophie Doe", birth: 1988, x: 480, y: 180 },
+  { id: 6, name: "Lucas Doe",  birth: 2024, x: 200, y: 300 },
+];
+const TREE_LINKS = [[1,3],[1,4],[2,3],[2,4],[1,5],[2,5],[3,6],[4,6]];
+
+// ── Content moderation word list ──────────────────────
+const BANNED_WORDS = ['hate','kill','die','stupid','idiot','racist','fuck','shit','bitch','dumb','ugly'];
+
+// ── Country → flag emoji map ──────────────────────────
+const FLAG_MAP = {
+  Australia: '🇦🇺', France: '🇫🇷', Japan: '🇯🇵',
+  USA: '🇺🇸', 'United States': '🇺🇸', Brazil: '🇧🇷',
+  Nigeria: '🇳🇬', India: '🇮🇳', Canada: '🇨🇦',
+  Ukraine: '🇺🇦', China: '🇨🇳', Argentina: '🇦🇷', Senegal: '🇸🇳',
+};
+/* =====================================================
+   canvas.js — All canvas / particle / animation effects
+   ===================================================== */
+
+// ── Custom cursor ─────────────────────────────────────
+(function initCursor() {
+  const cur   = document.getElementById('cursor');
+  const trail = document.getElementById('cursor-trail');
+  document.addEventListener('mousemove', e => {
+    cur.style.left = e.clientX + 'px';
+    cur.style.top  = e.clientY + 'px';
+    setTimeout(() => {
+      trail.style.left = e.clientX + 'px';
+      trail.style.top  = e.clientY + 'px';
+    }, 80);
+  });
+})();
+
+// ── Nebula background (persistent) ────────────────────
+(function initNebulaBg() {
+  const c   = document.getElementById('bg');
+  const ctx = c.getContext('2d');
+  let pts   = [];
+
+  function resize() {
+    c.width  = window.innerWidth;
+    c.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  for (let i = 0; i < 120; i++) {
+    pts.push({
+      x:     Math.random() * window.innerWidth,
+      y:     Math.random() * window.innerHeight,
+      vx:    (Math.random() - .5) * .15,
+      vy:    (Math.random() - .5) * .15,
+      r:     Math.random() * 1.5 + .5,
+      a:     Math.random() * .5 + .1,
+      color: Math.random() < .7 ? '0,255,209' : '192,132,252',
+    });
+  }
+
+  function drawNebula() {
+    ctx.clearRect(0, 0, c.width, c.height);
+    pts.forEach((p, i) => {
+      // Draw star dot
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.color},${p.a})`;
+      ctx.fill();
+
+      // Draw connection lines to nearby stars
+      pts.slice(i + 1).forEach(q => {
+        const d = Math.hypot(p.x - q.x, p.y - q.y);
+        if (d < 100) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(q.x, q.y);
+          ctx.strokeStyle = `rgba(0,255,209,${.03 * (1 - d / 100)})`;
+          ctx.lineWidth = .5;
+          ctx.stroke();
+        }
+      });
+
+      // Move and bounce
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0 || p.x > c.width)  p.vx *= -1;
+      if (p.y < 0 || p.y > c.height) p.vy *= -1;
+    });
+    requestAnimationFrame(drawNebula);
+  }
+  drawNebula();
+})();
+
+// ── Onboarding canvas animation ───────────────────────
+(function initOnboarding() {
+  const c     = document.getElementById('ob-canvas');
+  const ctx   = c.getContext('2d');
+  const title = document.getElementById('ob-title');
+  const sub   = document.getElementById('ob-sub');
+
+  c.width  = window.innerWidth;
+  c.height = window.innerHeight;
+
+  const WORD   = 'FAMILLE';
+  let   t      = 0;
+  const letters = WORD.split('').map((ch, i) => ({
+    ch,
+    x:  c.width  / 2 + (i - WORD.length / 2) * 60,
+    y:  c.height / 2,
+    vx: (Math.random() - .5) * 8,
+    vy: (Math.random() - .5) * 8,
+    a:  0,
+  }));
+
+  function drawOnboarding() {
+    ctx.clearRect(0, 0, c.width, c.height);
+    t++;
+
+    if (t < 60) {
+      // Phase 1 — letters float in
+      letters.forEach(l => {
+        l.a  = Math.min(1, l.a + .02);
+        l.x += l.vx * 0.95;
+        l.y += l.vy * 0.95;
+        l.vx *= 0.95; l.vy *= 0.95;
+        ctx.font      = 'bold clamp(2rem,6vw,5rem) Cinzel Decorative';
+        ctx.fillStyle = `rgba(0,255,209,${l.a})`;
+        ctx.textAlign = 'center';
+        ctx.fillText(l.ch, l.x, l.y);
+      });
+
+    } else if (t < 160) {
+      // Phase 2 — steady letters + horizontal line
+      letters.forEach(l => {
+        ctx.font      = 'bold clamp(2rem,6vw,5rem) Cinzel Decorative';
+        ctx.fillStyle = 'rgba(0,255,209,0.9)';
+        ctx.textAlign = 'center';
+        ctx.fillText(l.ch, l.x, l.y);
+      });
+      const prog = (t - 60) / 100;
+      const cx   = c.width / 2;
+      const cy   = c.height / 2 + 80;
+      ctx.beginPath();
+      ctx.moveTo(cx - 200 * prog, cy);
+      ctx.lineTo(cx + 200 * prog, cy);
+      ctx.strokeStyle = `rgba(0,255,209,${prog * .4})`;
+      ctx.lineWidth   = 1;
+      ctx.stroke();
+
+    } else {
+      // Phase 3 — logo reveal
+      if (t === 161) {
+        title.textContent = '⬡ LEGACYCHAIN';
+        sub.textContent   = 'Every family deserves to travel through time';
+      }
+      const alpha = Math.min(1, (t - 160) / 30);
+      ctx.fillStyle = `rgba(0,255,209,${alpha})`;
+      ctx.font      = 'bold 60px Cinzel Decorative';
+      ctx.textAlign = 'center';
+      ctx.fillText('⬡', c.width / 2, c.height / 2);
+    }
+
+    if (t < 300) {
+      requestAnimationFrame(drawOnboarding);
+    } else {
+      setTimeout(skipOnboarding, 1000);
+    }
+  }
+  drawOnboarding();
+})();
+
+// ── Submit particle burst ──────────────────────────────
+function showSubmitAnimation(callback) {
+  const overlay = document.getElementById('submit-anim');
+  const c       = document.getElementById('submit-canvas');
+  const ctx     = c.getContext('2d');
+
+  c.width  = window.innerWidth;
+  c.height = window.innerHeight;
+  overlay.style.display = 'flex';
+
+  const pts = [];
+  for (let i = 0; i < 200; i++) {
+    pts.push({
+      x:  c.width / 2,
+      y:  c.height / 2,
+      vx: (Math.random() - .5) * 8,
+      vy: (Math.random() - .5) * 8 - (Math.random() * 4),
+      a:  1,
+      r:  Math.random() * 3 + 1,
+    });
+  }
+
+  let frame = 0;
+  function animate() {
+    ctx.clearRect(0, 0, c.width, c.height);
+    pts.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.a -= .015;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0,255,209,${p.a})`;
+      ctx.fill();
+    });
+    frame++;
+    if (frame < 100) {
+      requestAnimationFrame(animate);
+    } else {
+      overlay.style.display = 'none';
+      callback();
+    }
+  }
+  animate();
+}
+
+// ── Immersive read mode background ────────────────────
+function startImmersiveBg() {
+  const c   = document.getElementById('im-canvas');
+  const ctx = c.getContext('2d');
+  c.width   = window.innerWidth;
+  c.height  = window.innerHeight;
+
+  const pts = [];
+  for (let i = 0; i < 60; i++) {
+    pts.push({
+      x:  Math.random() * c.width,
+      y:  Math.random() * c.height,
+      vx: (Math.random() - .5) * .3,
+      vy: (Math.random() - .5) * .3,
+      r:  Math.random() * 2 + .5,
+      a:  Math.random() * .3,
+    });
+  }
+
+  function drawImmersive() {
+    if (!document.getElementById('immersive').classList.contains('open')) return;
+    ctx.clearRect(0, 0, c.width, c.height);
+    pts.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0,255,209,${p.a})`;
+      ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0 || p.x > c.width)  p.vx *= -1;
+      if (p.y < 0 || p.y > c.height) p.vy *= -1;
+    });
+    requestAnimationFrame(drawImmersive);
+  }
+  drawImmersive();
+}
+/* =====================================================
+   auth.js — Onboarding skip, Landing, Login, App init
+   ===================================================== */
+
+// ── Onboarding ────────────────────────────────────────
+function skipOnboarding() {
+  const ob = document.getElementById('onboarding');
+  ob.style.opacity = '0';
+  setTimeout(() => {
+    ob.style.display = 'none';
+    showLanding();
+  }, 600);
+}
+
+// ── Landing ───────────────────────────────────────────
+function showLanding() {
+  const l = document.getElementById('landing');
+  l.style.display = 'flex';
+  setTimeout(() => l.style.opacity = '1', 50);
+  typewriterEffect();
+  animateCounters();
+}
+
+function typewriterEffect() {
+  const el      = document.querySelector('#typewriter span');
+  const phrases = [
+    "What will you leave behind?",
+    "Ce que vous laisserez...",
+    "What echoes through time?",
+  ];
+  let pi = 0, ci = 0, deleting = false;
+
+  function tick() {
+    const p = phrases[pi];
+    if (!deleting) {
+      el.textContent = p.slice(0, ci++);
+      if (ci > p.length) { deleting = true; setTimeout(tick, 2000); return; }
+    } else {
+      el.textContent = p.slice(0, ci--);
+      if (ci < 0) { deleting = false; pi = (pi + 1) % phrases.length; ci = 0; }
+    }
+    setTimeout(tick, deleting ? 50 : 80);
+  }
+  tick();
+}
+
+function animateCounters() {
+  const targets = { families: 12847, messages: 94320, capsules: 3201 };
+  Object.keys(targets).forEach(k => {
+    const el     = document.getElementById('cnt-' + k);
+    let   v      = 0;
+    const target = targets[k];
+    const step   = Math.ceil(target / 80);
+    const iv = setInterval(() => {
+      v = Math.min(v + step, target);
+      el.textContent = v.toLocaleString();
+      if (v >= target) clearInterval(iv);
+    }, 20);
+  });
+}
+
+// ── Login ─────────────────────────────────────────────
+function loginFB() {
+  const name  = prompt("Enter your name (Facebook simulation):", "Jean Doe") || "Jean Doe";
+  const parts = name.trim().split(' ');
+  state.user       = { name, first: parts[0], last: parts[parts.length - 1] || 'Doe', fb: true };
+  state.familyName = parts[parts.length - 1] || 'Doe';
+  enterApp();
+}
+
+function loginGuest() {
+  const name  = prompt("Your full name:", "Marie Dupont") || "Marie Dupont";
+  const parts = name.trim().split(' ');
+  state.user       = { name, first: parts[0], last: parts[parts.length - 1] || 'Guest', fb: false };
+  state.familyName = parts[parts.length - 1] || 'Guest';
+  enterApp();
+}
+
+function enterApp() {
+  document.getElementById('landing').style.opacity = '0';
+  setTimeout(() => {
+    document.getElementById('landing').style.display = 'none';
+    const app = document.getElementById('app');
+    app.style.display = 'block';
+    setTimeout(() => app.style.opacity = '1', 50);
+    initApp();
+  }, 600);
+}
+
+// ── App initialisation ────────────────────────────────
+function initApp() {
+  document.getElementById('nav-name').textContent         = state.user.name;
+  document.getElementById('nav-avatar').textContent       = state.user.first[0];
+  document.getElementById('chain-family-name').textContent = `THE ${state.familyName.toUpperCase()} FAMILY · EST. ${new Date().getFullYear()}`;
+  document.getElementById('invite-link').textContent      = `legacychain.app/?famille=${state.familyName}`;
+  document.getElementById('pacte-name').textContent       = state.user.first;
+
+  state.messages         = [...DEMO_MESSAGES];
+  state.humanityMessages = [...DEMO_HUMANITY];
+  state.challenges       = [...CHALLENGES_SEED];
+
+  renderChain();
+  renderTree();
+  initHumanity();
+  initChallenges();
+  initBook();
+  drawOriginChart();
+}
+
+// ── Tab switching ─────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+/* =====================================================
+   chain.js — Family chain tab: render, compose, immersive
+   ===================================================== */
+
+// ── Render chain timeline ─────────────────────────────
+function renderChain() {
+  const container = document.getElementById('chain-timeline');
+  // Keep the spine div, clear only the nodes
+  container.innerHTML = '<div class="timeline-spine"></div>';
+
+  if (state.messages.length === 0) {
+    container.innerHTML += `
+      <div class="chain-empty">
+        <div class="chain-empty-icon">⬡</div>
+        <div class="chain-empty-text">No messages yet.<br>Be the first to seal a word for the future.</div>
+      </div>`;
+    return;
+  }
+
+  state.messages.forEach((msg, i) => {
+    const node = document.createElement('div');
+    node.className = 'msg-node';
+    node.style.animationDelay = (i * 0.07) + 's';
+
+    // Birth / capsule extras
+    let extra = '';
+    if (msg.type === 'birth') {
+      const dy = msg.deliveryYear - new Date().getFullYear();
+      extra = `
+        <div class="birth-badge">👶 Birth message for ${msg.baby}</div>
+        <div class="birth-delivery">· ${msg.baby} will receive this on their 18th birthday (${msg.deliveryYear}) · in ${dy} years ·</div>`;
+    } else if (msg.type === 'capsule') {
+      extra = `<div class="birth-badge" style="border-color:rgba(255,179,71,.25);color:var(--amber)">⊙ Collective capsule</div>`;
+    }
+
+    const lockTag = msg.unlockYear
+      ? `<div class="msg-lock">🔒 <span>Sealed until ${msg.unlockYear}</span></div>`
+      : '';
+
+    const initial = msg.author ? msg.author[0].toUpperCase() : '?';
+
+    node.innerHTML = `
+      <div class="msg-year-marker">
+        <div class="msg-dot ${msg.emotion}"></div>
+      </div>
+      <div class="msg-card ${msg.emotion}">
+        ${extra}
+        <div class="msg-meta">
+          <div class="msg-author-block">
+            <div class="msg-author-init">${initial}</div>
+            <span class="msg-author">${msg.author}</span>
+          </div>
+          <span class="msg-year">${msg.year}</span>
+        </div>
+        <div class="msg-text">${msg.text}</div>
+        <div class="msg-footer">
+          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+            <span class="msg-emotion">
+              <span class="msg-emotion-dot"></span>
+              ${msg.emotion.toUpperCase()}
+            </span>
+            ${lockTag}
+          </div>
+          <div class="msg-actions">
+            <button class="msg-btn" onclick="openImmersive(${i})">👁 READ</button>
+            <button class="msg-btn" onclick="replyToMsg(${i})">↩ REPLY</button>
+          </div>
+        </div>
+      </div>`;
+    container.appendChild(node);
+  });
+}
+
+// ── Compose panel helpers ─────────────────────────────
+function updateMsgType() {
+  const t = document.getElementById('msg-type').value;
+  document.getElementById('birth-fields').style.display   = t === 'birth'   ? 'block' : 'none';
+  document.getElementById('capsule-fields').style.display = t === 'capsule' ? 'block' : 'none';
+}
+
+function updateCharCount() {
+  document.getElementById('char-count').textContent = document.getElementById('msg-text').value.length;
+}
+
+function selectEmotion(e, btn) {
+  state.selectedEmotion = e;
+  document.querySelectorAll('#emotion-picker .emotion-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+// ── Content moderation ────────────────────────────────
+function moderateText(text) {
+  const lower = text.toLowerCase();
+  return BANNED_WORDS.some(w => lower.includes(w));
+}
+
+// ── Submit message ────────────────────────────────────
+function submitMessage() {
+  const text = document.getElementById('msg-text').value.trim();
+  if (!text) { alert('Please write a message.'); return; }
+
+  if (moderateText(text)) {
+    const w  = document.getElementById('mod-warning');
+    const ta = document.getElementById('msg-text');
+    w.style.display = 'block';
+    w.textContent   = 'This message will not travel through generations. The words you leave today shape tomorrow. Rewrite with love.';
+    ta.classList.add('shake');
+    setTimeout(() => {
+      ta.classList.remove('shake');
+      document.getElementById('msg-text').value = '';
+      updateCharCount();
+    }, 1000);
+    return;
+  }
+
+  document.getElementById('mod-warning').style.display = 'none';
+
+  // Premium gate: max 10 messages for free users
+  if (state.messages.length >= 10 && !state.isPremium) {
+    document.getElementById('upgrade-modal').classList.add('open');
+    return;
+  }
+
+  const type = document.getElementById('msg-type').value;
+  const dobInput = document.getElementById('baby-dob').value;
+  const msg = {
+    author:      state.user.first,
+    year:        new Date().getFullYear(),
+    text,
+    emotion:     state.selectedEmotion,
+    type,
+    unlockYear:  parseInt(document.getElementById('unlock-year').value) || null,
+    baby:        document.getElementById('baby-name').value || null,
+    deliveryYear: dobInput ? new Date(dobInput).getFullYear() + 18 : null,
+  };
+
+  showSubmitAnimation(() => {
+    state.messages.unshift(msg);
+    renderChain();
+    document.getElementById('msg-text').value = '';
+    updateCharCount();
+  });
+}
+
+// ── Reply helper ──────────────────────────────────────
+function replyToMsg(i) {
+  const msg   = state.messages[i];
+  const years = new Date().getFullYear() - msg.year;
+  const ta    = document.getElementById('msg-text');
+  ta.value    = `[Reply to ${msg.author}, ${years} years later] `;
+  ta.focus();
+  // FIX: was scrolling a non-scrollable div; scroll the window instead
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+}
+
+// ── Immersive read mode ───────────────────────────────
+function openImmersive(i) {
+  const msg = state.messages[i];
+  document.getElementById('im-meta').textContent = `${msg.author.toUpperCase()} · ${msg.year}`;
+  document.getElementById('im-text').textContent = msg.text;
+  document.getElementById('immersive').classList.add('open');
+  startImmersiveBg();
+}
+
+function closeImmersive() {
+  document.getElementById('immersive').classList.remove('open');
+  if (state.audioCtx) state.audioCtx.suspend();
+}
+
+// ── Ambient sound (immersive mode) ────────────────────
+function toggleSound() {
+  if (!state.audioCtx) {
+    state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  const ctx = state.audioCtx;
+
+  if (ctx.state === 'suspended') {
+    ctx.resume();
+    state.soundOn = true;
+  } else {
+    ctx.suspend();
+    state.soundOn = false;
+    return;
+  }
+
+  // Drone base
+  const osc  = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(55, ctx.currentTime);
+  gain.gain.setValueAtTime(.05, ctx.currentTime);
+  osc.start();
+
+  // Melodic notes
+  const notes = [261, 294, 329, 349, 392];
+  let   ni    = 0;
+  const iv = setInterval(() => {
+    if (!state.soundOn) { osc.stop(); clearInterval(iv); return; }
+    const mel = ctx.createOscillator();
+    const mg  = ctx.createGain();
+    mel.connect(mg); mg.connect(ctx.destination);
+    mel.frequency.setValueAtTime(notes[ni % notes.length], ctx.currentTime);
+    mg.gain.setValueAtTime(.03, ctx.currentTime);
+    mg.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.5);
+    mel.start(); mel.stop(ctx.currentTime + 1.5);
+    ni++;
+  }, 2000);
+}
+/* =====================================================
+   tabs.js — Tree, Humanity, Challenges, Book of Life,
+             Origins, Invite modal, Upgrade modal
+   ===================================================== */
+
+// =====================================================
+// FAMILY TREE TAB
+// =====================================================
+
+function renderTree() {
+  const container = document.getElementById('tree-svg-container');
+  const members   = TREE_SEED;
+  const links     = TREE_LINKS;
+
+  let svg = `<svg viewBox="0 0 600 380" width="100%" style="min-height:350px">`;
+
+  // Links (dashed lines between nodes)
+  links.forEach(([a, b]) => {
+    const A = members.find(m => m.id === a);
+    const B = members.find(m => m.id === b);
+    if (A && B) {
+      svg += `<line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}"
+        stroke="rgba(0,255,209,0.25)" stroke-width="1" stroke-dasharray="4,4"/>`;
+    }
+  });
+
+  // Nodes
+  members.forEach(m => {
+    const hasMsg = state.messages.some(msg => msg.author.includes(m.name.split(' ')[0]));
+    const pulse  = hasMsg
+      ? `<circle cx="${m.x}" cy="${m.y}" r="33" fill="none" stroke="rgba(0,255,209,0.1)" stroke-width="6">
+           <animate attributeName="r" values="33;38;33" dur="2s" repeatCount="indefinite"/>
+           <animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/>
+         </circle>`
+      : '';
+
+    svg += `
+      <g class="tree-node" onclick="selectMember(${m.id})">
+        <circle cx="${m.x}" cy="${m.y}" r="28"
+          fill="rgba(0,255,209,0.05)"
+          stroke="${hasMsg ? 'rgba(0,255,209,0.8)' : 'rgba(0,255,209,0.2)'}"
+          stroke-width="${hasMsg ? 2 : 1}"/>
+        ${pulse}
+        <text x="${m.x}" y="${m.y - 5}" text-anchor="middle" fill="#EFF6FF"
+          font-family="DM Mono" font-size="10" font-weight="500">${m.name.split(' ')[0]}</text>
+        <text x="${m.x}" y="${m.y + 9}" text-anchor="middle" fill="rgba(0,255,209,0.6)"
+          font-family="DM Mono" font-size="9">${m.birth}</text>
+      </g>`;
+  });
+
+  svg += '</svg>';
+  container.innerHTML = svg;
+}
+
+function selectMember(id) {
+  const m = TREE_SEED.find(x => x.id === id);
+  if (!m) return;
+  const msgs = state.messages.filter(msg => msg.author.includes(m.name.split(' ')[0]));
+  alert(`${m.name} (${m.birth})\n\n${msgs.length} messages in the chain:\n${msgs.map(m => '"' + m.text.slice(0, 80) + '..."').join('\n\n') || 'No messages yet.'}`);
+}
+
+function toggleAddMember() {
+  document.getElementById('member-panel').classList.toggle('visible');
+}
+
+function addMember() {
+  const fn    = document.getElementById('new-firstname').value;
+  const ln    = document.getElementById('new-lastname').value;
+  const birth = parseInt(document.getElementById('new-birth').value) || 2000;
+  if (!fn) return;
+  TREE_SEED.push({ id: TREE_SEED.length + 1, name: `${fn} ${ln}`, birth, x: Math.random() * 500 + 50, y: 350 });
+  renderTree();
+  document.getElementById('member-panel').classList.remove('visible');
+}
+
+// =====================================================
+// HUMANITY TAB
+// =====================================================
+
+let twIdx = 0, twCharIdx = 0, twDeleting = false;
+
+function initHumanity() {
+  state.humanityMessages = [...DEMO_HUMANITY];
+  renderMasonry();
+  updateHumanityCounters();
+  startTypewriter();
+}
+
+function updateHumanityCounters() {
+  document.getElementById('h-voices').textContent    = state.humanityMessages.length + 94320;
+  document.getElementById('h-countries').textContent = 47;
+}
+
+function renderMasonry() {
+  const wall = document.getElementById('masonry-wall');
+  wall.innerHTML = '';
+  state.humanityMessages.forEach((m, i) => {
+    const card = document.createElement('div');
+    card.className = `voice-card ${m.emotion}`;
+    card.innerHTML = `
+      <div class="voice-flag">${m.flag || '🌍'}</div>
+      <div class="voice-author">${m.author} · ${m.year}</div>
+      <div class="voice-text">${m.text}</div>
+      <div class="voice-footer">
+        <span class="voice-emotion">${m.emotion.toUpperCase()}</span>
+        <button class="voice-like" id="like-${i}" onclick="likeMsg(${i})">♥ ${m.likes}</button>
+      </div>`;
+    wall.appendChild(card);
+  });
+}
+
+function likeMsg(i) {
+  state.humanityMessages[i].likes++;
+  const btn = document.getElementById('like-' + i);
+  if (btn) {
+    btn.textContent = '♥ ' + state.humanityMessages[i].likes;
+    btn.classList.add('liked');
+  }
+}
+
+function startTypewriter() {
+  const countryEl = document.getElementById('tw-country');
+  const textEl    = document.getElementById('tw-text');
+  const cursor    = document.getElementById('tw-cursor');
+
+  function tick() {
+    const msg = TW_MESSAGES[twIdx];
+    if (!twDeleting) {
+      const t = msg.text.slice(0, twCharIdx++);
+      textEl.textContent = t;
+      countryEl.textContent = msg.country;
+      textEl.appendChild(cursor);
+      if (twCharIdx > msg.text.length) {
+        twDeleting = true;
+        setTimeout(tick, 2500);
+        return;
+      }
+    } else {
+      twCharIdx = Math.max(0, twCharIdx - 2);
+      textEl.textContent = msg.text.slice(0, twCharIdx);
+      textEl.appendChild(cursor);
+      if (twCharIdx <= 0) {
+        twDeleting = false;
+        twIdx = (twIdx + 1) % TW_MESSAGES.length;
+        twCharIdx = 0;
+      }
+    }
+    setTimeout(tick, twDeleting ? 30 : 55);
+  }
+  tick();
+}
+
+function updateHCharCount() {
+  document.getElementById('h-char').textContent = document.getElementById('h-message').value.length;
+}
+
+function selectHEmotion(e, btn) {
+  state.hEmotion = e;
+  document.querySelectorAll('#h-emotion-picker .emotion-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+async function submitHumanityMsg() {
+  const text = document.getElementById('h-message').value.trim();
+  if (!text) { alert('Please write a message.'); return; }
+
+  if (moderateText(text)) {
+    const w = document.getElementById('h-mod-warning');
+    w.style.display = 'block';
+    w.textContent   = 'This message will not travel through generations. The words you leave today shape tomorrow. Write with love.';
+    return;
+  }
+
+  document.getElementById('h-mod-warning').style.display = 'none';
+  const country = document.getElementById('h-country').value || 'the world';
+  const name    = document.getElementById('h-name').value    || `A voice from ${country}`;
+  const msg = {
+    author:  name,
+    country,
+    flag:    FLAG_MAP[country] || '🌍',
+    text,
+    emotion: state.hEmotion,
+    year:    new Date().getFullYear(),
+    likes:   0,
+  };
+
+  showSubmitAnimation(() => {
+    state.humanityMessages.unshift(msg);
+    renderMasonry();
+    updateHumanityCounters();
+    document.getElementById('h-message').value = '';
+    document.getElementById('h-char').textContent = '0';
+  });
+}
+
+function scrollToCompose() {
+  document.getElementById('compose-humanity').scrollIntoView({ behavior: 'smooth' });
+}
+
+// =====================================================
+// CHALLENGES TAB
+// =====================================================
+
+function initChallenges() { renderChallenges(); }
+
+function renderChallenges() {
+  const container = document.getElementById('challenges-container');
+  container.innerHTML = '';
+  const decades = ['2020s', '2030s', '2040s'];
+
+  state.challenges.forEach((ch, ci) => {
+    const div = document.createElement('div');
+    div.className = 'challenge-card';
+    div.innerHTML = `
+      <div class="decade-label decade-2020s">${decades[ci % 3]}</div>
+      <div class="challenge-q">"${ch.q}"</div>
+      ${ch.answers.map(a => `
+        <div class="answer-item">
+          <div class="answer-author">${a.author} · ${a.year}</div>
+          <div class="answer-text">${a.text}</div>
+        </div>`).join('')}
+      <button class="btn-answer" onclick="toggleAnswer(${ci})">ANSWER THIS CHALLENGE</button>
+      <div class="answer-form" id="ans-${ci}">
+        <textarea class="form-textarea" id="ans-txt-${ci}" placeholder="Your answer, sealed to time..." style="min-height:70px;margin-top:.5rem"></textarea>
+        <button class="btn-submit" style="margin-top:.5rem;font-size:.7rem;padding:.6rem" onclick="submitAnswer(${ci})">SEAL MY ANSWER</button>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+function toggleAnswer(i) {
+  document.getElementById('ans-' + i).classList.toggle('open');
+}
+
+function submitAnswer(i) {
+  const text = document.getElementById('ans-txt-' + i).value.trim();
+  if (!text) return;
+  state.challenges[i].answers.push({ author: state.user.first, year: new Date().getFullYear(), text });
+  renderChallenges();
+}
+
+function createChallenge() {
+  const q = document.getElementById('new-challenge').value.trim();
+  if (!q) return;
+  state.challenges.unshift({ q, answers: [] });
+  document.getElementById('new-challenge').value = '';
+  renderChallenges();
+}
+
+// =====================================================
+// BOOK OF LIFE TAB
+// =====================================================
+
+function initBook() {
+  const stepper   = document.getElementById('stepper');
+  const container = document.getElementById('chapters-container');
+  stepper.innerHTML = container.innerHTML = '';
+
+  BOOK_CHAPTERS.forEach((ch, i) => {
+    // Step dot
+    const dot = document.createElement('div');
+    dot.className = 'step-dot' + (i === 0 ? ' active' : '');
+    dot.textContent = i + 1;
+    dot.onclick = () => goToChapter(i);
+    stepper.appendChild(dot);
+
+    // Chapter
+    const div = document.createElement('div');
+    div.className = 'chapter' + (i === 0 ? ' active' : '');
+    div.id = 'chapter-' + i;
+    div.innerHTML = `
+      <div class="chapter-title">CHAPTER ${i + 1} — ${ch.title}</div>
+      <div class="chapter-sub">${ch.sub}</div>
+      ${ch.fields.map((f, fi) => `
+        <div class="form-group">
+          <label>${f.l.toUpperCase()}</label>
+          <textarea class="form-textarea" id="book-${i}-${fi}" placeholder="${f.p}"
+            style="min-height:80px" onchange="saveBook(${i},${fi})"></textarea>
+        </div>`).join('')}
+      <div class="step-btns">
+        ${i > 0
+          ? `<button class="btn-prev" onclick="goToChapter(${i - 1})">← PREVIOUS</button>`
+          : '<div></div>'}
+        ${i < 5
+          ? `<button class="btn-next" onclick="goToChapter(${i + 1})">NEXT CHAPTER →</button>`
+          : `<button class="btn-next" onclick="exportBookPDF()">✦ EXPORT BOOK OF LIFE</button>`}
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+function goToChapter(i) {
+  state.currentChapter = i;
+  document.querySelectorAll('.chapter').forEach((c, ci) => c.classList.toggle('active', ci === i));
+  document.querySelectorAll('.step-dot').forEach((d, di) => {
+    d.classList.toggle('active', di === i);
+    d.classList.toggle('done',   di < i);
+  });
+  document.getElementById('progress-fill').style.width = ((i + 1) / 6 * 100) + '%';
+}
+
+function saveBook(ch, fi) {
+  state.bookData[`${ch}-${fi}`] = document.getElementById(`book-${ch}-${fi}`).value;
+}
+
+function exportBookPDF() {
+  if (!state.isPremium) { document.getElementById('upgrade-modal').classList.add('open'); return; }
+  alert('PDF export would be generated here with jsPDF library (Premium feature).');
+}
+
+// =====================================================
+// ORIGINS TAB
+// =====================================================
+
+let originRowCount = 3;
+
+function drawOriginChart() {
+  const canvas = document.getElementById('origin-chart');
+  if (!canvas) return;
+  const ctx    = canvas.getContext('2d');
+  const colors = ['#00FFD1','#C084FC','#FFB347','#FF6B9D','#7DD3FC','#86EFAC'];
+  const data   = [{ label: 'France', pct: 40 }, { label: 'Senegal', pct: 35 }, { label: 'Vietnam', pct: 25 }];
+
+  ctx.clearRect(0, 0, 200, 200);
+  let start = 0;
+  data.forEach((d, i) => {
+    const angle = (d.pct / 100) * Math.PI * 2;
+    ctx.beginPath(); ctx.moveTo(100, 100);
+    ctx.arc(100, 100, 80, start, start + angle);
+    ctx.fillStyle = colors[i % colors.length]; ctx.fill();
+    start += angle;
+  });
+  // Donut hole
+  ctx.beginPath(); ctx.arc(100, 100, 45, 0, Math.PI * 2);
+  ctx.fillStyle = '#04030A'; ctx.fill();
+
+  // Legend
+  document.getElementById('origin-legend').innerHTML = data.map((d, i) => `
+    <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.3rem">
+      <div style="width:10px;height:10px;border-radius:50%;background:${colors[i % colors.length]};flex-shrink:0"></div>
+      <span>${d.label}: ${d.pct}%</span>
+    </div>`).join('');
+}
+
+function addOriginRow() {
+  originRowCount++;
+  const row = document.createElement('div');
+  row.className = 'origin-row';
+  row.innerHTML = `
+    <input type="text"   class="form-input" placeholder="Country" id="or-${originRowCount - 1}-country">
+    <input type="number" class="form-input" placeholder="%" id="or-${originRowCount - 1}-pct" min="0" max="100" onchange="updateTotal()">
+    <span style="color:var(--teal);font-size:.8rem">%</span>`;
+  document.getElementById('origin-rows').appendChild(row);
+}
+
+function updateTotal() {
+  let total = 0;
+  for (let i = 0; i < originRowCount; i++) {
+    const el = document.getElementById(`or-${i}-pct`);
+    if (el) total += parseInt(el.value) || 0;
+  }
+  const bar = document.getElementById('origin-total');
+  if (total === 100) {
+    bar.className   = 'total-bar total-ok';
+    bar.textContent = '✓ Total: 100% — perfect';
+  } else if (total < 100) {
+    bar.className   = 'total-bar total-low';
+    bar.textContent = `⚠ Total: ${total}% — incomplete`;
+  } else {
+    bar.className   = 'total-bar total-over';
+    bar.textContent = `✗ Total: ${total}% — exceeds 100%, cannot save`;
+  }
+}
+
+// ── Family Pact ───────────────────────────────────────
+function signPacte() {
+  if (state.pacte) { alert('You have already signed the Family Pact.'); return; }
+  state.pacte = true;
+  const signers = document.getElementById('pacte-signers');
+  const s = document.createElement('div');
+  s.className   = 'signer';
+  s.textContent = `🛡 ${state.user.first} · ${new Date().getFullYear()}`;
+  signers.appendChild(s);
+  alert(`Thank you, ${state.user.first}. You are now a Guardian of the Chain. 🛡\n\nYou will receive an annual reminder by email.`);
+}
+
+// =====================================================
+// INVITE MODAL
+// =====================================================
+
+function openInvite() {
+  document.getElementById('invite-modal').classList.add('open');
+  const qrDiv = document.getElementById('qr-display');
+  qrDiv.innerHTML = '';
+  try {
+    new QRCode(qrDiv, {
+      text:       `https://legacychain.app/?famille=${state.familyName}`,
+      width:      120, height: 120,
+      colorDark:  '#00FFD1',
+      colorLight: '#04030A',
+    });
+  } catch (e) { /* QRCode library may not be loaded */ }
+}
+
+function closeInvite() {
+  document.getElementById('invite-modal').classList.remove('open');
+}
+
+function copyLink() {
+  const btn = document.getElementById('copy-btn');
+  navigator.clipboard.writeText(`https://legacychain.app/?famille=${state.familyName}`).catch(() => {});
+  btn.textContent = 'COPIED!'; btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 2000);
+}
+
+function shareWA() {
+  const msg = encodeURIComponent(`Join the memorial chain of our family 👨‍👩‍👧‍👦\nLeave a message for future generations: https://legacychain.app/?famille=${state.familyName}`);
+  window.open(`https://wa.me/?text=${msg}`, '_blank');
+}
+
+// =====================================================
+// UPGRADE MODAL
+// =====================================================
+
+function simulateUpgrade() {
+  state.isPremium = true;
+  document.getElementById('upgrade-modal').classList.remove('open');
+  document.getElementById('premium-badge').style.display = 'inline-block';
+  // Raise the character limit for the message textarea
+  document.getElementById('msg-text').maxLength = 500;
+  document.getElementById('char-count').parentElement.innerHTML =
+    `<span id="char-count">0</span>/500`;
+
+  showSubmitAnimation(() => {
+    setTimeout(() => alert(
+      '✦ Welcome, Founding Voice of Humanity!\n\n' +
+      'Your golden badge has been awarded.\n' +
+      '"Your voice will travel through the generations."\n\n' +
+      '(In a real implementation, Stripe would process the $10 payment and Resend would send a confirmation email.)'
+    ), 200);
+  });
+}
+
+</script>
+</body>
+</html>
