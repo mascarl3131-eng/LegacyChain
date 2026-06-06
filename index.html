@@ -1,2636 +1,1149 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5' fill='%2304030A' stroke='%238B6914' stroke-width='4'/%3E%3Ctext x='50' y='62' text-anchor='middle' font-size='40' fill='%238B6914' font-family='serif'%3E⬡%3C/text%3E%3C/svg%3E">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5' fill='%2304030A' stroke='%238B6914' stroke-width='4'/%3E%3Ctext x='50' y='62' text-anchor='middle' font-size='40' fill='%238B6914' font-family='serif'%3E⬡%3C/text%3E%3C/svg%3E">
-  <meta name="theme-color" content="#F5F0E8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LegacyChain — Digital Time Capsule</title>
-
-  <!-- ── SEO ── -->
-  <meta name="description" content="Leave a message for the generations that follow you. LegacyChain is a digital time capsule for families — seal your words, memories and love across time.">
-  <meta name="keywords" content="family legacy, time capsule, digital memory, family chain, message future generations, heritage">
-  <meta name="author" content="LegacyChain">
-  <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://legacy-chain.vercel.app">
-
-  <!-- ── Open Graph (Facebook, WhatsApp, LinkedIn) ── -->
-  <meta property="og:type"        content="website">
-  <meta property="og:url"         content="https://legacy-chain.vercel.app">
-  <meta property="og:title"       content="LegacyChain — Leave a message for the future">
-  <meta property="og:description" content="What will you leave behind? Seal your words, memories and love in a family chain that travels through generations.">
-  <meta property="og:image"       content="https://legacy-chain.vercel.app/og-image.png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:site_name"   content="LegacyChain">
-  <meta property="og:locale"      content="en_US">
-
-  <!-- ── Twitter Card ── -->
-  <meta name="twitter:card"        content="summary_large_image">
-  <meta name="twitter:url"         content="https://legacy-chain.vercel.app">
-  <meta name="twitter:title"       content="LegacyChain — Leave a message for the future">
-  <meta name="twitter:description" content="What will you leave behind? Seal your words, memories and love in a family chain that travels through generations.">
-  <meta name="twitter:image"       content="https://legacy-chain.vercel.app/og-image.png">
-
-  <!-- ── Facebook App ID (replace YOUR_APP_ID when you have one) ── -->
-  <meta property="fb:app_id" content="YOUR_APP_ID">
-
-  <!-- ── Facebook Pixel ── -->
-  <script>
-  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
-  document,'script','https://connect.facebook.net/en_US/fbevents.js');
-  // Replace YOUR_PIXEL_ID with your real Facebook Pixel ID
-  // fbq('init', 'YOUR_PIXEL_ID');
-  // fbq('track', 'PageView');
-  </script>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
-  <style>
-/* =====================================================
-   BASE.CSS — Reset, CSS Variables, Body, Scrollbar
-   ===================================================== */
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-:root {
-  --void:         #F5F0E8;
-  --teal:         #8B6914;
-  --amber:        #6B2737;
-  --violet:       #5C4A2A;
-  --text:         #1C1410;
-  --danger:       #9B2335;
-  --glass:        rgba(139,105,20,0.06);
-  --glass-border: rgba(139,105,20,0.18);
-
-  /* Extended warm palette */
-  --cream:        #F5F0E8;
-  --ivory:        #FEFCF7;
-  --gold:         #8B6914;
-  --gold-light:   #C4A84F;
-  --gold-pale:    #E8D9A0;
-  --bordeaux:     #6B2737;
-  --brown:        #1C1410;
-  --brown-light:  #4A3728;
-  --sand:         #D4C5A9;
-  --sand-light:   #EDE5D4;
-  --parchment:    #F5F0E8;
-}
-
-body {
-  background: var(--cream);
-  color: var(--brown);
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 16px;
-  overflow-x: hidden;
-  cursor: default;
-}
-
-/* Subtle parchment texture overlay */
-body::before {
-  content: '';
-  position: fixed; top:0; left:0; width:100%; height:100%;
-  background-image:
-    radial-gradient(ellipse at 20% 20%, rgba(139,105,20,.04) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 80%, rgba(107,39,55,.03) 0%, transparent 60%);
-  pointer-events: none; z-index: 0;
-}
-
-/* ── Scrollbar ── */
-::-webkit-scrollbar       { width: 5px; }
-::-webkit-scrollbar-track { background: var(--sand-light); }
-::-webkit-scrollbar-thumb { background: var(--gold-light); border-radius: 3px; }
-
-/* ── Custom cursor ── */
-#cursor, #cursor-trail { display: none; }
-
-/* ── Background canvas ── */
-canvas#bg { display: none; }
-
-/* ── Animations ── */
-@keyframes blink   { 0%,100% { opacity:1 } 50% { opacity:0 } }
-@keyframes rotate  { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }
-@keyframes shake   { 0%,100% { transform:translateX(0) } 25% { transform:translateX(-4px) } 75% { transform:translateX(4px) } }
-@keyframes fadeUp  { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
-
-/* =====================================================
-   PAGES.CSS — Page system, Onboarding, Landing
-   ===================================================== */
-
-/* ── Page system ── */
-.page {
-  position: fixed; top: 0; left: 0;
-  width: 100%; height: 100%;
-  overflow-y: auto; z-index: 1;
-  display: none; opacity: 0;
-  transition: opacity .6s;
-}
-.page.active { display: block; opacity: 1; }
-
-/* ════════════════════════════════════════════════════
-   ONBOARDING
-   ════════════════════════════════════════════════════ */
-#onboarding {
-  z-index: 100;
-  background: linear-gradient(135deg, #1C1410 0%, #2C1F14 50%, #1C1410 100%);
-  display: flex; align-items: center;
-  justify-content: center; flex-direction: column;
-}
-#onboarding.active { display: flex; }
-#ob-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-
-#ob-text {
-  position: relative; z-index: 2;
-  text-align: center; font-family: 'Cinzel Decorative', serif;
-}
-#ob-text h1 {
-  font-size: clamp(2rem,6vw,5rem);
-  color: var(--gold-pale);
-  text-shadow: 0 0 60px rgba(196,168,79,.3);
-  letter-spacing: .15em;
-}
-#ob-text p {
-  font-family: 'Cormorant Garamond', serif;
-  color: rgba(232,217,160,.6);
-  margin-top: 1rem; font-size: 1rem;
-  font-style: italic;
-}
-#ob-skip {
-  position: absolute; top: 2rem; right: 2rem; z-index: 10;
-  background: transparent; border: 1px solid var(--sand);
-  color: var(--gold); font-family: 'Cormorant Garamond', serif;
-  font-size: .8rem; padding: .5rem 1rem; border-radius: 4px;
-  cursor: pointer; letter-spacing: .1em; transition: background .3s;
-}
-#ob-skip:hover { background: var(--ivory); }
-
-/* ════════════════════════════════════════════════════
-   LANDING — full redesign
-   ════════════════════════════════════════════════════ */
-#landing {
-  display: flex; flex-direction: column;
-  min-height: 100vh; overflow-x: hidden;
-  background: linear-gradient(180deg, #FEFCF7 0%, #F5F0E8 50%, #EDE5D4 100%);
-  position: relative;
-}
-/* Decorative large ⬡ watermark */
-#landing::before {
-  content: '⬡';
-  position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: clamp(300px, 50vw, 500px);
-  color: rgba(139,105,20,.028);
-  pointer-events: none; z-index: 0;
-  font-family: serif; line-height: 1;
-  user-select: none;
-}
-#landing.active { display: flex; }
-
-/* ── Hero ── */
-.landing-hero {
-  position: relative; z-index: 2;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  min-height: 100vh; padding: 5rem 2rem 3rem;
-  text-align: center;
-  /* Decorative corner lines */
-}
-
-/* Top-left corner ornament */
-.landing-hero::before {
-  content: '';
-  position: absolute; top: 3rem; left: 3rem;
-  width: 60px; height: 60px;
-  border-top: 1px solid rgba(139,105,20,.25);
-  border-left: 1px solid rgba(139,105,20,.25);
-  pointer-events: none;
-}
-/* Bottom-right corner ornament */
-.landing-hero::after {
-  content: '';
-  position: absolute; bottom: 3rem; right: 3rem;
-  width: 60px; height: 60px;
-  border-bottom: 1px solid rgba(139,105,20,.25);
-  border-right: 1px solid rgba(139,105,20,.25);
-  pointer-events: none;
-}
-
-/* Eyebrow tag */
-.landing-eyebrow {
-  display: flex; align-items: center; gap: .6rem;
-  font-size: .65rem; letter-spacing: .35em;
-  color: var(--gold); opacity: .8;
-  margin-bottom: 2rem;
-  border: 1px solid rgba(139,105,20,.2);
-  padding: .4rem 1rem; border-radius: 20px;
-  background: rgba(139,105,20,.04);
-}
-.landing-eyebrow::before,
-.landing-eyebrow::after { content: '✦'; font-size: .5rem; opacity: .6; }
-
-/* Typewriter headline */
-#typewriter {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: clamp(2.2rem, 5.5vw, 4.5rem);
-  color: var(--text);
-  line-height: 1.15;
-  min-height: 1.3em;
-  text-shadow: 0 0 80px rgba(139,105,20,.15);
-  letter-spacing: .02em;
-}
-#typewriter span {
-  border-right: 2px solid var(--gold);
-  animation: blink 1s infinite;
-}
-
-/* Subline */
-.landing-sub {
-  font-size: 1.05rem; color: var(--brown-light);
-  margin: 1.75rem auto 2.75rem;
-  max-width: 480px; line-height: 1.9;
-  font-style: italic; font-weight: 300;
-  opacity: .75;
-}
-
-/* ── Auth buttons — card style ── */
-.auth-btns {
-  display: flex; flex-direction: column; gap: .75rem;
-  width: 100%; max-width: 380px; margin: 0 auto;
-}
-
-.btn-fb {
-  display: flex; align-items: center; justify-content: center;
-  gap: .85rem; padding: 1rem 1.5rem;
-  background: #1877F2;
-  border: none;
-  border-radius: 10px; color: #ffffff;
-  font-family: 'Cormorant Garamond', serif; font-size: .85rem;
-  letter-spacing: .06em; cursor: pointer; transition: all .35s;
-  position: relative; overflow: hidden;
-}
-.btn-fb:hover {
-  background: #1469d6;
-  box-shadow: 0 4px 20px rgba(24,119,242,.5);
-  transform: translateY(-1px);
-}
-.btn-fb .fb-icon {
-  width: 22px; height: 22px;
-  display: flex; align-items: center;
-  justify-content: center; font-weight: 900;
-  color: #ffffff; font-size: 1.1rem; flex-shrink: 0;
-  font-family: Georgia, serif;
-}
-
-.btn-guest {
-  background: transparent;
-  border: 1px solid var(--sand);
-  color: var(--brown-light); opacity: .65; padding: .8rem;
-  border-radius: 10px; font-family: 'Cormorant Garamond', serif;
-  font-size: .75rem; cursor: pointer; letter-spacing: .08em;
-  transition: all .3s;
-}
-.btn-guest:hover {
-  border-color: rgba(239,246,255,.25);
-  color: var(--brown-light);
-  background: rgba(239,246,255,.03);
-}
-
-/* ── Stats band ── */
-.landing-stats {
-  width: 100%; margin-top: 3.5rem;
-  display: grid; grid-template-columns: repeat(3, 1fr);
-  border-top: 1px solid var(--sand);
-  border-bottom: 1px solid var(--sand);
-}
-.stat-item {
-  display: flex; flex-direction: column; align-items: center;
-  padding: 1.5rem 1rem; gap: .3rem;
-  border-right: 1px solid var(--sand);
-  transition: background .3s;
-}
-.stat-item:last-child { border-right: none; }
-.stat-item:hover { background: rgba(139,105,20,.03); }
-
-.stat-number {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: clamp(1.4rem, 3vw, 2rem);
-  color: var(--gold);
-  text-shadow: none;
-  line-height: 1;
-}
-.stat-label {
-  font-size: .62rem; letter-spacing: .18em;
-  color: var(--brown-light); opacity: .5;
-  text-transform: uppercase; font-family: 'Cinzel', serif;
-}
-
-/* ── Features strip (3 pills under stats) ── */
-.landing-features {
-  display: flex; gap: 1rem; justify-content: center;
-  flex-wrap: wrap; padding: 2rem 2rem 1rem;
-  z-index: 2; position: relative;
-}
-.feature-pill {
-  display: flex; align-items: center; gap: .5rem;
-  font-size: .7rem; letter-spacing: .1em;
-  color: var(--brown-light); opacity: .5;
-  border: 1px solid var(--sand);
-  padding: .45rem .9rem; border-radius: 20px;
-  background: var(--ivory); backdrop-filter: blur(8px);
-  transition: all .3s;
-}
-.feature-pill:hover {
-  border-color: rgba(139,105,20,.3);
-  color: var(--brown-light);
-}
-.feature-pill-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--gold); opacity: .7; flex-shrink: 0;
-}
-
-/* ── Footer stamp ── */
-.landing-footer-stamp {
-  font-size: .6rem; letter-spacing: .25em;
-  color: rgba(139,105,20,.2);
-  text-align: center;
-  padding: 1.5rem 2rem 2rem;
-  z-index: 2; position: relative;
-}
-
-/* ── Responsive ── */
-@media (max-width: 500px) {
-  .landing-stats { grid-template-columns: 1fr; }
-  .stat-item { border-right: none; border-bottom: 1px solid var(--sand); }
-  .stat-item:last-child { border-bottom: none; }
-  #typewriter { font-size: clamp(1.8rem, 8vw, 2.8rem); }
-}
-
-/* =====================================================
-   NAV.CSS — Main app shell, navigation bar, tabs
-   ===================================================== */
-
-/* ── App container ── */
-#app        { display: none; background: var(--cream); min-height: 100vh; }
-#app.active { display: block; }
-
-.app-content { padding-top: 65px; min-height: 100vh; }
-
-.tab-content        { display: none; padding: 2.5rem; }
-.tab-content.active { display: block; }
-
-/* ── Navigation bar ── */
-.app-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-  height: 65px;
-  padding: 0 1.5rem;
-  display: flex; align-items: center; justify-content: space-between;
-  background: rgba(254,252,247,.95);
-  backdrop-filter: blur(24px);
-  border-bottom: 1px solid var(--sand);
-}
-
-/* ── Logo ── */
-.nav-logo {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: .95rem; color: var(--gold); letter-spacing: .15em;
-  flex-shrink: 0;
-  text-shadow: none;
-}
-
-/* ── Tab group (center) ── */
-.nav-tabs {
-  display: flex; gap: .15rem;
-  background: rgba(0,0,0,.2);
-  border: 1px solid var(--sand);
-  border-radius: 8px; padding: .25rem;
-}
-
-.nav-tab {
-  background: transparent; border: none;
-  color: rgba(239,246,255,.38);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: .65rem; letter-spacing: .1em;
-  padding: .45rem .7rem; border-radius: 5px;
-  cursor: pointer; transition: all .25s;
-  white-space: nowrap;
-  position: relative;
-}
-.nav-tab:hover { color: var(--brown-light); background: rgba(255,255,255,.04); }
-.nav-tab.active {
-  color: var(--gold);
-  background: rgba(139,105,20,.1);
-  box-shadow: 0 0 12px rgba(139,105,20,.08);
-}
-/* Active tab indicator dot */
-.nav-tab.active::after {
-  content: '';
-  position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%);
-  width: 4px; height: 4px; border-radius: 50%;
-  background: var(--gold);
-  box-shadow: 0 0 6px var(--gold);
-}
-
-/* ── Right side ── */
-.nav-right { display: flex; align-items: center; gap: .75rem; flex-shrink: 0; }
-
-.user-badge {
-  display: flex; align-items: center; gap: .5rem;
-  font-size: .72rem; color: rgba(239,246,255,.55);
-  padding: .3rem .6rem;
-  border: 1px solid transparent;
-  border-radius: 20px;
-  transition: all .3s;
-}
-.user-badge:hover {
-  border-color: var(--glass-border);
-  background: var(--ivory);
-}
-
-.user-avatar {
-  width: 28px; height: 28px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--gold), var(--violet));
-  display: flex; align-items: center; justify-content: center;
-  font-size: .7rem; font-weight: 700; color: var(--void);
-  flex-shrink: 0;
-  box-shadow: 0 0 10px rgba(139,105,20,.2);
-}
-
-.btn-invite {
-  background: transparent;
-  border: 1px solid rgba(139,105,20,.3);
-  color: var(--gold); font-family: 'Cormorant Garamond', serif;
-  font-size: .65rem; letter-spacing: .1em;
-  padding: .45rem .9rem; border-radius: 6px;
-  cursor: pointer; transition: all .3s;
-}
-.btn-invite:hover {
-  background: rgba(139,105,20,.08);
-  box-shadow: 0 0 14px rgba(139,105,20,.1);
-}
-
-.premium-badge {
-  background: linear-gradient(135deg, var(--amber), #ff6b35);
-  color: var(--void); font-size: .58rem; padding: .2rem .5rem;
-  border-radius: 3px; font-weight: 700; letter-spacing: .1em;
-}
-
-/* ── Shared section headers ── */
-.section-header { margin-bottom: 2rem; }
-
-.section-title {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 1.1rem; color: var(--gold);
-  letter-spacing: .15em; margin-bottom: .4rem;
-}
-.section-sub {
-  font-size: .72rem; color: rgba(239,246,255,.35);
-  letter-spacing: .1em;
-}
-
-/* ── Responsive: hide text labels, show icon pills on small screens ── */
-@media (max-width: 900px) {
-  .nav-tabs { gap: .1rem; padding: .2rem; }
-  .nav-tab  { font-size: .6rem; padding: .4rem .5rem; letter-spacing: .05em; }
-  .nav-tab.active::after { display: none; }
-  #nav-name { display: none; }
-}
-
-@media (max-width: 680px) {
-  .app-nav { padding: 0 1rem; }
-  .tab-content { padding: 1.25rem; }
-  /* Tabs wrap below nav on very small screens */
-  .nav-tabs {
-    position: fixed; bottom: 0; left: 0; right: 0; top: auto;
-    border-radius: 0; border: none;
-    border-top: 1px solid var(--sand);
-    background: rgba(254,252,247,.98);
-    padding: .4rem .5rem;
-    justify-content: space-around;
-    overflow-x: auto;
-  }
-  .app-nav { height: 55px; }
-  .app-content { padding-top: 55px; padding-bottom: 60px; }
-}
-
-/* =====================================================
-   CHAIN.CSS — Chain tab, compose panel, form elements
-   ===================================================== */
-
-/* ── Chain layout ── */
-.chain-container { display: flex; gap: 2.5rem; align-items: flex-start; flex-wrap: wrap; }
-.chain-scroll-wrap {
-  flex: 1.4; min-width: 320px;
-  height: 520px;
-  overflow: hidden;
-  position: relative;
-  border: 1px solid var(--sand);
-  border-radius: 12px;
-  background: var(--sand-light);
-  mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
-  box-shadow: inset 0 2px 8px rgba(28,20,16,.06);
-}
-.chain-scroll-inner {
-  display: flex;
-  flex-direction: column;
-  gap: .6rem;
-  padding: 1.25rem;
-  animation: chainScroll 32s linear infinite;
-}
-.chain-scroll-inner:hover { animation-play-state: paused; }
-@keyframes chainScroll {
-  0%   { transform: translateY(0); }
-  100% { transform: translateY(-50%); }
-}
-.chain-compose-col { flex: 1; min-width: 300px; }
-
-/* ── Timeline spine ── */
-.timeline-spine {
-  position: absolute; left: 19px; top: 0; bottom: 0; width: 2px;
-  background: linear-gradient(to bottom,
-    rgba(139,105,20,.4) 0%,
-    rgba(139,105,20,.15) 60%,
-    transparent 100%);
-}
-
-/* ── Message nodes — alternating layout ── */
-.msg-node {
-  position: relative;
-  margin-bottom: 2.5rem;
-  padding-left: 52px;
-  animation: fadeSlideIn .4s ease both;
-}
-@keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* Year marker on the spine */
-.msg-year-marker {
-  position: absolute; left: 0; top: .6rem;
-  display: flex; align-items: center; gap: 8px;
-}
-.msg-dot {
-  width: 16px; height: 16px; border-radius: 50%;
-  border: 2px solid var(--gold); background: var(--void);
-  box-shadow: 0 0 12px rgba(139,105,20,.5);
-  flex-shrink: 0; z-index: 1;
-  transition: transform .2s;
-}
-.msg-node:hover .msg-dot { transform: scale(1.25); }
-
-.msg-dot.hope    { border-color: var(--gold);   box-shadow: 0 0 12px rgba(139,105,20,.5); }
-.msg-dot.love    { border-color: #ff6b9d;        box-shadow: 0 0 12px rgba(255,107,157,.5); }
-.msg-dot.wisdom  { border-color: var(--violet);  box-shadow: 0 0 12px rgba(192,132,252,.5); }
-.msg-dot.memory  { border-color: var(--amber);   box-shadow: 0 0 12px rgba(255,179,71,.5); }
-.msg-dot.warning { border-color: var(--danger);  box-shadow: 0 0 12px rgba(255,45,85,.5); }
-
-/* ── Message cards ── */
-.msg-card {
-  background: rgba(245,240,232,.8);
-  border: 1px solid var(--sand);
-  border-radius: 14px; padding: 1.4rem 1.5rem;
-  backdrop-filter: blur(16px);
-  transition: all .3s;
-  position: relative; overflow: hidden;
-}
-/* Colored left accent bar */
-.msg-card::before {
-  content: ''; position: absolute;
-  top: 0; left: 0; bottom: 0; width: 3px;
-  background: var(--gold); opacity: .5;
-  border-radius: 14px 0 0 14px;
-}
-/* Top shimmer */
-.msg-card::after {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  opacity: .25;
-}
-.msg-card:hover {
-  border-color: rgba(139,105,20,.28);
-  box-shadow: 0 8px 32px rgba(0,0,0,.4), 0 0 0 1px rgba(139,105,20,.08);
-  transform: translateY(-2px);
-  background: rgba(139,105,20,.03);
-}
-
-/* Emotion-specific left bar + border */
-.msg-card.hope   { border-color: rgba(139,105,20,.18); }
-.msg-card.hope::before   { background: var(--gold); }
-.msg-card.love   { border-color: rgba(255,107,157,.18); }
-.msg-card.love::before   { background: #ff6b9d; }
-.msg-card.love::after    { background: linear-gradient(90deg,transparent,#ff6b9d,transparent); }
-.msg-card.wisdom { border-color: rgba(192,132,252,.18); }
-.msg-card.wisdom::before { background: var(--violet); }
-.msg-card.wisdom::after  { background: linear-gradient(90deg,transparent,var(--violet),transparent); }
-.msg-card.memory { border-color: rgba(255,179,71,.18); }
-.msg-card.memory::before { background: var(--amber); }
-.msg-card.memory::after  { background: linear-gradient(90deg,transparent,var(--amber),transparent); }
-.msg-card.warning { border-color: rgba(255,45,85,.18); }
-.msg-card.warning::before { background: var(--danger); }
-.msg-card.birth  { border-color: rgba(255,179,71,.35); background: rgba(255,179,71,.04); }
-
-/* ── Card header ── */
-.msg-meta {
-  display: flex; align-items: center;
-  justify-content: space-between; margin-bottom: .9rem;
-}
-.msg-author-block { display: flex; align-items: center; gap: .5rem; }
-.msg-author-init {
-  width: 24px; height: 24px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--gold), var(--violet));
-  display: flex; align-items: center; justify-content: center;
-  font-size: .65rem; font-weight: 700; color: var(--void);
-  flex-shrink: 0;
-}
-.msg-author { font-size: .8rem; color: var(--text); letter-spacing: .05em; font-weight: 500; }
-.msg-year   { font-size: .65rem; color: rgba(239,246,255,.25); letter-spacing: .08em; }
-
-/* ── Message body ── */
-.msg-text {
-  font-size: .87rem; line-height: 1.75;
-  color: rgba(239,246,255,.75);
-  margin-bottom: .9rem;
-}
-
-/* ── Card footer ── */
-.msg-footer {
-  display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: .5rem;
-  padding-top: .75rem;
-  border-top: 1px solid rgba(255,255,255,.05);
-}
-.msg-emotion {
-  display: inline-flex; align-items: center; gap: .3rem;
-  font-size: .6rem; letter-spacing: .12em;
-  padding: .2rem .65rem; border-radius: 20px;
-  background: rgba(255,255,255,.04);
-  border: 1px solid var(--sand);
-  color: var(--brown-light); opacity: .5;
-}
-.msg-emotion-dot {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: var(--gold); flex-shrink: 0;
-}
-.msg-card.love .msg-emotion-dot    { background: #ff6b9d; }
-.msg-card.wisdom .msg-emotion-dot  { background: var(--violet); }
-.msg-card.memory .msg-emotion-dot  { background: var(--amber); }
-.msg-card.warning .msg-emotion-dot { background: var(--danger); }
-
-.msg-actions { display: flex; gap: .4rem; }
-.msg-btn {
-  background: transparent; border: 1px solid rgba(255,255,255,.07);
-  color: rgba(239,246,255,.35); font-family: 'Cormorant Garamond', serif;
-  font-size: .62rem; padding: .3rem .65rem; border-radius: 5px;
-  cursor: pointer; transition: all .25s; letter-spacing: .05em;
-}
-.msg-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(139,105,20,.05); }
-
-/* Lock tag */
-.msg-lock {
-  font-size: .62rem; color: rgba(239,246,255,.25);
-  letter-spacing: .08em; display: flex; align-items: center; gap: .3rem;
-}
-
-/* Birth / capsule badges */
-.birth-badge {
-  display: inline-flex; align-items: center; gap: .4rem;
-  background: rgba(255,179,71,.08); border: 1px solid rgba(255,179,71,.25);
-  color: var(--amber); font-size: .68rem; padding: .3rem .75rem;
-  border-radius: 20px; margin-bottom: .75rem; letter-spacing: .05em;
-}
-.birth-delivery {
-  font-size: .72rem; color: rgba(255,179,71,.6);
-  margin-top: .4rem; font-style: italic; line-height: 1.6;
-}
-
-/* Empty state */
-.chain-empty {
-  text-align: center; padding: 4rem 2rem;
-  color: var(--brown-light); opacity: .25;
-}
-.chain-empty-icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: .4; }
-.chain-empty-text { font-size: .8rem; letter-spacing: .1em; line-height: 1.8; }
-
-/* ════════════════════════════════════════════════════
-   COMPOSE PANEL
-   ════════════════════════════════════════════════════ */
-.compose-panel {
-  background: rgba(245,240,232,.85);
-  border: 1px solid var(--sand);
-  border-radius: 16px; padding: 1.75rem;
-  backdrop-filter: blur(24px);
-  position: sticky; top: 80px;
-}
-.compose-panel-header {
-  display: flex; align-items: center; gap: .6rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--sand);
-}
-.compose-panel-icon {
-  width: 28px; height: 28px; border-radius: 8px;
-  background: rgba(139,105,20,.1); border: 1px solid rgba(139,105,20,.2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: .85rem;
-}
-.compose-panel h3 {
-  font-size: .75rem; letter-spacing: .2em;
-  color: var(--gold); flex: 1;
-}
-
-/* Premium upsell card */
-.premium-upsell {
-  margin-top: 1rem;
-  background: rgba(255,179,71,.04);
-  border: 1px solid rgba(255,179,71,.2);
-  border-radius: 12px; padding: 1rem 1.25rem;
-  display: flex; align-items: center; gap: .75rem;
-  cursor: pointer; transition: all .3s;
-}
-.premium-upsell:hover {
-  background: rgba(255,179,71,.08);
-  border-color: rgba(255,179,71,.35);
-}
-.premium-upsell-icon { font-size: 1.1rem; flex-shrink: 0; }
-.premium-upsell-text { flex: 1; }
-.premium-upsell-title {
-  font-size: .72rem; color: var(--amber); letter-spacing: .1em; font-weight: 500;
-}
-.premium-upsell-sub {
-  font-size: .62rem; color: rgba(255,179,71,.45); margin-top: .2rem; letter-spacing: .05em;
-}
-.premium-upsell-arrow {
-  font-size: .8rem; color: rgba(255,179,71,.4); flex-shrink: 0;
-}
-
-/* ════════════════════════════════════════════════════
-   FORM ELEMENTS (shared across tabs)
-   ════════════════════════════════════════════════════ */
-.form-group       { margin-bottom: 1.1rem; }
-.form-group label {
-  display: block; font-size: .67rem;
-  color: var(--brown-light); opacity: .5; letter-spacing: .12em;
-  margin-bottom: .45rem; text-transform: uppercase;
-}
-
-.form-input,
-.form-textarea,
-.form-select {
-  width: 100%;
-  background: rgba(245,240,232,.75);
-  border: 1px solid rgba(255,255,255,.08);
-  color: var(--text); font-family: 'Cormorant Garamond', serif;
-  font-size: .82rem; padding: .65rem .9rem;
-  border-radius: 8px; outline: none;
-  transition: border-color .25s, box-shadow .25s;
-}
-.form-input:focus,
-.form-textarea:focus,
-.form-select:focus {
-  border-color: rgba(139,105,20,.4);
-  box-shadow: 0 0 0 3px rgba(139,105,20,.06);
-}
-.form-input::placeholder,
-.form-textarea::placeholder { color: rgba(239,246,255,.18); }
-.form-select option { background: var(--ivory); }
-.form-textarea { resize: vertical; min-height: 100px; line-height: 1.65; }
-
-/* Emotion picker */
-.emotion-picker { display: flex; gap: .4rem; flex-wrap: wrap; }
-.emotion-btn {
-  background: transparent; border: 1px solid rgba(255,255,255,.08);
-  color: var(--brown-light); opacity: .5; font-family: 'Cormorant Garamond', serif;
-  font-size: .62rem; padding: .32rem .75rem; border-radius: 20px;
-  cursor: pointer; transition: all .25s; letter-spacing: .06em;
-}
-.emotion-btn:hover { border-color: var(--glass-border); color: var(--brown-light); }
-.emotion-btn.selected,
-.emotion-btn.hope.selected     { border-color: var(--gold);   color: var(--gold);   background: rgba(139,105,20,.08); }
-.emotion-btn.love.selected     { border-color: #ff6b9d;        color: #ff6b9d;        background: rgba(255,107,157,.08); }
-.emotion-btn.wisdom.selected   { border-color: var(--violet);  color: var(--violet);  background: rgba(192,132,252,.08); }
-.emotion-btn.memory.selected   { border-color: var(--amber);   color: var(--amber);   background: rgba(255,179,71,.08); }
-.emotion-btn.warning.selected  { border-color: var(--danger);  color: var(--danger);  background: rgba(255,45,85,.08); }
-
-/* Char counter */
-.char-count { text-align: right; font-size: .62rem; color: rgba(239,246,255,.25); margin-top: .35rem; }
-
-/* Submit button */
-.btn-submit {
-  width: 100%; padding: .85rem;
-  background: linear-gradient(135deg, #8B6914, #A07820);
-  border: none; color: #FEFCF7;
-  font-family: 'Cinzel', serif; font-size: .72rem;
-  letter-spacing: .2em; border-radius: 8px;
-  cursor: pointer; transition: all .3s; margin-top: .5rem;
-  box-shadow: 0 2px 8px rgba(139,105,20,.25);
-}
-.btn-submit::before {
-  content: '';
-  position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(139,105,20,.08), transparent);
-  transition: left .5s;
-}
-.btn-submit:hover::before { left: 100%; }
-.btn-submit:hover {
-  background: linear-gradient(135deg, #A07820, #8B6914);
-  box-shadow: 0 4px 16px rgba(139,105,20,.4);
-  transform: translateY(-1px);
-}
-
-/* Moderation warning */
-.moderation-warning {
-  background: rgba(255,45,85,.06);
-  border: 1px solid rgba(255,45,85,.25);
-  color: var(--danger); font-size: .75rem; padding: .9rem 1rem;
-  border-radius: 8px; margin-top: .75rem;
-  display: none; line-height: 1.6; text-align: center;
-}
-
-/* Shake animation */
-.shake { animation: shake .4s; }
-
-/* Submit overlay */
-.submit-anim {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  z-index: 200; display: none;
-  align-items: center; justify-content: center;
-  background: rgba(28,20,16,.92);
-}
-.submit-anim.show { display: flex; }
-#submit-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-.submit-text {
-  position: relative; z-index: 1; text-align: center;
-  font-family: 'Cinzel Decorative', serif; color: var(--gold);
-  font-size: 1.1rem; text-shadow: 0 0 30px rgba(139,105,20,.5);
-  letter-spacing: .1em;
-}
-
-/* Responsive */
-@media (max-width: 700px) {
-  .chain-container { flex-direction: column; }
-  .compose-panel   { position: static; }
-}
-
-/* =====================================================
-   TABS.CSS — Tree, Humanity, Book of Life,
-              Challenges, Origins, Modals
-   ===================================================== */
-
-/* =====================================================
-   TREE TAB
-   ===================================================== */
-#tree-svg-container {
-  width: 100%; overflow-x: auto;
-  background: var(--ivory); border: 1px solid var(--sand);
-  border-radius: 16px; padding: 1rem;
-}
-.tree-node           { cursor: pointer; transition: all .3s; }
-.tree-node:hover circle { filter: brightness(1.3); }
-
-.add-member-btn {
-  margin-top: 1rem; background: transparent;
-  border: 1px solid var(--sand); color: var(--brown-light);
-  font-family: 'Cinzel', serif; font-size: .7rem;
-  padding: .6rem 1.2rem; border-radius: 6px;
-  cursor: pointer; letter-spacing: .1em; transition: all .3s;
-}
-.add-member-btn:hover { border-color: var(--gold); color: var(--gold); }
-
-.member-panel {
-  background: var(--ivory); border: 1px solid var(--sand);
-  border-radius: 12px; padding: 1.25rem; margin-top: 1rem; display: none;
-}
-.member-panel.visible { display: block; }
-.member-panel h4      { font-size: .8rem; color: var(--gold); letter-spacing: .15em; margin-bottom: 1rem; }
-
-/* =====================================================
-   HUMANITY TAB
-   ===================================================== */
-.humanity-hero {
-  text-align: center; padding: 3rem 1rem 2rem;
-  border-bottom: 1px solid var(--sand); margin-bottom: 2rem;
-}
-.humanity-title {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: clamp(1.5rem,4vw,3rem); color: var(--brown);
-  letter-spacing: .1em; margin-bottom: .75rem;
-}
-.humanity-sub {
-  font-size: .95rem; color: var(--brown-light);
-  max-width: 600px; margin: 0 auto 1.5rem;
-  font-style: italic;
-}
-.globe-placeholder {
-  width: 200px; height: 200px; border-radius: 50%;
-  margin: 0 auto 1.5rem; position: relative;
-  overflow: hidden; border: 1px solid rgba(139,105,20,.2);
-}
-.globe-placeholder canvas { width: 100%; height: 100%; }
-
-/* Typewriter block */
-.typewriter-block {
-  background: var(--ivory); border: 1px solid var(--sand);
-  border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;
-  text-align: center; backdrop-filter: blur(10px);
-}
-.typewriter-label { font-size: .65rem; color: rgba(139,105,20,.5); letter-spacing: .2em; margin-bottom: 1rem; }
-.tw-country       { font-size: .7rem; color: rgba(139,105,20,.6); letter-spacing: .1em; margin-bottom: .5rem; }
-.tw-text          { font-size: .9rem; color: rgba(239,246,255,.85); line-height: 1.8; min-height: 3em; }
-#tw-cursor {
-  display: inline-block; width: 2px; height: 1em;
-  background: var(--gold); vertical-align: middle; animation: blink 1s infinite;
-}
-
-.btn-write {
-  background: transparent; border: none;
-  color: rgba(139,105,20,.5); font-family: 'Cormorant Garamond', serif;
-  font-size: .7rem; letter-spacing: .1em; cursor: pointer;
-  margin-top: .75rem; text-decoration: underline;
-  text-underline-offset: 3px; transition: color .3s;
-}
-.btn-write:hover { color: var(--gold); }
-
-/* Columns */
-.humanity-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
-@media (max-width: 700px) { .humanity-cols { grid-template-columns: 1fr; } }
-
-.wall-title  { font-size: .7rem; letter-spacing: .2em; color: var(--brown-light); margin-bottom: 1rem; }
-.masonry-wall { columns: 1; gap: 1rem; }
-
-/* Voice cards */
-.voice-card {
-  background: var(--ivory); border: 1px solid var(--sand);
-  border-radius: 8px; padding: 1rem; margin-bottom: 1rem;
-  break-inside: avoid; transition: all .3s; position: relative; overflow: hidden;
-  box-shadow: 0 1px 4px rgba(28,20,16,.06);
-}
-.voice-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; opacity: .6; }
-.voice-card.hope::before    { background: var(--gold); }
-.voice-card.wisdom::before  { background: var(--violet); }
-.voice-card.love::before    { background: #ff6b9d; }
-.voice-card.memory::before  { background: var(--amber); }
-.voice-card.warning::before { background: var(--danger); }
-.voice-card.peace::before   { background: #7dd3fc; }
-.voice-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.3); }
-
-.voice-flag   { position: absolute; top: .75rem; right: .75rem; font-size: 1rem; }
-.voice-author { font-size: .7rem; color: rgba(139,105,20,.7); letter-spacing: .1em; margin-bottom: .4rem; }
-.voice-text   { font-size: .8rem; line-height: 1.7; color: var(--brown); }
-.voice-footer { display: flex; align-items: center; justify-content: space-between; margin-top: .75rem; }
-.voice-emotion {
-  font-size: .6rem; letter-spacing: .1em; color: var(--brown-light); opacity: .35;
-  border: 1px solid var(--sand); padding: .15rem .5rem; border-radius: 3px;
-}
-.voice-like {
-  background: transparent; border: none;
-  color: var(--brown-light); opacity: .35; font-family: 'Cormorant Garamond', serif;
-  font-size: .7rem; cursor: pointer; transition: all .3s;
-}
-.voice-like:hover,
-.voice-like.liked { color: #ff6b9d; }
-
-.translate-badge { display: inline-block; font-size: .6rem; color: var(--brown-light); opacity: .35; margin-top: .3rem; letter-spacing: .05em; }
-
-/* =====================================================
-   BOOK OF LIFE TAB
-   ===================================================== */
-.stepper       { display: flex; gap: .5rem; margin-bottom: 2rem; flex-wrap: wrap; }
-.step-dot {
-  width: 28px; height: 28px; border-radius: 50%;
-  border: 1px solid var(--sand); color: var(--brown-light); opacity: .35;
-  font-family: 'Cinzel', serif; font-size: .65rem;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all .3s;
-}
-.step-dot.done   { border-color: var(--gold); color: var(--gold); background: rgba(139,105,20,.1); }
-.step-dot.active { border-color: var(--gold); color: var(--void); background: var(--gold); }
-
-.progress-bar  { height: 2px; background: var(--sand); border-radius: 1px; margin-bottom: 2rem; overflow: hidden; }
-.progress-fill { height: 100%; background: var(--gold); transition: width .5s; box-shadow: 0 0 8px rgba(139,105,20,.5); }
-
-.chapter        { display: none; }
-.chapter.active { display: block; }
-.chapter-title  { font-family: 'Cinzel Decorative', serif; font-size: 1rem; color: var(--gold); margin-bottom: .5rem; letter-spacing: .1em; }
-.chapter-sub    { font-size: .75rem; color: var(--brown-light); opacity: .5; margin-bottom: 1.5rem; line-height: 1.7; }
-
-.step-btns { display: flex; gap: 1rem; margin-top: 1.5rem; }
-.btn-next, .btn-prev {
-  flex: 1; padding: .75rem; background: transparent;
-  font-family: 'Cinzel', serif; font-size: .7rem;
-  letter-spacing: .15em; border-radius: 6px; cursor: pointer; transition: all .3s;
-}
-.btn-next { border: 1px solid var(--gold); color: var(--gold); }
-.btn-next:hover { background: rgba(139,105,20,.1); }
-.btn-prev { border: 1px solid var(--sand); color: var(--brown-light); opacity: .5; }
-.btn-prev:hover { border-color: var(--brown-light); opacity: .35; color: var(--text); }
-
-/* =====================================================
-   CHALLENGES TAB
-   ===================================================== */
-.challenge-card {
-  background: var(--ivory); border: 1px solid var(--sand);
-  border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem;
-  box-shadow: 0 1px 6px rgba(28,20,16,.06);
-}
-.challenge-q { font-size: 1rem; color: var(--brown); margin-bottom: 1rem; line-height: 1.65; font-style: italic; }
-
-.decade-label  { font-size: .65rem; letter-spacing: .2em; padding: .2rem .6rem; border-radius: 3px; display: inline-block; margin-bottom: .5rem; }
-.decade-2020s  { background: rgba(139,105,20,.1);   color: var(--gold);   border: 1px solid rgba(139,105,20,.2); }
-.decade-2030s  { background: rgba(192,132,252,.1); color: var(--violet); border: 1px solid rgba(192,132,252,.2); }
-.decade-2040s  { background: rgba(255,179,71,.1);  color: var(--amber);  border: 1px solid rgba(255,179,71,.2); }
-
-.answer-item   { padding: .75rem 0; border-top: 1px solid var(--sand); }
-.answer-author { font-size: .7rem; color: var(--brown-light); opacity: .5; margin-bottom: .3rem; }
-.answer-text   { font-size: .82rem; line-height: 1.6; color: var(--brown); }
-
-.btn-answer {
-  background: transparent; border: 1px solid var(--sand);
-  color: var(--brown-light); font-family: 'Cormorant Garamond', serif;
-  font-size: .7rem; padding: .4rem .8rem; border-radius: 4px;
-  cursor: pointer; margin-top: .75rem; transition: all .3s; letter-spacing: .1em;
-}
-.btn-answer:hover { border-color: var(--gold); color: var(--gold); }
-
-.answer-form      { margin-top: .75rem; display: none; }
-.answer-form.open { display: block; }
-
-/* =====================================================
-   ORIGINS TAB
-   ===================================================== */
-.dna-warning {
-  border: 1px solid rgba(107,39,55,.25); background: rgba(107,39,55,.04);
-  border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;
-  font-size: .82rem; line-height: 1.75; color: var(--brown-light);
-}
-.dna-warning strong { color: var(--bordeaux); display: block; margin-bottom: .3rem; font-family: 'Cinzel', serif; font-size: .72rem; letter-spacing: .08em; }
-
-.origins-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-@media (max-width: 600px) { .origins-grid { grid-template-columns: 1fr; } }
-
-.origin-row                   { display: flex; gap: .5rem; align-items: center; margin-bottom: .5rem; }
-.origin-row input[type=text]  { flex: 1; }
-.origin-row input[type=number]{ width: 70px; }
-
-.total-bar  { margin-top: 1rem; padding: .75rem; border-radius: 6px; font-size: .75rem; letter-spacing: .1em; transition: all .3s; text-align: center; }
-.total-ok   { background: rgba(139,105,20,.08);  border: 1px solid rgba(139,105,20,.2);  color: var(--gold); }
-.total-low  { background: rgba(255,179,71,.08); border: 1px solid rgba(255,179,71,.2); color: var(--amber); }
-.total-over { background: rgba(255,45,85,.08);  border: 1px solid rgba(255,45,85,.2);  color: var(--danger); }
-
-/* ── Family Pact ── */
-.pacte-card {
-  background: linear-gradient(135deg, rgba(139,105,20,.05), rgba(192,132,252,.05));
-  border: 1px solid rgba(139,105,20,.2); border-radius: 16px;
-  padding: 2rem; text-align: center; margin-top: 2rem;
-}
-.pacte-text    { font-style: italic; font-size: .85rem; line-height: 1.9; color: var(--brown-light); margin-bottom: 1.5rem; }
-.pacte-signers { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem; }
-.signer {
-  font-size: .7rem; color: var(--gold);
-  background: rgba(139,105,20,.1); border: 1px solid rgba(139,105,20,.2);
-  padding: .3rem .7rem; border-radius: 20px;
-  display: flex; align-items: center; gap: .3rem;
-}
-
-/* =====================================================
-   MODALS — Immersive, Invite, Upgrade
-   ===================================================== */
-
-/* Immersive read mode */
-#immersive {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  z-index: 150; background: rgba(15,10,8,.97);
-  display: none; align-items: center; justify-content: center; flex-direction: column;
-}
-#immersive.open { display: flex; }
-#im-canvas      { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-.im-content     { position: relative; z-index: 2; text-align: center; max-width: 600px; padding: 2rem; }
-.im-meta        { font-size: .75rem; color: var(--gold); letter-spacing: .2em; margin-bottom: 1.5rem; }
-.im-text {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: clamp(1.2rem,3vw,2rem); color: var(--text);
-  line-height: 1.8; text-shadow: 0 0 40px rgba(239,246,255,.1);
-}
-.im-close {
-  position: absolute; top: 2rem; right: 2rem;
-  background: transparent; border: 1px solid rgba(232,217,160,.2);
-  color: rgba(232,217,160,.5); font-family: 'Cinzel', serif;
-  font-size: .8rem; padding: .4rem .8rem; border-radius: 4px;
-  cursor: pointer; z-index: 3; transition: all .3s;
-}
-.im-close:hover { border-color: var(--gold); color: var(--gold); }
-.im-sound {
-  position: absolute; bottom: 2rem; right: 2rem;
-  background: transparent; border: 1px solid var(--sand);
-  color: var(--brown-light); opacity: .5; font-family: 'Cormorant Garamond', serif;
-  font-size: .7rem; padding: .4rem .8rem; border-radius: 4px;
-  cursor: pointer; z-index: 3; transition: all .3s; letter-spacing: .1em;
-}
-.im-sound:hover { border-color: var(--amber); color: var(--amber); }
-
-/* Invite modal */
-#invite-modal           { position: fixed; top:0; left:0; width:100%; height:100%; z-index:160; background:rgba(28,20,16,.85); display:none; align-items:center; justify-content:center; }
-#invite-modal.open      { display: flex; }
-
-.modal-box      { background: var(--ivory); border: 1px solid var(--sand); border-radius: 12px; padding: 2rem; max-width: 400px; width: 90%; position: relative; box-shadow: 0 8px 40px rgba(28,20,16,.15); }
-.modal-box h3   { font-family: 'Cinzel Decorative', serif; color: var(--gold); font-size: 1rem; margin-bottom: .5rem; letter-spacing: .1em; }
-.modal-box p    { font-size: .85rem; color: var(--brown-light); margin-bottom: 1.5rem; line-height: 1.7; }
-.modal-close    { position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; color: var(--brown-light); cursor: pointer; font-size: 1.2rem; transition: color .3s; opacity: .5; }
-.modal-close:hover { color: var(--brown); opacity: 1; }
-
-.link-box {
-  background: var(--ivory); border: 1px solid var(--sand);
-  border-radius: 6px; padding: .6rem .8rem; font-size: .75rem;
-  color: var(--gold); margin-bottom: .75rem; letter-spacing: .05em;
-  display: flex; justify-content: space-between; align-items: center;
-}
-.btn-copy { background: transparent; border: 1px solid var(--sand); color: var(--brown-light); font-family: 'Cinzel', serif; font-size: .62rem; padding: .3rem .6rem; border-radius: 3px; cursor: pointer; letter-spacing: .1em; transition: all .3s; }
-.btn-copy:hover,
-.btn-copy.copied { border-color: var(--gold); color: var(--gold); }
-
-.share-btns { display: flex; gap: .5rem; }
-.btn-wa     { flex: 1; background: rgba(37,211,102,.08); border: 1px solid rgba(37,211,102,.2); color: #25d366; font-family: 'Cinzel', serif; font-size: .65rem; padding: .6rem; border-radius: 6px; cursor: pointer; letter-spacing: .1em; transition: all .3s; }
-.btn-wa:hover { background: rgba(37,211,102,.15); }
-
-#qr-display canvas { border: 1px solid var(--sand); border-radius: 8px; padding: .5rem; background: rgba(255,255,255,.05); }
-#qr-display { margin-top: 1rem; text-align: center; }
-
-/* Upgrade modal */
-#upgrade-modal       { position: fixed; top:0; left:0; width:100%; height:100%; z-index:160; background:rgba(28,20,16,.85); display:none; align-items:center; justify-content:center; }
-#upgrade-modal.open  { display: flex; }
-
-.upgrade-box    { background: var(--ivory); border: 1px solid rgba(255,179,71,.3); border-radius: 16px; padding: 2rem; max-width: 420px; width: 90%; position: relative; text-align: center; }
-.upgrade-box h3 { font-family: 'Cinzel Decorative', serif; color: var(--amber); font-size: 1.1rem; letter-spacing: .1em; margin-bottom: .5rem; }
-.upgrade-box .price { font-size: 2.5rem; color: var(--text); font-weight: 500; margin: 1rem 0; }
-.upgrade-box .price span { font-size: .8rem; color: var(--brown-light); opacity: .5; }
-
-.upgrade-features { text-align: left; margin: 1rem 0; display: flex; flex-direction: column; gap: .4rem; }
-.upgrade-feat { font-size: .78rem; color: var(--brown-light); padding: .3rem 0; border-bottom: 1px solid var(--sand); display: flex; align-items: center; gap: .5rem; }
-.upgrade-feat::before { content: '✦'; color: var(--amber); font-size: .6rem; }
-
-.btn-upgrade { width: 100%; padding: .9rem; background: linear-gradient(135deg, rgba(255,179,71,.2), rgba(192,132,252,.2)); border: 1px solid var(--amber); color: var(--amber); font-family: 'Cormorant Garamond', serif; font-size: .85rem; letter-spacing: .2em; border-radius: 8px; cursor: pointer; transition: all .4s; margin-top: 1rem; }
-.btn-upgrade:hover { background: linear-gradient(135deg, rgba(255,179,71,.3), rgba(192,132,252,.3)); box-shadow: 0 0 30px rgba(255,179,71,.2); }
-
-/* =====================================================
-   MISC UTILITIES
-   ===================================================== */
-.tag-premium { font-size: .6rem; color: var(--amber); border: 1px solid rgba(255,179,71,.3); padding: .1rem .4rem; border-radius: 3px; margin-left: .3rem; vertical-align: middle; }
-
-.tooltip { position: relative; }
-.tooltip:hover::after {
-  content: attr(data-tip); position: absolute; bottom: calc(100% + 5px); left: 50%; transform: translateX(-50%);
-  background: var(--cream); border: 1px solid var(--sand); color: var(--text); font-size: .65rem;
-  padding: .3rem .6rem; border-radius: 4px; white-space: nowrap; z-index: 10; pointer-events: none;
-}
-
-
-/* ── Scrolling message ticker ── */
-.chain-ticker-wrap {
-  overflow: hidden;
-  height: 220px;
-  position: relative;
-  mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
-  margin-bottom: 1.5rem;
-}
-.chain-ticker {
-  display: flex;
-  flex-direction: column;
-  gap: .5rem;
-  animation: tickerScroll 18s linear infinite;
-}
-.chain-ticker:hover { animation-play-state: paused; }
-@keyframes tickerScroll {
-  0%   { transform: translateY(0); }
-  100% { transform: translateY(-50%); }
-}
-.ticker-card {
-  background: var(--ivory);
-  border: 1px solid var(--sand);
-  border-radius: 8px;
-  padding: .6rem .9rem;
-  display: flex;
-  align-items: flex-start;
-  gap: .6rem;
-  flex-shrink: 0;
-}
-.ticker-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  flex-shrink: 0; margin-top: .35rem;
-}
-.ticker-dot.hope    { background: var(--gold); }
-.ticker-dot.love    { background: #ff6b9d; }
-.ticker-dot.wisdom  { background: var(--violet); }
-.ticker-dot.memory  { background: var(--amber); }
-.ticker-dot.warning { background: var(--danger); }
-.ticker-meta {
-  font-size: .65rem; color: rgba(139,105,20,.6);
-  letter-spacing: .08em; margin-bottom: .2rem;
-}
-.ticker-text {
-  font-size: .75rem; line-height: 1.5;
-  color: var(--brown-light);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* ── Compact scrolling chain cards ── */
-.scroll-card {
-  background: var(--ivory);
-  border: 1px solid var(--sand);
-  border-radius: 8px;
-  padding: .85rem 1rem;
-  cursor: pointer;
-  transition: all .25s;
-  flex-shrink: 0;
-  box-shadow: 0 1px 4px rgba(28,20,16,.06);
-}
-.scroll-card:hover {
-  background: #FEFCF7;
-  box-shadow: 0 3px 12px rgba(28,20,16,.1);
-  transform: translateY(-1px);
-}
-.scroll-card-top {
-  display: flex; align-items: center;
-  justify-content: space-between; margin-bottom: .5rem;
-}
-.scroll-avatar {
-  width: 22px; height: 22px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: .65rem; font-weight: 700; flex-shrink: 0;
-}
-.scroll-author { font-size: .75rem; color: var(--gold); letter-spacing: .06em; font-family: 'Cinzel', serif; }
-.scroll-year   { font-size: .68rem; color: var(--brown-light); opacity: .5; }
-.scroll-text {
-  font-size: .9rem; line-height: 1.6; color: var(--brown-light);
-  display: -webkit-box; -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical; overflow: hidden;
-  font-style: italic;
-}
-.scroll-footer {
-  display: flex; align-items: center;
-  justify-content: space-between; margin-top: .5rem;
-}
-.scroll-emotion {
-  font-size: .6rem; letter-spacing: .1em;
-  border: 1px solid; padding: .15rem .45rem; border-radius: 3px;
-}
-
-/* =====================================================
-   RESPONSIVE — Mobile first polish
-   ===================================================== */
-
-/* ── Chain tab ── */
-@media (max-width: 768px) {
-  .chain-container { flex-direction: column; gap: 1rem; }
-  .chain-scroll-wrap { height: 320px; min-width: unset; width: 100%; }
-  .chain-compose-col { width: 100%; }
-  .compose-panel { padding: 1rem; }
-}
-
-/* ── Nav mobile bottom bar ── */
-@media (max-width: 680px) {
-  .nav-logo { font-size: .75rem; }
-  .nav-right { gap: .5rem; }
-  .btn-invite { display: none; }
-  .premium-badge { font-size: .5rem; padding: .15rem .35rem; }
-}
-
-/* ── Landing mobile ── */
-@media (max-width: 480px) {
-  #typewriter { font-size: clamp(1.4rem, 7vw, 2.2rem); }
-  .landing-sub { font-size: .78rem; }
-  .auth-btns { max-width: 100%; padding: 0 1rem; }
-  .btn-fb { font-size: .8rem; padding: .85rem 1.2rem; }
-  .world-counter { gap: 1rem; font-size: .68rem; }
-  .world-counter span { font-size: .9rem; }
-}
-
-/* ── Tab content padding ── */
-@media (max-width: 480px) {
-  .tab-content { padding: 1rem; }
-  .section-title { font-size: 1rem; }
-  .section-sub { font-size: .7rem; }
-}
-
-/* ── Origins mobile ── */
-@media (max-width: 600px) {
-  .origins-grid { grid-template-columns: 1fr; }
-  #origin-chart { max-width: 160px !important; }
-  .pacte-card { padding: 1.25rem; }
-  .pacte-text { font-size: .78rem; }
-}
-
-/* ── Humanity mobile ── */
-@media (max-width: 700px) {
-  .humanity-cols { grid-template-columns: 1fr; }
-  .humanity-hero { padding: 1.5rem .5rem 1rem; }
-  .humanity-title { font-size: clamp(1.2rem, 6vw, 2rem); }
-  #compose-humanity .compose-panel { position: static; }
-}
-
-/* ── Tree mobile ── */
-@media (max-width: 600px) {
-  #tree-svg-container svg { min-height: 280px; }
-}
-
-/* ── Modals mobile ── */
-@media (max-width: 480px) {
-  .modal-box { padding: 1.25rem; }
-  .upgrade-box { padding: 1.25rem; max-width: 95vw; }
-  .upgrade-box .price { font-size: 2rem; }
-  .im-text { font-size: clamp(1rem, 4vw, 1.5rem); }
-}
-
-/* ── Challenges mobile ── */
-@media (max-width: 480px) {
-  .challenge-card { padding: 1rem; }
-  .challenge-q { font-size: .82rem; }
-}
-
-/* ── Book of life mobile ── */
-@media (max-width: 480px) {
-  .stepper { gap: .3rem; }
-  .step-dot { width: 24px; height: 24px; font-size: .6rem; }
-  .step-btns { flex-direction: column; }
-  .btn-next, .btn-prev { width: 100%; }
-}
-
-/* ── Compose panel mobile ── */
-@media (max-width: 480px) {
-  .emotion-picker { gap: .3rem; }
-  .emotion-btn { font-size: .6rem; padding: .25rem .5rem; }
-  .form-textarea { min-height: 80px; }
-}
-
-/* ── Origins layout fix ── */
-.origins-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  align-items: start;
-}
-.origin-row {
-  display: flex; gap: .5rem; align-items: center; margin-bottom: .6rem;
-}
-.origin-row input[type=text]   { flex: 1; min-width: 0; }
-.origin-row input[type=number] { width: 65px; flex-shrink: 0; }
-.dna-warning {
-  border: 1px solid rgba(139,105,20,.35);
-  background: rgba(255,179,71,.06);
-  border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;
-  font-size: .75rem; line-height: 1.7; color: rgba(255,179,71,.8);
-}
-#origin-chart-box {
-  background: var(--ivory);
-  border: 1px solid var(--sand);
-  border-radius: 12px; padding: 1.5rem; text-align: center;
-  position: sticky; top: 80px;
-}
-
-/* ── Upgrade modal — WOW treatment ── */
-#upgrade-modal {
-  position: fixed; top:0; left:0; width:100%; height:100%;
-  z-index: 160;
-  background: rgba(28,20,16,.85);
-  backdrop-filter: blur(8px);
-  display: none; align-items: center; justify-content: center;
-}
-#upgrade-modal.open { display: flex; }
-
-.upgrade-box {
-  background: linear-gradient(145deg, #0d0b1a, #0a0818);
-  border: 1px solid rgba(139,105,20,.35);
-  border-radius: 20px;
-  padding: 2.5rem 2rem;
-  max-width: 440px; width: 92%;
-  position: relative; text-align: center;
-  box-shadow: 0 0 60px rgba(255,179,71,.1), 0 0 120px rgba(192,132,252,.05);
-  overflow: hidden;
-}
-/* Animated top glow line */
-.upgrade-box::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--amber), var(--violet), var(--amber), transparent);
-  background-size: 200% 100%;
-  animation: shimmerLine 3s linear infinite;
-}
-@keyframes shimmerLine {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-/* Corner stars */
-.upgrade-box::after {
-  content: '✦';
-  position: absolute; top: 1rem; left: 1.5rem;
-  font-size: .8rem; color: rgba(255,179,71,.3);
-  animation: pulse 2s ease-in-out infinite;
-}
-@keyframes pulse { 0%,100%{opacity:.3} 50%{opacity:.8} }
-
-.upgrade-crown {
-  font-size: 2.5rem; margin-bottom: .5rem;
-  animation: float 3s ease-in-out infinite;
-}
-@keyframes float {
-  0%,100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
-}
-.upgrade-box h3 {
-  font-family: 'Cinzel Decorative', serif;
-  color: var(--gold); font-size: 1.2rem;
-  letter-spacing: .15em; margin-bottom: .3rem;
-}
-.upgrade-tagline {
-  font-size: .72rem; color: var(--brown-light); opacity: .5;
-  letter-spacing: .15em; margin-bottom: 1.25rem;
-}
-.upgrade-price-wrap {
-  background: rgba(255,179,71,.06);
-  border: 1px solid rgba(255,179,71,.2);
-  border-radius: 12px; padding: 1rem; margin-bottom: 1.25rem;
-  display: flex; align-items: center; justify-content: center; gap: .75rem;
-}
-.upgrade-price-old {
-  font-size: .8rem; color: var(--brown-light); opacity: .35;
-  text-decoration: line-through;
-}
-.upgrade-price-new {
-  font-size: 2.8rem; font-weight: 600; color: var(--text);
-  line-height: 1;
-}
-.upgrade-price-sub {
-  font-size: .65rem; color: rgba(255,179,71,.6);
-  letter-spacing: .1em; text-align: left; line-height: 1.5;
-}
-.upgrade-features {
-  text-align: left; margin: 0 0 1.25rem;
-  display: grid; grid-template-columns: 1fr 1fr; gap: .35rem;
-}
-.upgrade-feat {
-  font-size: .72rem; color: var(--brown-light);
-  padding: .35rem .5rem;
-  background: rgba(255,179,71,.04);
-  border: 1px solid rgba(255,179,71,.1);
-  border-radius: 6px;
-  display: flex; align-items: center; gap: .4rem;
-}
-.upgrade-feat::before { content: '✦'; color: var(--amber); font-size: .5rem; flex-shrink:0; }
-.btn-upgrade {
-  width: 100%; padding: 1rem;
-  background: linear-gradient(135deg, #FFB347, #ff8c00);
-  border: none; color: #0a0818;
-  font-family: 'Cormorant Garamond', serif; font-size: .85rem;
-  font-weight: 700; letter-spacing: .2em;
-  border-radius: 10px; cursor: pointer;
-  transition: all .3s; margin-top: .25rem;
-  box-shadow: 0 4px 20px rgba(255,179,71,.3);
-}
-.btn-upgrade:hover {
-  background: linear-gradient(135deg, #ffc56a, #FFB347);
-  box-shadow: 0 6px 30px rgba(255,179,71,.5);
-  transform: translateY(-2px);
-}
-.upgrade-guarantee {
-  font-size: .62rem; color: var(--brown-light); opacity: .35;
-  margin-top: .75rem; letter-spacing: .08em;
-}
-
-
-/* ── Facebook Share button ── */
-.btn-fb-share {
-  display: inline-flex; align-items: center; gap: .5rem;
-  background: #1877F2; color: #fff;
-  font-family: 'Cormorant Garamond', serif; font-size: .72rem;
-  letter-spacing: .08em; padding: .5rem 1rem;
-  border: none; border-radius: 6px; cursor: pointer;
-  transition: all .3s;
-}
-.btn-fb-share:hover {
-  background: #1469d6;
-  box-shadow: 0 4px 15px rgba(24,119,242,.4);
-  transform: translateY(-1px);
-}
-.btn-fb-share .fb-f {
-  font-weight: 900; font-size: .9rem; font-family: Georgia, serif;
-}
-
-/* ── Share bar on landing ── */
-.share-bar {
-  display: flex; gap: .75rem; align-items: center;
-  justify-content: center; margin-top: 1.5rem; flex-wrap: wrap;
-}
-.share-label {
-  font-size: .65rem; color: var(--brown-light); opacity: .35;
-  letter-spacing: .15em;
-}
-
-
-/* ── Loading splash ── */
-#splash {
-  position: fixed; top:0; left:0; width:100%; height:100%;
-  z-index: 9999;
-  background: linear-gradient(135deg, #1C1410, #2C1F14);
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  transition: opacity .8s;
-}
-#splash.hidden { opacity: 0; pointer-events: none; }
-.splash-logo {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: clamp(1.5rem, 4vw, 2.5rem);
-  color: var(--gold-pale);
-  letter-spacing: .2em;
-  text-shadow: 0 0 40px rgba(196,168,79,.3);
-  margin-bottom: 2rem;
-}
-.splash-bar {
-  width: 200px; height: 1px;
-  background: rgba(196,168,79,.15);
-  border-radius: 1px; overflow: hidden;
-}
-.splash-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--gold-pale), #E8D9A0);
-  border-radius: 1px;
-  animation: splashLoad 1.8s ease-out forwards;
-}
-@keyframes splashLoad {
-  0%   { width: 0%; }
-  60%  { width: 80%; }
-  100% { width: 100%; }
-}
-.splash-sub {
-  font-size: .65rem; color: rgba(196,168,79,.4);
-  letter-spacing: .3em; margin-top: 1rem;
-  font-family: 'Cinzel', serif;
-}
-
-
-/* ── Legal footer ── */
-.app-footer {
-  border-top: 1px solid var(--sand);
-  padding: 2rem;
-  text-align: center;
-  margin-top: 3rem;
-}
-.app-footer-links {
-  display: flex; gap: 1.5rem; justify-content: center;
-  flex-wrap: wrap; margin-bottom: .75rem;
-}
-.app-footer-links a {
-  font-size: .65rem; color: var(--brown-light);
-  opacity: .45; letter-spacing: .1em; text-decoration: none;
-  transition: all .3s; font-family: 'Cinzel', serif;
-}
-.app-footer-links a:hover { color: var(--gold); opacity: 1; }
-.app-footer-copy {
-  font-size: .6rem; color: var(--brown-light); opacity: .3; letter-spacing: .1em;
-}
-
-/* ── Privacy modal ── */
-#privacy-modal {
-  position: fixed; top:0; left:0; width:100%; height:100%;
-  z-index: 170; background: rgba(254,252,247,.98);
-  display: none; align-items: center; justify-content: center;
-  padding: 1rem;
-}
-#privacy-modal.open { display: flex; }
-.legal-box {
-  background: var(--ivory); border: 1px solid var(--sand);
-  border-radius: 16px; padding: 2rem; max-width: 600px;
-  width: 100%; max-height: 80vh; overflow-y: auto;
-  position: relative;
-}
-.legal-box h2 {
-  font-family: 'Cinzel Decorative', serif;
-  color: var(--gold); font-size: 1rem; margin-bottom: 1.5rem;
-  letter-spacing: .1em;
-}
-.legal-box h3 {
-  color: var(--gold); font-size: .8rem; margin: 1.25rem 0 .5rem;
-  letter-spacing: .1em;
-}
-.legal-box p {
-  font-size: .75rem; color: var(--brown-light);
-  line-height: 1.8; margin-bottom: .75rem;
-}
-
-
-/* ── 404 page ── */
-#page-404 {
-  position: fixed; top:0; left:0; width:100%; height:100%;
-  z-index: 50; background: var(--cream);
-  display: none; align-items: center; justify-content: center;
-  flex-direction: column; text-align: center;
-}
-#page-404.show { display: flex; }
-.err-code {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: clamp(4rem, 15vw, 8rem);
-  color: rgba(139,105,20,.15); line-height: 1;
-  margin-bottom: 1rem;
-}
-.err-msg  { font-size: .85rem; color: var(--brown-light); margin-bottom: 2rem; line-height: 1.7; }
-.btn-home {
-  background: transparent; border: 1px solid var(--gold);
-  color: var(--gold); font-family: 'Cormorant Garamond', serif;
-  font-size: .8rem; letter-spacing: .15em; padding: .75rem 1.5rem;
-  border-radius: 6px; cursor: pointer; transition: all .3s;
-}
-.btn-home:hover { background: rgba(139,105,20,.1); }
-
-
-/* ── Ornamental divider ── */
-.landing-divider {
-  display: flex; align-items: center; gap: 1rem;
-  width: 100%; max-width: 600px; margin: 0 auto;
-  padding: 2rem 2rem;
-}
-.divider-line {
-  flex: 1; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--sand), transparent);
-}
-.divider-ornament {
-  font-size: .6rem; color: var(--gold); opacity: .5;
-  letter-spacing: .2em;
-}
-
-/* ── How it works ── */
-.how-it-works {
-  width: 100%; max-width: 760px; margin: 0 auto;
-  padding: 0 2rem 1rem; text-align: center;
-}
-.hiw-label {
-  font-family: 'Cinzel', serif; font-size: .62rem;
-  letter-spacing: .3em; color: var(--gold);
-  opacity: .6; margin-bottom: 2.5rem;
-}
-.hiw-steps {
-  display: flex; align-items: flex-start;
-  justify-content: center; gap: 1rem; flex-wrap: wrap;
-}
-.hiw-step {
-  flex: 1; min-width: 160px; max-width: 200px;
-  padding: 1.5rem 1rem;
-  background: var(--ivory);
-  border: 1px solid var(--sand);
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(28,20,16,.05);
-  transition: all .3s;
-}
-.hiw-step:hover {
-  box-shadow: 0 4px 16px rgba(28,20,16,.1);
-  transform: translateY(-2px);
-}
-.hiw-number {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 1.4rem; color: var(--gold);
-  opacity: .35; margin-bottom: .75rem;
-}
-.hiw-title {
-  font-family: 'Cinzel', serif;
-  font-size: .85rem; color: var(--brown);
-  letter-spacing: .1em; margin-bottom: .6rem;
-}
-.hiw-desc {
-  font-size: .82rem; color: var(--brown-light);
-  line-height: 1.7; font-style: italic; opacity: .7;
-}
-.hiw-connector {
-  color: var(--sand); font-size: 1rem;
-  align-self: center; padding-top: .5rem;
-  display: flex; align-items: center;
-}
-@media (max-width: 600px) {
-  .hiw-connector { display: none; }
-  .hiw-step { min-width: 100%; }
-  .landing-hero::before, .landing-hero::after { display: none; }
-}
-
-/* ── Illustration placeholder on landing ── */
-.landing-illustration {
-  width: 100%; max-width: 480px; margin: 0 auto 2rem;
-  position: relative;
-}
-.landing-illustration svg {
-  width: 100%; opacity: .85;
-}
-
-
-/* ── Fade-in entrance animations ── */
-.landing-hero > * {
-  animation: fadeUp .8s ease-out both;
-}
-.landing-hero > *:nth-child(1) { animation-delay: .1s; }
-.landing-hero > *:nth-child(2) { animation-delay: .25s; }
-.landing-hero > *:nth-child(3) { animation-delay: .4s; }
-.landing-hero > *:nth-child(4) { animation-delay: .55s; }
-.landing-hero > *:nth-child(5) { animation-delay: .7s; }
-
-
-/* ── Hero illustration ── */
-.hero-illustration {
-  width: 100%;
-  max-width: 540px;
-  margin: 0 auto 1.5rem;
-  position: relative;
-  z-index: 1;
-  animation: fadeUp .9s ease-out .05s both;
-}
-.hero-svg {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-@media (max-width: 480px) {
-  .hero-illustration { max-width: 340px; }
-}
-
-  </style>
-</head>
-<body>
-
-
-<!-- ── Persistent background canvas ──────────────────── -->
-<!-- ── Loading splash ── -->
-<div id="splash">
-  <div class="splash-logo">⬡ LEGACYCHAIN</div>
-  <div class="splash-bar"><div class="splash-fill"></div></div>
-  <div class="splash-sub">LOADING YOUR LEGACY...</div>
-</div>
-
-
-<!-- ── 404 page ── -->
-<div id="page-404">
-  <div class="err-code">404</div>
-  <div class="err-msg">This page has been lost in time.<br>The chain continues elsewhere.</div>
-  <button class="btn-home" onclick="document.getElementById('page-404').classList.remove('show');showLanding()">← RETURN TO THE CHAIN</button>
-</div>
-
-<canvas id="bg"></canvas>
-<div id="cursor"></div>
-<div id="cursor-trail"></div>
-
-<!-- ── Immersive read mode overlay ───────────────────── -->
-<div id="immersive">
-  <canvas id="im-canvas"></canvas>
-  <div class="im-content">
-    <div class="im-meta" id="im-meta"></div>
-    <div class="im-text" id="im-text"></div>
-  </div>
-  <button class="im-close" onclick="closeImmersive()">× CLOSE</button>
-  <button class="im-sound" onclick="toggleSound()">♫ SOUND</button>
-</div>
-
-<!-- ── Submit particle animation overlay ─────────────── -->
-<div class="submit-anim" id="submit-anim">
-  <canvas id="submit-canvas"></canvas>
-  <div class="submit-text" id="submit-text">Your words are being sealed...</div>
-</div>
-
-<!-- ── Invite modal ───────────────────────────────────── -->
-<div id="invite-modal">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeInvite()">×</button>
-    <h3>INVITE YOUR FAMILY</h3>
-    <p>Share this link and your family joins your chain automatically</p>
-    <div class="link-box">
-      <span id="invite-link">legacychain.app/?famille=Doe</span>
-      <button class="btn-copy" id="copy-btn" onclick="copyLink()">COPY</button>
-    </div>
-    <div class="share-btns">
-      <button class="btn-wa" onclick="shareWA()">WhatsApp</button>
-    </div>
-    <div id="qr-display"></div>
-  </div>
-</div>
-
-<!-- ── Upgrade modal ──────────────────────────────────── -->
-<div id="upgrade-modal">
-  <div class="upgrade-box">
-    <button class="modal-close" onclick="document.getElementById('upgrade-modal').classList.remove('open')">×</button>
-    <div class="upgrade-crown">👑</div>
-    <h3>FOUNDING VOICE</h3>
-    <div class="upgrade-tagline">ONE PAYMENT · ETERNAL ACCESS · YOUR LEGACY FOREVER</div>
-    <div class="upgrade-price-wrap">
-      <div class="upgrade-price-old">$49</div>
-      <div class="upgrade-price-new">$10</div>
-      <div class="upgrade-price-sub">once<br>forever</div>
-    </div>
-    <div class="upgrade-features">
-      <div class="upgrade-feat">Unlimited messages</div>
-      <div class="upgrade-feat">Audio (3 min)</div>
-      <div class="upgrade-feat">Video (60 sec)</div>
-      <div class="upgrade-feat">Photo attachments</div>
-      <div class="upgrade-feat">500 char limit</div>
-      <div class="upgrade-feat">PDF Book export</div>
-      <div class="upgrade-feat">Full family tree</div>
-      <div class="upgrade-feat">✨ Gold badge</div>
-    </div>
-    <button class="btn-upgrade" onclick="simulateUpgrade()">✦ UNLOCK FOREVER — $10</button>
-    <div class="upgrade-guarantee">🔒 Secure payment · No subscription · Cancel anytime</div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════
-     ONBOARDING PAGE
-     ══════════════════════════════════════════════════════ -->
-<div class="page active" id="onboarding">
-  <canvas id="ob-canvas"></canvas>
-  <!-- FIX: removed stray class="btn" (undefined class) -->
-  <button id="ob-skip" onclick="skipOnboarding()">SKIP →</button>
-  <div id="ob-text">
-    <h1 id="ob-title">FAMILLE</h1>
-    <p id="ob-sub">Each family deserves to travel through time</p>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════
-     LANDING PAGE
-     ══════════════════════════════════════════════════════ -->
-<div class="page" id="landing">
-
-  <!-- Hero section -->
-  <div class="landing-hero">
-
-<!-- ── Hero illustration ── -->
-<div class="hero-illustration" aria-hidden="true">
-  <svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg" class="hero-svg">
-    <defs>
-      <!-- Gold gradient -->
-      <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:#C4A84F;stop-opacity:1"/>
-        <stop offset="100%" style="stop-color:#8B6914;stop-opacity:1"/>
-      </linearGradient>
-      <!-- Bordeaux gradient -->
-      <linearGradient id="deepGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:#6B2737;stop-opacity:.8"/>
-        <stop offset="100%" style="stop-color:#4A1828;stop-opacity:.6"/>
-      </linearGradient>
-      <!-- Parchment paper fill -->
-      <linearGradient id="paperGrad" x1="0%" y1="0%" x2="5%" y2="100%">
-        <stop offset="0%" style="stop-color:#FEF9EE;stop-opacity:1"/>
-        <stop offset="100%" style="stop-color:#F0E8D5;stop-opacity:1"/>
-      </linearGradient>
-      <!-- Subtle shadow filter -->
-      <filter id="softShadow" x="-10%" y="-10%" width="120%" height="130%">
-        <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="rgba(28,20,16,.12)"/>
-      </filter>
-      <filter id="leafShadow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="rgba(28,20,16,.08)"/>
-      </filter>
-    </defs>
-
-    <!-- ── Background subtle rings ── -->
-    <circle cx="260" cy="140" r="200" fill="none" stroke="rgba(139,105,20,.04)" stroke-width="1"/>
-    <circle cx="260" cy="140" r="160" fill="none" stroke="rgba(139,105,20,.06)" stroke-width="1"/>
-    <circle cx="260" cy="140" r="120" fill="none" stroke="rgba(139,105,20,.08)" stroke-width="1"/>
-
-    <!-- ══════════════════════════════════════
-         TREE TRUNK — central aged wood
-    ══════════════════════════════════════ -->
-    <!-- Main trunk -->
-    <path d="M245 270 C243 230 238 200 240 170 C242 140 248 120 260 100"
-      stroke="url(#goldGrad)" stroke-width="8" fill="none"
-      stroke-linecap="round" opacity=".7"/>
-    <path d="M275 270 C277 230 282 200 280 170 C278 140 272 120 260 100"
-      stroke="url(#goldGrad)" stroke-width="8" fill="none"
-      stroke-linecap="round" opacity=".7"/>
-    <!-- Trunk fill -->
-    <path d="M245 270 C243 230 238 200 240 170 C242 140 248 120 260 100
-             C272 120 278 140 280 170 C282 200 277 230 275 270 Z"
-      fill="rgba(139,105,20,.08)"/>
-
-    <!-- Root lines -->
-    <path d="M250 270 C240 275 220 278 205 272" stroke="rgba(139,105,20,.3)" stroke-width="3" fill="none" stroke-linecap="round"/>
-    <path d="M260 272 C260 278 258 282 255 285" stroke="rgba(139,105,20,.25)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    <path d="M270 270 C280 275 300 278 315 272" stroke="rgba(139,105,20,.3)" stroke-width="3" fill="none" stroke-linecap="round"/>
-
-    <!-- ══════════════════════════════════════
-         BRANCHES — spreading family lines
-    ══════════════════════════════════════ -->
-    <!-- Left main branch -->
-    <path d="M252 165 C230 155 190 148 155 152"
-      stroke="url(#goldGrad)" stroke-width="5" fill="none"
-      stroke-linecap="round" opacity=".65"/>
-    <!-- Left sub-branches -->
-    <path d="M190 150 C180 135 165 125 148 120"
-      stroke="rgba(139,105,20,.5)" stroke-width="3" fill="none" stroke-linecap="round"/>
-    <path d="M190 150 C185 162 175 168 160 170"
-      stroke="rgba(139,105,20,.5)" stroke-width="3" fill="none" stroke-linecap="round"/>
-    <path d="M155 152 C148 140 138 132 128 128"
-      stroke="rgba(139,105,20,.4)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-
-    <!-- Right main branch -->
-    <path d="M268 165 C290 155 330 148 365 152"
-      stroke="url(#goldGrad)" stroke-width="5" fill="none"
-      stroke-linecap="round" opacity=".65"/>
-    <!-- Right sub-branches -->
-    <path d="M330 150 C340 135 355 125 372 120"
-      stroke="rgba(139,105,20,.5)" stroke-width="3" fill="none" stroke-linecap="round"/>
-    <path d="M330 150 C335 162 345 168 360 170"
-      stroke="rgba(139,105,20,.5)" stroke-width="3" fill="none" stroke-linecap="round"/>
-    <path d="M365 152 C372 140 382 132 392 128"
-      stroke="rgba(139,105,20,.4)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-
-    <!-- Center top branch -->
-    <path d="M260 120 C258 105 255 92 252 80"
-      stroke="url(#goldGrad)" stroke-width="4" fill="none" stroke-linecap="round" opacity=".6"/>
-    <path d="M252 80 C245 70 235 65 224 62"
-      stroke="rgba(139,105,20,.45)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    <path d="M252 80 C258 68 265 60 268 52"
-      stroke="rgba(139,105,20,.45)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-
-    <!-- ══════════════════════════════════════
-         LEAVES — soft oval foliage clusters
-    ══════════════════════════════════════ -->
-    <!-- Helper macro: leaf clusters at branch tips -->
-    <!-- Left tip cluster -->
-    <ellipse cx="140" cy="118" rx="18" ry="12" fill="rgba(107,39,55,.12)" transform="rotate(-20,140,118)" filter="url(#leafShadow)"/>
-    <ellipse cx="148" cy="112" rx="14" ry="9"  fill="rgba(139,105,20,.18)" transform="rotate(-15,148,112)"/>
-    <ellipse cx="130" cy="114" rx="12" ry="8"  fill="rgba(92,74,42,.15)"  transform="rotate(-25,130,114)"/>
-
-    <!-- Left lower tip -->
-    <ellipse cx="155" cy="174" rx="16" ry="10" fill="rgba(107,39,55,.10)" transform="rotate(10,155,174)" filter="url(#leafShadow)"/>
-    <ellipse cx="163" cy="168" rx="12" ry="8"  fill="rgba(139,105,20,.16)" transform="rotate(5,163,168)"/>
-
-    <!-- Right tip cluster -->
-    <ellipse cx="380" cy="118" rx="18" ry="12" fill="rgba(107,39,55,.12)" transform="rotate(20,380,118)" filter="url(#leafShadow)"/>
-    <ellipse cx="372" cy="112" rx="14" ry="9"  fill="rgba(139,105,20,.18)" transform="rotate(15,372,112)"/>
-    <ellipse cx="390" cy="114" rx="12" ry="8"  fill="rgba(92,74,42,.15)"  transform="rotate(25,390,114)"/>
-
-    <!-- Right lower tip -->
-    <ellipse cx="365" cy="174" rx="16" ry="10" fill="rgba(107,39,55,.10)" transform="rotate(-10,365,174)" filter="url(#leafShadow)"/>
-    <ellipse cx="357" cy="168" rx="12" ry="8"  fill="rgba(139,105,20,.16)" transform="rotate(-5,357,168)"/>
-
-    <!-- Top cluster -->
-    <ellipse cx="222" cy="58" rx="20" ry="13" fill="rgba(107,39,55,.12)" transform="rotate(-30,222,58)" filter="url(#leafShadow)"/>
-    <ellipse cx="214" cy="52" rx="15" ry="10" fill="rgba(139,105,20,.2)" transform="rotate(-25,214,52)"/>
-    <ellipse cx="268" cy="46" rx="18" ry="12" fill="rgba(107,39,55,.12)" transform="rotate(15,268,46)" filter="url(#leafShadow)"/>
-    <ellipse cx="275" cy="40" rx="13" ry="9"  fill="rgba(139,105,20,.18)" transform="rotate(20,275,40)"/>
-
-    <!-- Middle foliage -->
-    <ellipse cx="190" cy="148" rx="12" ry="8" fill="rgba(139,105,20,.1)" transform="rotate(-10,190,148)"/>
-    <ellipse cx="330" cy="148" rx="12" ry="8" fill="rgba(139,105,20,.1)" transform="rotate(10,330,148)"/>
-
-    <!-- ══════════════════════════════════════
-         LETTER / ENVELOPE at center
-    ══════════════════════════════════════ -->
-    <g transform="translate(224, 180)" filter="url(#softShadow)">
-      <!-- Envelope body -->
-      <rect x="0" y="0" width="72" height="52" rx="4"
-        fill="url(#paperGrad)" stroke="rgba(139,105,20,.4)" stroke-width="1.2"/>
-      <!-- Envelope flap (closed) -->
-      <path d="M0 0 L36 26 L72 0 Z"
-        fill="rgba(240,232,213,.8)" stroke="rgba(139,105,20,.35)" stroke-width="1"/>
-      <!-- Envelope bottom fold lines -->
-      <path d="M0 52 L36 28 L72 52" fill="none" stroke="rgba(139,105,20,.2)" stroke-width=".8"/>
-      <!-- Wax seal -->
-      <circle cx="36" cy="14" r="9" fill="url(#deepGrad)" opacity=".85"/>
-      <text x="36" y="18" text-anchor="middle" font-size="8" fill="rgba(255,240,200,.8)" font-family="serif">⬡</text>
-      <!-- Letter lines peeking out -->
-      <rect x="8" y="34" width="22" height="1.5" rx="1" fill="rgba(139,105,20,.25)"/>
-      <rect x="8" y="39" width="18" height="1.5" rx="1" fill="rgba(139,105,20,.2)"/>
-      <rect x="42" y="34" width="22" height="1.5" rx="1" fill="rgba(139,105,20,.25)"/>
-      <rect x="42" y="39" width="16" height="1.5" rx="1" fill="rgba(139,105,20,.2)"/>
-    </g>
-
-    <!-- ══════════════════════════════════════
-         HANDS — left (older) passing, right (younger) receiving
-    ══════════════════════════════════════ -->
-
-    <!-- Left hand — aged, giving -->
-    <g opacity=".75">
-      <!-- Palm -->
-      <path d="M110 220 C105 210 108 198 115 192 C120 187 128 188 132 193
-               C136 188 143 187 147 192 C151 187 158 188 161 194
-               C165 190 172 191 174 198 C176 208 172 220 168 228
-               C164 236 155 242 145 243 C130 244 115 235 110 220 Z"
-        fill="rgba(196,168,120,.55)" stroke="rgba(139,105,20,.3)" stroke-width=".8"/>
-      <!-- Fingers giving -->
-      <path d="M115 192 C114 182 116 172 118 165 C120 158 125 156 128 160 C130 164 130 175 132 193"
-        fill="rgba(196,168,120,.5)" stroke="rgba(139,105,20,.25)" stroke-width=".8"/>
-      <path d="M132 193 C131 182 133 170 136 163 C138 157 143 156 145 160 C147 165 147 178 147 192"
-        fill="rgba(196,168,120,.5)" stroke="rgba(139,105,20,.25)" stroke-width=".8"/>
-      <path d="M147 192 C147 181 149 170 153 164 C155 158 160 158 162 163 C163 168 162 180 161 194"
-        fill="rgba(196,168,120,.5)" stroke="rgba(139,105,20,.25)" stroke-width=".8"/>
-      <!-- Thumb -->
-      <path d="M110 220 C100 215 96 205 100 198 C104 192 112 194 115 202"
-        fill="rgba(196,168,120,.5)" stroke="rgba(139,105,20,.25)" stroke-width=".8"/>
-      <!-- Knuckle lines -->
-      <path d="M118 175 Q120 172 122 175" stroke="rgba(107,75,40,.3)" stroke-width=".7" fill="none"/>
-      <path d="M133 173 Q135 170 137 173" stroke="rgba(107,75,40,.3)" stroke-width=".7" fill="none"/>
-      <path d="M149 173 Q151 170 153 173" stroke="rgba(107,75,40,.3)" stroke-width=".7" fill="none"/>
-    </g>
-
-    <!-- Right hand — young, receiving -->
-    <g opacity=".75">
-      <!-- Palm -->
-      <path d="M350 225 C355 215 352 203 345 197 C340 192 332 193 328 198
-               C324 193 317 192 313 197 C309 193 302 194 300 200 C298 210 302 222 306 230
-               C310 238 319 244 329 244 C344 245 355 237 350 225 Z"
-        fill="rgba(196,168,120,.55)" stroke="rgba(139,105,20,.3)" stroke-width=".8"/>
-      <!-- Fingers receiving -->
-      <path d="M345 197 C346 187 344 177 342 170 C340 163 335 161 332 165 C330 169 330 180 328 198"
-        fill="rgba(196,168,120,.5)" stroke="rgba(139,105,20,.25)" stroke-width=".8"/>
-      <path d="M328 198 C329 187 327 175 324 168 C322 162 317 161 315 165 C313 170 313 183 313 197"
-        fill="rgba(196,168,120,.5)" stroke="rgba(139,105,20,.25)" stroke-width=".8"/>
-      <path d="M313 197 C313 186 311 175 307 169 C305 163 300 163 298 168 C297 173 298 185 300 200"
-        fill="rgba(196,168,120,.5)" stroke="rgba(139,105,20,.25)" stroke-width=".8"/>
-      <!-- Thumb -->
-      <path d="M350 225 C360 220 364 210 360 203 C356 197 348 199 345 207"
-        fill="rgba(196,168,120,.5)" stroke="rgba(139,105,20,.25)" stroke-width=".8"/>
-      <!-- Knuckle lines -->
-      <path d="M342 179 Q340 176 338 179" stroke="rgba(107,75,40,.3)" stroke-width=".7" fill="none"/>
-      <path d="M327 177 Q325 174 323 177" stroke="rgba(107,75,40,.3)" stroke-width=".7" fill="none"/>
-      <path d="M311 177 Q309 174 307 177" stroke="rgba(107,75,40,.3)" stroke-width=".7" fill="none"/>
-    </g>
-
-    <!-- ══════════════════════════════════════
-         YEAR LABELS — floating on branches
-    ══════════════════════════════════════ -->
-    <text x="128" y="143" text-anchor="middle" font-family="'Cinzel', serif" font-size="8" fill="rgba(139,105,20,.5)" letter-spacing="1">1952</text>
-    <text x="392" y="143" text-anchor="middle" font-family="'Cinzel', serif" font-size="8" fill="rgba(139,105,20,.5)" letter-spacing="1">1955</text>
-    <text x="215" y="72" text-anchor="middle" font-family="'Cinzel', serif" font-size="8" fill="rgba(139,105,20,.5)" letter-spacing="1">1982</text>
-    <text x="278" y="60" text-anchor="middle" font-family="'Cinzel', serif" font-size="8" fill="rgba(139,105,20,.5)" letter-spacing="1">1985</text>
-
-    <!-- ══════════════════════════════════════
-         DECORATIVE ELEMENTS
-    ══════════════════════════════════════ -->
-    <!-- Top ornamental stars -->
-    <text x="60"  y="50"  font-size="8" fill="rgba(139,105,20,.2)" text-anchor="middle">✦</text>
-    <text x="460" y="50"  font-size="8" fill="rgba(139,105,20,.2)" text-anchor="middle">✦</text>
-    <text x="260" y="18"  font-size="10" fill="rgba(139,105,20,.15)" text-anchor="middle">✦</text>
-
-    <!-- Floating small leaves -->
-    <ellipse cx="80"  cy="190" rx="8" ry="5" fill="rgba(139,105,20,.08)" transform="rotate(-35,80,190)"/>
-    <ellipse cx="440" cy="185" rx="8" ry="5" fill="rgba(139,105,20,.08)" transform="rotate(35,440,185)"/>
-    <ellipse cx="70"  cy="140" rx="6" ry="4" fill="rgba(107,39,55,.07)"  transform="rotate(-20,70,140)"/>
-    <ellipse cx="450" cy="140" rx="6" ry="4" fill="rgba(107,39,55,.07)"  transform="rotate(20,450,140)"/>
-
-    <!-- Bottom text -->
-    <text x="260" y="295" text-anchor="middle" font-family="'Cinzel', serif" font-size="7.5" fill="rgba(139,105,20,.35)" letter-spacing="3">YOUR FAMILY · YOUR LEGACY · YOUR CHAIN</text>
-  </svg>
-</div>
-
-    <div class="landing-eyebrow">HÉRITAGE · CHAÎNE · ∞</div>
-
-    <div id="typewriter"><span></span></div>
-
-    <p class="landing-sub">
-      A chest of words for those who will come.<br>
-      Each family carries its own chain — a continuous thread<br>of memory, woven across generations.
-    </p>
-
-    <div class="auth-btns">
-      <button class="btn-fb" onclick="loginFB()">
-        <div class="fb-icon">f</div>
-        <span>Continue with Facebook</span>
-      </button>
-      <button class="btn-guest" onclick="loginGuest()">
-        Continue as guest
-        <span style="opacity:.4;font-size:.65rem;margin-left:.4rem">· unverified</span>
-      </button>
-    </div>
-
-    <!-- Feature pills -->
-    <div class="landing-features">
-      <div class="feature-pill"><div class="feature-pill-dot"></div>Time-locked messages</div>
-      <div class="feature-pill"><div class="feature-pill-dot"></div>Birth capsules</div>
-      <div class="feature-pill"><div class="feature-pill-dot"></div>Family tree</div>
-      <div class="feature-pill"><div class="feature-pill-dot"></div>Book of Life</div>
-    </div>
-  </div>
-
-  <!-- Ornamental divider -->
-  <div class="landing-divider">
-    <div class="divider-line"></div>
-    <div class="divider-ornament">✦</div>
-    <div class="divider-line"></div>
-  </div>
-
-  <!-- How it works -->
-  <div class="how-it-works">
-    <div class="hiw-label">HOW IT WORKS</div>
-    <div class="hiw-steps">
-      <div class="hiw-step">
-        <div class="hiw-number">I</div>
-        <div class="hiw-title">Write</div>
-        <div class="hiw-desc">Seal a message, a memory, a letter — for someone who doesn't exist yet</div>
-      </div>
-      <div class="hiw-connector">—</div>
-      <div class="hiw-step">
-        <div class="hiw-number">II</div>
-        <div class="hiw-title">Lock</div>
-        <div class="hiw-desc">Choose when it opens — in 10, 20 or 50 years. Or on a loved one's 18th birthday</div>
-      </div>
-      <div class="hiw-connector">—</div>
-      <div class="hiw-step">
-        <div class="hiw-number">III</div>
-        <div class="hiw-title">Pass on</div>
-        <div class="hiw-desc">Invite your family. Build a chain of voices that spans generations</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Ornamental divider -->
-  <div class="landing-divider">
-    <div class="divider-line"></div>
-    <div class="divider-ornament">✦</div>
-    <div class="divider-line"></div>
-  </div>
-
-  <!-- Stats band -->
-  <div class="landing-stats">
-    <div class="stat-item">
-      <div class="stat-number"><span id="cnt-families">0</span></div>
-      <div class="stat-label">Families</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-number"><span id="cnt-messages">0</span></div>
-      <div class="stat-label">Messages sealed</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-number"><span id="cnt-capsules">0</span></div>
-      <div class="stat-label">Capsules opening this year</div>
-    </div>
-  </div>
-
-  <div style="display:flex;gap:1.5rem;justify-content:center;margin-bottom:.75rem;flex-wrap:wrap">
-    <a href="#" onclick="document.getElementById('privacy-modal').classList.add('open');return false" style="font-size:.62rem;color:rgba(239,246,255,.25);letter-spacing:.1em;text-decoration:none">Privacy Policy</a>
-    <a href="#" onclick="document.getElementById('terms-modal').classList.add('open');return false" style="font-size:.62rem;color:rgba(239,246,255,.25);letter-spacing:.1em;text-decoration:none">Terms of Service</a>
-    <a href="mailto:hello@legacychain.app" style="font-size:.62rem;color:rgba(239,246,255,.25);letter-spacing:.1em;text-decoration:none">Contact</a>
-  </div>
-  <div class="landing-footer-stamp">A BLOCKCHAIN OF LOVE · SEALED IN LIGHT</div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════
-     MAIN APP
-     ══════════════════════════════════════════════════════ -->
-<div class="page" id="app">
-
-  <!-- Navigation -->
-  <nav class="app-nav">
-    <div class="nav-logo">⬡ LEGACYCHAIN</div>
-    <div class="nav-tabs">
-      <button class="nav-tab active"  onclick="switchTab('chain',this)">CHAIN</button>
-      <button class="nav-tab"         onclick="switchTab('tree',this)">TREE</button>
-      <button class="nav-tab"         onclick="switchTab('origins',this)">ORIGINS</button>
-      <button class="nav-tab"         onclick="switchTab('challenges',this)">CHALLENGES</button>
-      <button class="nav-tab"         onclick="switchTab('book',this)">BOOK OF LIFE</button>
-      <button class="nav-tab"         onclick="switchTab('humanity',this)">VOICES OF HUMANITY</button>
-    </div>
-    <div class="nav-right">
-      <div class="user-badge">
-        <div class="user-avatar" id="nav-avatar">J</div>
-        <span id="nav-name">Jean Doe</span>
-        <span class="premium-badge" id="premium-badge" style="display:none">✦ FOUNDER</span>
-      </div>
-      <button class="btn-invite" onclick="openInvite()">+ INVITE FAMILY</button>
-    </div>
-  </nav>
-
-  <div class="app-content">
-
-    <!-- ════════════ CHAIN TAB ════════════ -->
-    <div class="tab-content active" id="tab-chain">
-      <div class="section-header">
-        <div class="section-title">FAMILY CHAIN</div>
-        <div class="section-sub" id="chain-family-name">THE DOE FAMILY · EST. 2024</div>
-      </div>
-      <div class="chain-container">
-
-        <!-- Scrolling message feed -->
-        <div class="chain-scroll-wrap">
-          <div class="chain-scroll-inner" id="chain-timeline"></div>
-        </div>
-
-        <!-- Compose panel -->
-        <div class="chain-compose-col">
-          <div class="compose-panel">
-            <div class="compose-panel-header">
-              <div class="compose-panel-icon">⬡</div>
-              <h3>SEAL A MESSAGE</h3>
-            </div>
-
-            <div class="form-group">
-              <label>MESSAGE TYPE</label>
-              <select class="form-select" id="msg-type" onchange="updateMsgType()">
-                <option value="standard">Standard message</option>
-                <option value="birth">Birth message 👶</option>
-                <option value="capsule">Collective capsule</option>
-              </select>
-            </div>
-
-            <!-- Birth fields (shown when type = birth) -->
-            <div class="form-group" id="birth-fields" style="display:none">
-              <label>BABY'S NAME</label>
-              <input type="text" class="form-input" id="baby-name" placeholder="Lucas...">
-              <label style="margin-top:.5rem">DATE OF BIRTH</label>
-              <input type="date" class="form-input" id="baby-dob">
-              <div id="birth-preview" style="font-size:.72rem;color:var(--amber);margin-top:.5rem;line-height:1.6"></div>
-            </div>
-
-            <!-- Capsule fields (shown when type = capsule) -->
-            <div class="form-group" id="capsule-fields" style="display:none">
-              <label>CAPSULE NAME</label>
-              <input type="text" class="form-input" id="capsule-name" placeholder="Family reunion 2030...">
-              <label style="margin-top:.5rem">OPEN ON</label>
-              <input type="date" class="form-input" id="capsule-date">
-            </div>
-
-            <div class="form-group">
-              <label>YOUR MESSAGE</label>
-              <textarea class="form-textarea" id="msg-text" maxlength="300"
-                placeholder="Write something that will last forever..."
-                oninput="updateCharCount()"></textarea>
-              <div class="char-count"><span id="char-count">0</span>/300</div>
-            </div>
-
-            <div class="form-group" id="emotion-group">
-              <label>EMOTION</label>
-              <div class="emotion-picker" id="emotion-picker">
-                <button class="emotion-btn hope selected"    onclick="selectEmotion('hope',this)">HOPE</button>
-                <button class="emotion-btn love"             onclick="selectEmotion('love',this)">LOVE</button>
-                <button class="emotion-btn wisdom"           onclick="selectEmotion('wisdom',this)">WISDOM</button>
-                <button class="emotion-btn memory"           onclick="selectEmotion('memory',this)">MEMORY</button>
-                <button class="emotion-btn warning"          onclick="selectEmotion('warning',this)">WARNING</button>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>UNLOCK YEAR <span style="opacity:.5">(optional time-lock)</span></label>
-              <input type="number" class="form-input" id="unlock-year" placeholder="e.g. 2040" min="2025" max="2100">
-            </div>
-
-            <div class="moderation-warning" id="mod-warning"></div>
-            <button class="btn-submit" onclick="submitMessage()">⬡ SEAL THIS MESSAGE</button>
-          </div>
-
-          <!-- Premium upsell card -->
-          <div class="premium-upsell" onclick="document.getElementById('upgrade-modal').classList.add('open')">
-            <div class="premium-upsell-icon">✦</div>
-            <div class="premium-upsell-text">
-              <div class="premium-upsell-title">UNLOCK PREMIUM — $10 FOREVER</div>
-              <div class="premium-upsell-sub">Unlimited messages · Audio · Video · PDF export</div>
-            </div>
-            <div class="premium-upsell-arrow">→</div>
-          </div>
-        </div><!-- /.chain-compose-col -->
-      </div><!-- /.chain-container -->
-    </div><!-- /#tab-chain -->
-
-    <!-- ════════════ TREE TAB ════════════ -->
-    <div class="tab-content" id="tab-tree">
-      <div class="section-title">FAMILY TREE</div>
-      <div class="section-sub">Your lineage, visualised across time</div>
-
-      <!-- SVG injected by renderTree() -->
-      <div id="tree-svg-container"></div>
-
-      <button class="add-member-btn" onclick="toggleAddMember()">+ ADD FAMILY MEMBER</button>
-
-      <div class="member-panel" id="member-panel">
-        <h4>NEW MEMBER</h4>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-          <div class="form-group"><label>FIRST NAME</label><input type="text" class="form-input" id="new-firstname" placeholder="Marie"></div>
-          <div class="form-group"><label>LAST NAME</label><input type="text" class="form-input" id="new-lastname" placeholder="Doe"></div>
-          <div class="form-group"><label>BIRTH YEAR</label><input type="number" class="form-input" id="new-birth" placeholder="1985"></div>
-          <div class="form-group">
-            <label>RELATIONSHIP</label>
-            <select class="form-select" id="new-relation">
-              <option>Parent</option>
-              <option>Child</option>
-              <option>Sibling</option>
-              <option>Grandparent</option>
-              <option>Grandchild</option>
-              <option>Partner</option>
-            </select>
-          </div>
-        </div>
-        <button class="btn-submit" onclick="addMember()">ADD TO TREE</button>
-      </div>
-    </div>
-
-    <!-- ════════════ ORIGINS TAB ════════════ -->
-    <div class="tab-content" id="tab-origins">
-      <div class="section-title">ORIGINS & DNA</div>
-      <div class="section-sub">Your family's roots across the world</div>
-
-      <div class="dna-warning">
-        <strong>⚠ NON-CERTIFIED DATA</strong>
-        These origins are manually entered based on family traditions or personal estimates. They may be inaccurate. For absolute certainty, use a certified DNA test (23andMe, Ancestry, MyHeritage). Only a DNA test is 100% reliable.
-      </div>
-
-      <div class="origins-grid">
-        <!-- Left: input form -->
-        <div>
-          <div class="form-group">
-            <label>ADD ORIGIN</label>
-            <div id="origin-rows">
-              <div class="origin-row">
-                <input type="text"   class="form-input" placeholder="France"  id="or-0-country">
-                <input type="number" class="form-input" placeholder="%" id="or-0-pct" min="0" max="100" onchange="updateTotal()">
-                <span style="color:var(--gold);font-size:.8rem">%</span>
-              </div>
-              <div class="origin-row">
-                <input type="text"   class="form-input" placeholder="Senegal" id="or-1-country">
-                <input type="number" class="form-input" placeholder="%" id="or-1-pct" min="0" max="100" onchange="updateTotal()">
-                <span style="color:var(--gold);font-size:.8rem">%</span>
-              </div>
-              <div class="origin-row">
-                <input type="text"   class="form-input" placeholder="Vietnam" id="or-2-country">
-                <input type="number" class="form-input" placeholder="%" id="or-2-pct" min="0" max="100" onchange="updateTotal()">
-                <span style="color:var(--gold);font-size:.8rem">%</span>
-              </div>
-            </div>
-            <!-- FIX: moved hover styles to CSS; replaced inline onmouseover/onmouseout -->
-            <button class="btn-answer" onclick="addOriginRow()">+ ADD ORIGIN</button>
-            <div class="total-bar total-low" id="origin-total">⚠ Total: 0% — incomplete</div>
-          </div>
-          <div style="font-size:.7rem;color:rgba(239,246,255,.3);margin-top:1rem;line-height:1.7">
-            Discover your true origins →<br>
-            <a href="https://www.23andme.com" style="color:rgba(139,105,20,.4);text-decoration:none;letter-spacing:.05em">23andMe</a> ·
-            <a href="https://www.ancestry.com" style="color:rgba(139,105,20,.4);text-decoration:none;letter-spacing:.05em">Ancestry</a>
-          </div>
-        </div>
-
-        <!-- Right: donut chart -->
-        <div>
-          <div id="origin-chart-box">
-            <div style="font-size:.65rem;color:rgba(239,246,255,.4);letter-spacing:.2em;margin-bottom:1rem">ORIGIN DISTRIBUTION</div>
-            <canvas id="origin-chart" width="200" height="200" style="max-width:200px;margin:0 auto;display:block"></canvas>
-            <div id="origin-legend" style="margin-top:1rem;font-size:.7rem;color:rgba(239,246,255,.5);text-align:left"></div>
-            <div style="font-size:.6rem;color:rgba(255,179,71,.3);margin-top:.75rem;letter-spacing:.1em">ESTIMATED ORIGINS · NOT CERTIFIED</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Family Pact -->
-      <div class="pacte-card" style="margin-top:2rem">
-        <div class="section-title" style="margin-bottom:.5rem">FAMILY PACT</div>
-        <p style="font-size:.7rem;color:rgba(239,246,255,.4);margin-bottom:1.5rem;letter-spacing:.1em">Sign your commitment to future generations</p>
-        <p class="pacte-text">"I, <span id="pacte-name" style="color:var(--gold)">Jean</span>, commit to presenting LegacyChain to my children before the age of 60 and to transmitting our family name and access to our chain."</p>
-        <div class="pacte-signers" id="pacte-signers">
-          <div class="signer">🛡 Marie · 2024</div>
-          <div class="signer">🛡 Robert · 2024</div>
-        </div>
-        <button class="btn-submit" style="max-width:280px;margin:0 auto" onclick="signPacte()">🛡 SIGN THE FAMILY PACT</button>
-      </div>
-    </div>
-
-    <!-- ════════════ CHALLENGES TAB ════════════ -->
-    <div class="tab-content" id="tab-challenges">
-      <div class="section-title">INTERGENERATIONAL CHALLENGES</div>
-      <div class="section-sub">Questions that echo through the decades</div>
-
-      <!-- Challenges injected by renderChallenges() -->
-      <div id="challenges-container"></div>
-
-      <!-- Create challenge -->
-      <div style="margin-top:2rem;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:1.5rem">
-        <div style="font-size:.75rem;letter-spacing:.15em;color:var(--gold);margin-bottom:1rem">CREATE A CHALLENGE</div>
-        <textarea class="form-textarea" id="new-challenge" placeholder="What question should echo through generations?" style="min-height:80px"></textarea>
-        <button class="btn-submit" style="margin-top:.75rem" onclick="createChallenge()">SEAL THIS CHALLENGE</button>
-      </div>
-    </div>
-
-    <!-- ════════════ BOOK OF LIFE TAB ════════════ -->
-    <div class="tab-content" id="tab-book">
-      <div class="section-title">BOOK OF LIFE</div>
-      <div class="section-sub">Your digital legacy — 6 chapters</div>
-
-      <!-- Stepper and progress injected by initBook() -->
-      <div class="stepper" id="stepper"></div>
-      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:16.6%"></div></div>
-      <div id="chapters-container"></div>
-    </div>
-
-    <!-- ════════════ VOICES OF HUMANITY TAB ════════════ -->
-    <div class="tab-content" id="tab-humanity">
-      <div class="humanity-hero">
-        <div class="humanity-title">VOICES OF HUMANITY</div>
-        <p class="humanity-sub">What our era wants to say to those who will come after us</p>
-        <div style="font-size:.75rem;color:rgba(239,246,255,.4);letter-spacing:.1em">
-          <span id="h-voices">0</span> voices · <span id="h-countries">0</span> countries · era 2025
-        </div>
-      </div>
-
-      <div style="padding:0 2rem">
-
-        <!-- Typewriter block -->
-        <div class="typewriter-block">
-          <div class="typewriter-label">WHAT OTHERS HAVE ALREADY LEFT...</div>
-          <div class="tw-country" id="tw-country"></div>
-          <div class="tw-text" id="tw-text"><span id="tw-cursor"></span></div>
-          <button class="btn-write" onclick="scrollToCompose()">→ Write yours</button>
-        </div>
-
-        <div class="humanity-cols">
-          <!-- Left: masonry wall -->
-          <div>
-            <div class="wall-title">VOICES OF THE WORLD</div>
-            <div class="masonry-wall" id="masonry-wall"></div>
-          </div>
-
-          <!-- Right: compose panel -->
-          <div id="compose-humanity">
-            <div class="compose-panel" style="position:sticky;top:80px">
-              <h3>LEAVE YOUR VOICE FOR THE FUTURE</h3>
-
-              <div class="form-group">
-                <label>YOUR NAME <span style="opacity:.5">(optional)</span></label>
-                <input type="text" class="form-input" id="h-name" placeholder="A voice from Australia">
-              </div>
-
-              <div class="form-group">
-                <label>COUNTRY</label>
-                <input type="text" class="form-input" id="h-country" placeholder="Australia" value="Australia">
-              </div>
-
-              <div class="form-group">
-                <label>TO WHOM</label>
-                <select class="form-select" id="h-to">
-                  <option>To future generations</option>
-                  <option>To my unknown descendants</option>
-                  <option>To humanity in 2100</option>
-                  <option>To whoever reads this</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>YOUR MESSAGE</label>
-                <!-- FIX: removed duplicate id="h-message" attribute -->
-                <textarea class="form-textarea" id="h-message" maxlength="300"
-                  oninput="updateHCharCount()"
-                  placeholder="I live in a world where..."></textarea>
-                <div class="char-count"><span id="h-char">0</span>/300</div>
-              </div>
-
-              <div class="form-group">
-                <label>EMOTION</label>
-                <div class="emotion-picker" id="h-emotion-picker">
-                  <button class="emotion-btn hope selected"  onclick="selectHEmotion('hope',this)">HOPE</button>
-                  <button class="emotion-btn love"           onclick="selectHEmotion('love',this)">LOVE</button>
-                  <button class="emotion-btn wisdom"         onclick="selectHEmotion('wisdom',this)">WISDOM</button>
-                  <button class="emotion-btn"                onclick="selectHEmotion('peace',this)">PEACE</button>
-                  <button class="emotion-btn warning"        onclick="selectHEmotion('warning',this)">WARNING</button>
-                  <button class="emotion-btn memory"         onclick="selectHEmotion('memory',this)">MEMORY</button>
-                </div>
-              </div>
-
-              <div class="moderation-warning" id="h-mod-warning"></div>
-              <button class="btn-submit" onclick="submitHumanityMsg()">⬡ SEAL YOUR VOICE</button>
-              <div style="font-size:.65rem;color:rgba(239,246,255,.2);text-align:center;margin-top:.75rem;line-height:1.6">
-                Your message will be reviewed by AI before publication.<br>We never post anything on your profile.
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div><!-- /.app-content -->
-</div><!-- /#app -->
-
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>
-/* =====================================================
-   data.js — App state + all static seed data
-   ===================================================== */
-
-// ── Global app state ──────────────────────────────────
-let state = {
-  user:             null,
-  isPremium:        false,
-  familyName:       'Doe',
-  selectedEmotion:  'hope',
-  hEmotion:         'hope',
-  messages:         [],
-  humanityMessages: [],
-  treeMembers:      [],
-  bookData:         {},
-  currentChapter:   0,
-  pacte:            false,
-  originRows:       3,
-  challenges:       [],
-  soundOn:          false,
-  audioCtx:         null,
+─────────────────────────
+const TREE_SEED = [
+  { id: 1, name: "Robert Doe", birth: 1952, x: 180, y: 60  },
+  { id: 2, name: "Irène Doe",  birth: 1955, x: 360, y: 60  },
+  { id: 3, name: "Jean Doe",   birth: 1982, x: 120, y: 180 },
+  { id: 4, name: "Marie Doe",  birth: 1985, x: 300, y: 180 },
+  { id: 5, name: "Sophie Doe", birth: 1988, x: 480, y: 180 },
+  { id: 6, name: "Lucas Doe",  birth: 2024, x: 200, y: 300 },
+];
+const TREE_LINKS = [[1,3],[1,4],[2,3],[2,4],[1,5],[2,5],[3,6],[4,6]];
+
+// ── Content moderation word list ──────────────────────
+const BANNED_WORDS = ['hate','kill','die','stupid','idiot','racist','fuck','shit','bitch','dumb','ugly'];
+
+// ── Country → flag emoji map ──────────────────────────
+const FLAG_MAP = {
+  Australia: '🇦🇺', France: '🇫🇷', Japan: '🇯🇵',
+  USA: '🇺🇸', 'United States': '🇺🇸', Brazil: '🇧🇷',
+  Nigeria: '🇳🇬', India: '🇮🇳', Canada: '🇨🇦',
+  Ukraine: '🇺🇦', China: '🇨🇳', Argentina: '🇦🇷', Senegal: '🇸🇳',
 };
 
-// ── Demo chain messages ───────────────────────────────
-const DEMO_MESSAGES = [
-  {
-    author: 'Marie', year: 1987,
-    text: "To whoever reads this: I planted an oak tree the day you were born. I hope it's still standing, taller than any of us ever dreamed.",
-    emotion: 'hope', unlockYear: null, type: 'standard',
-  },
-  {
-    author: 'Robert', year: 2001,
-    text: "When the towers fell, I held your grandmother's hand and I thought of all of you, unborn. I wanted a world without fear for you. Did we manage it?",
-    emotion: 'memory', unlockYear: null, type: 'standard',
-  },
-  {
-    author: 'Jean', year: 2024,
-    text: "To Lucas, my firstborn. You made me understand that love is not something you feel — it's something you do, every single day.",
-    emotion: 'love', unlockYear: null, type: 'birth', baby: 'Lucas', deliveryYear: 2042,
-  },
-  {
-    author: 'Sophie', year: 2024,
-    text: "I've sealed this message to be opened on our 50th family reunion. If you're reading this in 2074 — the family is still here. That's enough.",
-    emotion: 'wisdom', unlockYear: 2074, type: 'standard',
-  },
-];
+/* =====================================================
+   canvas.js — All canvas / particle / animation effects
+   ===================================================== */
 
-// ── Demo humanity voices ──────────────────────────────
-const DEMO_HUMANITY = [
-  { author: 'A voice from Senegal',   country: 'Senegal',   flag: '🇸🇳', text: "I live in a world where we still fight for food. I hope you've solved that.", emotion: 'hope',    year: 2025, likes: 47  },
-  { author: 'A voice from Japan',     country: 'Japan',     flag: '🇯🇵', text: "My daughter was just born. I entrust her to you. Take care of her.",           emotion: 'love',    year: 2025, likes: 89  },
-  { author: 'A voice from Ukraine',   country: 'Ukraine',   flag: '🇺🇦', text: "We were crossing a war. I hope you no longer know this.",                       emotion: 'hope',    year: 2025, likes: 134 },
-  { author: 'A voice from Brazil',    country: 'Brazil',    flag: '🇧🇷', text: "The forest I loved as a child is disappearing. I hope you managed to keep it.", emotion: 'warning', year: 2025, likes: 62  },
-  { author: 'A voice from Australia', country: 'Australia', flag: '🇦🇺', text: "The oceans were rising slowly. How are they where you are?",                    emotion: 'wisdom',  year: 2025, likes: 31  },
-  { author: 'A voice from Nigeria',   country: 'Nigeria',   flag: '🇳🇬', text: "I'm young and I'm scared and I'm hopeful. Both at once. Do you understand?",    emotion: 'hope',    year: 2025, likes: 78  },
-];
+// ── Custom cursor ─────────────────────────────────────
+(function initCursor() {
+  const cur   = document.getElementById('cursor');
+  const trail = document.getElementById('cursor-trail');
+  document.addEventListener('mousemove', e => {
+    cur.style.left = e.clientX + 'px';
+    cur.style.top  = e.clientY + 'px';
+    setTimeout(() => {
+      trail.style.left = e.clientX + 'px';
+      trail.style.top  = e.clientY + 'px';
+    }, 80);
+  });
+})();
 
-// ── Typewriter messages (Humanity tab) ───────────────
-const TW_MESSAGES = [
-  { country: "A voice from Senegal · 2025",   text: "I live in a world where we still fight for food. I hope you've solved that." },
-  { country: "A voice from Japan · 2025",     text: "My daughter was just born. I entrust her to you. Take care of her." },
-  { country: "A voice from France · 2025",    text: "We were afraid of the future. Did you find peace?" },
-  { country: "A voice from Ukraine · 2025",   text: "We were crossing a war. I hope you no longer know this." },
-  { country: "A voice from Australia · 2025", text: "The oceans were rising slowly. How are they where you are?" },
-  { country: "A voice from Canada · 2025",    text: "I loved someone with all my soul. Does love still exist where you are?" },
-  { country: "A voice from India · 2025",     text: "We were 8 billion. How many are you now?" },
-  { country: "A voice from Nigeria · 2025",   text: "I'm young and scared and hopeful. Both at once. You understand?" },
-];
+// ── Nebula background (persistent) ────────────────────
+(function initNebulaBg() {
+  const c   = document.getElementById('bg');
+  const ctx = c.getContext('2d');
+  let pts   = [];
 
-// ── Intergenerational challenges ──────────────────────
-const CHALLENGES_SEED = [
-  { q: "What is happiness to you?",                answers: [{ author: "Marie",  year: 2024, text: "Happiness is a quiet Sunday morning with no plan and nowhere to be." }] },
-  { q: "What advice would you give your younger self?", answers: [{ author: "Robert", year: 2024, text: "Stop waiting. Everything you want is waiting for you to be brave enough to ask." }] },
-  { q: "Your era in 3 words?",                     answers: [{ author: "Sophie", year: 2024, text: "Anxious. Connected. Searching." }] },
-  { q: "What do you hope for your descendants?",   answers: [{ author: "Jean",   year: 2024, text: "That they live in a world where kindness is unremarkable because it's ordinary." }] },
-];
+  function resize() {
+    c.width  = window.innerWidth;
+    c.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
 
-// ── Book of Life chapters ──────────────────────────────
-const BOOK_CHAPTERS = [
-  {
-    title: "WHO I AM", sub: "Your origins, your childhood, what built you",
-    fields: [
-      { l: "Date and place of birth",  p: "15 March 1985, Paris..." },
-      { l: "My childhood in a few words", p: "A summer that lasted forever..." },
-      { l: "What built me",             p: "The day I realized that..." },
-    ],
-  },
-  {
-    title: "MY VALUES", sub: "What you believe, what guides you",
-    fields: [
-      { l: "My 3 most important values", p: "Honesty, courage, kindness..." },
-      { l: "What I believe deeply",      p: "I believe that every human..." },
-      { l: "What I regret",              p: "Not having said 'I love you' more..." },
-    ],
-  },
-  {
-    title: "MY LIFE ADVICE", sub: "Wisdom for those who follow",
-    fields: [
-      { l: "To my children",                   p: "Never stop learning..." },
-      { l: "To my grandchildren",              p: "The world you inherit..." },
-      { l: "To generations I will never see",  p: "By the time you read this..." },
-    ],
-  },
-  {
-    title: "MY TREASURES", sub: "What you love, what changed you",
-    fields: [
-      { l: "My favourite recipe",            p: "Grandmother's tart..." },
-      { l: "The song that defines me & why", p: "Because the first time I heard..." },
-      { l: "The book that changed me",       p: "It made me see the world differently..." },
-      { l: "The place where I feel at home", p: "There's a bench by the river..." },
-    ],
-  },
-  {
-    title: "PERSONAL LETTERS", sub: "Words for each member of your family",
-    fields: [
-      { l: "A letter to someone you love", p: "Dear [Name], there are things I've never said..." },
-    ],
-  },
-  {
-    title: "MY LEGACY", sub: "What you leave behind",
-    fields: [
-      { l: "What I'm most proud of",              p: "That I kept my word..." },
-      { l: "What I'd like to be remembered for",  p: "Someone who showed up..." },
-      { l: "My last words",                       p: "If you're reading this, know that..." },
-    ],
-  },
-];
+  for (let i = 0; i < 120; i++) {
+    pts.push({
+      x:     Math.random() * window.innerWidth,
+      y:     Math.random() * window.innerHeight,
+      vx:    (Math.random() - .5) * .15,
+      vy:    (Math.random() - .5) * .15,
+      r:     Math.random() * 1.5 + .5,
+      a:     Math.random() * .5 + .1,
+      color: Math.random() < .7 ? '0,255,209' : '192,132,252',
+    });
+  }
 
-// ── Family tree seed data ─────
+  function drawNebula() {
+    ctx.clearRect(0, 0, c.width, c.height);
+    pts.forEach((p, i) => {
+      // Draw star dot
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.color},${p.a})`;
+      ctx.fill();
+
+      // Draw connection lines to nearby stars
+      pts.slice(i + 1).forEach(q => {
+        const d = Math.hypot(p.x - q.x, p.y - q.y);
+        if (d < 100) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(q.x, q.y);
+          ctx.strokeStyle = `rgba(139,105,20,${.03 * (1 - d / 100)})`;
+          ctx.lineWidth = .5;
+          ctx.stroke();
+        }
+      });
+
+      // Move and bounce
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0 || p.x > c.width)  p.vx *= -1;
+      if (p.y < 0 || p.y > c.height) p.vy *= -1;
+    });
+    requestAnimationFrame(drawNebula);
+  }
+  drawNebula();
+})();
+
+// ── Onboarding canvas animation ───────────────────────
+(function initOnboarding() {
+  const c     = document.getElementById('ob-canvas');
+  const ctx   = c.getContext('2d');
+  const title = document.getElementById('ob-title');
+  const sub   = document.getElementById('ob-sub');
+
+  c.width  = window.innerWidth;
+  c.height = window.innerHeight;
+
+  const WORD   = 'FAMILLE';
+  let   t      = 0;
+  const letters = WORD.split('').map((ch, i) => ({
+    ch,
+    x:  c.width  / 2 + (i - WORD.length / 2) * 60,
+    y:  c.height / 2,
+    vx: (Math.random() - .5) * 8,
+    vy: (Math.random() - .5) * 8,
+    a:  0,
+  }));
+
+  function drawOnboarding() {
+    ctx.clearRect(0, 0, c.width, c.height);
+    t++;
+
+    if (t < 60) {
+      // Phase 1 — letters float in
+      letters.forEach(l => {
+        l.a  = Math.min(1, l.a + .02);
+        l.x += l.vx * 0.95;
+        l.y += l.vy * 0.95;
+        l.vx *= 0.95; l.vy *= 0.95;
+        ctx.font      = 'bold clamp(2rem,6vw,5rem) Cinzel Decorative';
+        ctx.fillStyle = `rgba(139,105,20,${l.a})`;
+        ctx.textAlign = 'center';
+        ctx.fillText(l.ch, l.x, l.y);
+      });
+
+    } else if (t < 160) {
+      // Phase 2 — steady letters + horizontal line
+      letters.forEach(l => {
+        ctx.font      = 'bold clamp(2rem,6vw,5rem) Cinzel Decorative';
+        ctx.fillStyle = 'rgba(139,105,20,0.9)';
+        ctx.textAlign = 'center';
+        ctx.fillText(l.ch, l.x, l.y);
+      });
+      const prog = (t - 60) / 100;
+      const cx   = c.width / 2;
+      const cy   = c.height / 2 + 80;
+      ctx.beginPath();
+      ctx.moveTo(cx - 200 * prog, cy);
+      ctx.lineTo(cx + 200 * prog, cy);
+      ctx.strokeStyle = `rgba(139,105,20,${prog * .4})`;
+      ctx.lineWidth   = 1;
+      ctx.stroke();
+
+    } else {
+      // Phase 3 — logo reveal
+      if (t === 161) {
+        title.textContent = '⬡ LEGACYCHAIN';
+        sub.textContent   = 'Every family deserves to travel through time';
+      }
+      const alpha = Math.min(1, (t - 160) / 30);
+      ctx.fillStyle = `rgba(139,105,20,${alpha})`;
+      ctx.font      = 'bold 60px Cinzel Decorative';
+      ctx.textAlign = 'center';
+      ctx.fillText('⬡', c.width / 2, c.height / 2);
+    }
+
+    if (t < 300) {
+      requestAnimationFrame(drawOnboarding);
+    } else {
+      // Only go to landing if user hasn't already logged in
+      if (!state.user) setTimeout(skipOnboarding, 1000);
+    }
+  }
+  drawOnboarding();
+})();
+
+// ── Submit particle burst ──────────────────────────────
+function showSubmitAnimation(callback) {
+  const overlay = document.getElementById('submit-anim');
+  const c       = document.getElementById('submit-canvas');
+  const ctx     = c.getContext('2d');
+
+  c.width  = window.innerWidth;
+  c.height = window.innerHeight;
+  overlay.style.display = 'flex';
+
+  const pts = [];
+  for (let i = 0; i < 200; i++) {
+    pts.push({
+      x:  c.width / 2,
+      y:  c.height / 2,
+      vx: (Math.random() - .5) * 8,
+      vy: (Math.random() - .5) * 8 - (Math.random() * 4),
+      a:  1,
+      r:  Math.random() * 3 + 1,
+    });
+  }
+
+  let frame = 0;
+  function animate() {
+    ctx.clearRect(0, 0, c.width, c.height);
+    pts.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.a -= .015;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(139,105,20,${p.a})`;
+      ctx.fill();
+    });
+    frame++;
+    if (frame < 100) {
+      requestAnimationFrame(animate);
+    } else {
+      overlay.style.display = 'none';
+      callback();
+    }
+  }
+  animate();
+}
+
+// ── Immersive read mode background ────────────────────
+function startImmersiveBg() {
+  const c   = document.getElementById('im-canvas');
+  const ctx = c.getContext('2d');
+  c.width   = window.innerWidth;
+  c.height  = window.innerHeight;
+
+  const pts = [];
+  for (let i = 0; i < 60; i++) {
+    pts.push({
+      x:  Math.random() * c.width,
+      y:  Math.random() * c.height,
+      vx: (Math.random() - .5) * .3,
+      vy: (Math.random() - .5) * .3,
+      r:  Math.random() * 2 + .5,
+      a:  Math.random() * .3,
+    });
+  }
+
+  function drawImmersive() {
+    if (!document.getElementById('immersive').classList.contains('open')) return;
+    ctx.clearRect(0, 0, c.width, c.height);
+    pts.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(139,105,20,${p.a})`;
+      ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0 || p.x > c.width)  p.vx *= -1;
+      if (p.y < 0 || p.y > c.height) p.vy *= -1;
+    });
+    requestAnimationFrame(drawImmersive);
+  }
+  drawImmersive();
+}
+
+/* =====================================================
+   auth.js — Onboarding skip, Landing, Login, App init
+   ===================================================== */
+
+// ── Onboarding ────────────────────────────────────────
+function skipOnboarding() {
+  // Don't show landing if user already entered the app
+  if (state.user) return;
+  const ob = document.getElementById('onboarding');
+  ob.style.opacity = '0';
+  setTimeout(() => {
+    ob.style.display = 'none';
+    showLanding();
+  }, 600);
+}
+
+// ── Landing ───────────────────────────────────────────
+function showLanding() {
+  const l = document.getElementById('landing');
+  l.style.display  = 'flex';
+  l.style.zIndex   = '2';
+  l.classList.add('active');
+  setTimeout(() => l.style.opacity = '1', 50);
+  typewriterEffect();
+  animateCounters();
+}
+
+function typewriterEffect() {
+  const el      = document.querySelector('#typewriter span');
+  const phrases = [
+    "What will you leave behind?",
+    "Ce que vous laisserez...",
+    "What echoes through time?",
+  ];
+  let pi = 0, ci = 0, deleting = false;
+
+  function tick() {
+    const p = phrases[pi];
+    if (!deleting) {
+      el.textContent = p.slice(0, ci++);
+      if (ci > p.length) { deleting = true; setTimeout(tick, 2000); return; }
+    } else {
+      el.textContent = p.slice(0, ci--);
+      if (ci < 0) { deleting = false; pi = (pi + 1) % phrases.length; ci = 0; }
+    }
+    setTimeout(tick, deleting ? 50 : 80);
+  }
+  tick();
+}
+
+function animateCounters() {
+  const targets = { families: 12847, messages: 94320, capsules: 3201 };
+  Object.keys(targets).forEach(k => {
+    const el     = document.getElementById('cnt-' + k);
+    let   v      = 0;
+    const target = targets[k];
+    const step   = Math.ceil(target / 80);
+    const iv = setInterval(() => {
+      v = Math.min(v + step, target);
+      el.textContent = v.toLocaleString();
+      if (v >= target) clearInterval(iv);
+    }, 20);
+  });
+}
+
+// ── Login ─────────────────────────────────────────────
+function loginFB() {
+  const name  = prompt("Enter your name (Facebook simulation):", "Jean Doe") || "Jean Doe";
+  const parts = name.trim().split(' ');
+  state.user       = { name, first: parts[0], last: parts[parts.length - 1] || 'Doe', fb: true };
+  state.familyName = parts[parts.length - 1] || 'Doe';
+  enterApp();
+}
+
+function loginGuest() {
+  const name  = prompt("Your full name:", "Marie Dupont") || "Marie Dupont";
+  const parts = name.trim().split(' ');
+  state.user       = { name, first: parts[0], last: parts[parts.length - 1] || 'Guest', fb: false };
+  state.familyName = parts[parts.length - 1] || 'Guest';
+  enterApp();
+}
+
+function enterApp() {
+  trackLogin();
+  const landing = document.getElementById('landing');
+  const app     = document.getElementById('app');
+  // Fade out landing
+  landing.style.opacity = '0';
+  landing.style.transition = 'opacity .6s';
+  setTimeout(() => {
+    // Fully hide landing (remove from stacking context)
+    landing.classList.remove('active');
+    landing.style.display = 'none';
+    landing.style.zIndex  = '-1';
+    // Show app
+    app.style.display  = 'block';
+    app.style.opacity  = '0';
+    app.style.zIndex   = '2';
+    app.classList.add('active');
+    setTimeout(() => { app.style.opacity = '1'; }, 50);
+    initApp();
+  }, 600);
+}
+
+// ── App initialisation ────────────────────────────────
+function initApp() {
+  showAppFooter();
+  document.getElementById('nav-name').textContent         = state.user.name;
+  document.getElementById('nav-avatar').textContent       = state.user.first[0];
+  document.getElementById('chain-family-name').textContent = `THE ${state.familyName.toUpperCase()} FAMILY · EST. ${new Date().getFullYear()}`;
+  document.getElementById('invite-link').textContent      = `legacychain.app/?famille=${state.familyName}`;
+  document.getElementById('pacte-name').textContent       = state.user.first;
+
+  state.messages         = [...DEMO_MESSAGES];
+  state.humanityMessages = [...DEMO_HUMANITY];
+  state.challenges       = [...CHALLENGES_SEED];
+
+  renderChain();
+  renderTree();
+  initHumanity();
+  initChallenges();
+  initBook();
+  drawOriginChart();
+}
+
+// ── Tab switching ─────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* =====================================================
+   chain.js — Family chain tab: render, compose, immersive
+   ===================================================== */
+
+// ── Render chain timeline ─────────────────────────────
+function renderChain() {
+  const container = document.getElementById('chain-timeline');
+  if (!container) return;
+
+  const emotionColors = {
+    hope: '#00FFD1', love: '#ff6b9d', wisdom: '#C084FC',
+    memory: '#FFB347', warning: '#FF2D55'
+  };
+
+  function makeCards(msgs) {
+    return msgs.map((msg, i) => {
+      const col = emotionColors[msg.emotion] || '#00FFD1';
+      let badge = '';
+      if (msg.type === 'birth')   badge = `<span style="font-size:.58rem;color:#FFB347">👶 Birth</span>`;
+      if (msg.type === 'capsule') badge = `<span style="font-size:.58rem;color:#FFB347">⊙ Capsule</span>`;
+      const lock = msg.unlockYear
+        ? `<span style="font-size:.6rem;color:rgba(239,246,255,.3)">🔒 ${msg.unlockYear}</span>` : '';
+
+      return `<div class="scroll-card" style="border-left:3px solid ${col}40">
+        <div class="scroll-card-top">
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <div class="scroll-avatar" style="background:${col}20;color:${col}">${msg.author[0]}</div>
+            <span class="scroll-author" style="color:${col}">${msg.author}</span>
+            ${badge}
+          </div>
+          <div style="display:flex;align-items:center;gap:.4rem">
+            <span class="scroll-year">${msg.year}</span>${lock}
+          </div>
+        </div>
+        <div class="scroll-text">${msg.text}</div>
+        <div class="scroll-footer">
+          <span class="scroll-emotion" style="color:${col};border-color:${col}40">${msg.emotion.toUpperCase()}</span>
+          <div style="display:flex;gap:.3rem">
+            <button class="msg-btn" onclick="event.stopPropagation();openImmersive(${i})">👁 READ</button>
+            <button class="msg-btn" onclick="event.stopPropagation();replyToMsg(${i})">↩ REPLY</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Duplicate for seamless infinite loop
+  const cards = makeCards(state.messages);
+  container.innerHTML = cards + cards;
+}
+
+
+// ── Compose panel helpers ─────────────────────────────
+function updateMsgType() {
+  const t = document.getElementById('msg-type').value;
+  document.getElementById('birth-fields').style.display   = t === 'birth'   ? 'block' : 'none';
+  document.getElementById('capsule-fields').style.display = t === 'capsule' ? 'block' : 'none';
+}
+
+function updateCharCount() {
+  document.getElementById('char-count').textContent = document.getElementById('msg-text').value.length;
+}
+
+function selectEmotion(e, btn) {
+  state.selectedEmotion = e;
+  document.querySelectorAll('#emotion-picker .emotion-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+// ── Content moderation ────────────────────────────────
+function moderateText(text) {
+  const lower = text.toLowerCase();
+  return BANNED_WORDS.some(w => lower.includes(w));
+}
+
+// ── Submit message ────────────────────────────────────
+function submitMessage() {
+  const text = document.getElementById('msg-text').value.trim();
+  if (!text) { alert('Please write a message.'); return; }
+
+  if (moderateText(text)) {
+    const w  = document.getElementById('mod-warning');
+    const ta = document.getElementById('msg-text');
+    w.style.display = 'block';
+    w.textContent   = 'This message will not travel through generations. The words you leave today shape tomorrow. Rewrite with love.';
+    ta.classList.add('shake');
+    setTimeout(() => {
+      ta.classList.remove('shake');
+      document.getElementById('msg-text').value = '';
+      updateCharCount();
+    }, 1000);
+    return;
+  }
+
+  document.getElementById('mod-warning').style.display = 'none';
+
+  // Premium gate: max 10 messages for free users
+  if (state.messages.length >= 10 && !state.isPremium) {
+    document.getElementById('upgrade-modal').classList.add('open'); trackPremium();
+    return;
+  }
+
+  const type = document.getElementById('msg-type').value;
+  const dobInput = document.getElementById('baby-dob').value;
+  const msg = {
+    author:      state.user.first,
+    year:        new Date().getFullYear(),
+    text,
+    emotion:     state.selectedEmotion,
+    type,
+    unlockYear:  parseInt(document.getElementById('unlock-year').value) || null,
+    baby:        document.getElementById('baby-name').value || null,
+    deliveryYear: dobInput ? new Date(dobInput).getFullYear() + 18 : null,
+  };
+
+  showSubmitAnimation(() => {
+    state.messages.unshift(msg);
+    renderChain();
+    document.getElementById('msg-text').value = '';
+    updateCharCount();
+  });
+}
+
+// ── Reply helper ──────────────────────────────────────
+function replyToMsg(i) {
+  const msg   = state.messages[i];
+  const years = new Date().getFullYear() - msg.year;
+  const ta    = document.getElementById('msg-text');
+  ta.value    = `[Reply to ${msg.author}, ${years} years later] `;
+  ta.focus();
+  // FIX: was scrolling a non-scrollable div; scroll the window instead
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+}
+
+// ── Immersive read mode ───────────────────────────────
+function openImmersive(i) {
+  const msg = state.messages[i];
+  document.getElementById('im-meta').textContent = `${msg.author.toUpperCase()} · ${msg.year}`;
+  document.getElementById('im-text').textContent = msg.text;
+  document.getElementById('immersive').classList.add('open');
+  startImmersiveBg();
+}
+
+function closeImmersive() {
+  document.getElementById('immersive').classList.remove('open');
+  if (state.audioCtx) state.audioCtx.suspend();
+}
+
+// ── Ambient sound (immersive mode) ────────────────────
+function toggleSound() {
+  if (!state.audioCtx) {
+    state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  const ctx = state.audioCtx;
+
+  if (ctx.state === 'suspended') {
+    ctx.resume();
+    state.soundOn = true;
+  } else {
+    ctx.suspend();
+    state.soundOn = false;
+    return;
+  }
+
+  // Drone base
+  const osc  = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(55, ctx.currentTime);
+  gain.gain.setValueAtTime(.05, ctx.currentTime);
+  osc.start();
+
+  // Melodic notes
+  const notes = [261, 294, 329, 349, 392];
+  let   ni    = 0;
+  const iv = setInterval(() => {
+    if (!state.soundOn) { osc.stop(); clearInterval(iv); return; }
+    const mel = ctx.createOscillator();
+    const mg  = ctx.createGain();
+    mel.connect(mg); mg.connect(ctx.destination);
+    mel.frequency.setValueAtTime(notes[ni % notes.length], ctx.currentTime);
+    mg.gain.setValueAtTime(.03, ctx.currentTime);
+    mg.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.5);
+    mel.start(); mel.stop(ctx.currentTime + 1.5);
+    ni++;
+  }, 2000);
+}
+
+/* =====================================================
+   tabs.js — Tree, Humanity, Challenges, Book of Life,
+             Origins, Invite modal, Upgrade modal
+   ===================================================== */
+
+// =====================================================
+// FAMILY TREE TAB
+// =====================================================
+
+function renderTree() {
+  const container = document.getElementById('tree-svg-container');
+  const members   = TREE_SEED;
+  const links     = TREE_LINKS;
+
+  let svg = `<svg viewBox="0 0 600 380" width="100%" style="min-height:350px">`;
+
+  // Links (dashed lines between nodes)
+  links.forEach(([a, b]) => {
+    const A = members.find(m => m.id === a);
+    const B = members.find(m => m.id === b);
+    if (A && B) {
+      svg += `<line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}"
+        stroke="rgba(139,105,20,0.25)" stroke-width="1" stroke-dasharray="4,4"/>`;
+    }
+  });
+
+  // Nodes
+  members.forEach(m => {
+    const hasMsg = state.messages.some(msg => msg.author.includes(m.name.split(' ')[0]));
+    const pulse  = hasMsg
+      ? `<circle cx="${m.x}" cy="${m.y}" r="33" fill="none" stroke="rgba(139,105,20,0.1)" stroke-width="6">
+           <animate attributeName="r" values="33;38;33" dur="2s" repeatCount="indefinite"/>
+           <animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/>
+         </circle>`
+      : '';
+
+    svg += `
+      <g class="tree-node" onclick="selectMember(${m.id})">
+        <circle cx="${m.x}" cy="${m.y}" r="28"
+          fill="rgba(139,105,20,0.05)"
+          stroke="${hasMsg ? 'rgba(139,105,20,0.8)' : 'rgba(139,105,20,0.2)'}"
+          stroke-width="${hasMsg ? 2 : 1}"/>
+        ${pulse}
+        <text x="${m.x}" y="${m.y - 5}" text-anchor="middle" fill="var(--ivory)"
+          font-family="DM Mono" font-size="10" font-weight="500">${m.name.split(' ')[0]}</text>
+        <text x="${m.x}" y="${m.y + 9}" text-anchor="middle" fill="rgba(139,105,20,0.6)"
+          font-family="DM Mono" font-size="9">${m.birth}</text>
+      </g>`;
+  });
+
+  svg += '</svg>';
+  container.innerHTML = svg;
+}
+
+function selectMember(id) {
+  const m = TREE_SEED.find(x => x.id === id);
+  if (!m) return;
+  const msgs = state.messages.filter(msg => msg.author.includes(m.name.split(' ')[0]));
+  alert(`${m.name} (${m.birth})\n\n${msgs.length} messages in the chain:\n${msgs.map(m => '"' + m.text.slice(0, 80) + '..."').join('\n\n') || 'No messages yet.'}`);
+}
+
+function toggleAddMember() {
+  document.getElementById('member-panel').classList.toggle('visible');
+}
+
+function addMember() {
+  const fn    = document.getElementById('new-firstname').value;
+  const ln    = document.getElementById('new-lastname').value;
+  const birth = parseInt(document.getElementById('new-birth').value) || 2000;
+  if (!fn) return;
+  TREE_SEED.push({ id: TREE_SEED.length + 1, name: `${fn} ${ln}`, birth, x: Math.random() * 500 + 50, y: 350 });
+  renderTree();
+  document.getElementById('member-panel').classList.remove('visible');
+}
+
+// =====================================================
+// HUMANITY TAB
+// =====================================================
+
+let twIdx = 0, twCharIdx = 0, twDeleting = false;
+
+function initHumanity() {
+  state.humanityMessages = [...DEMO_HUMANITY];
+  renderMasonry();
+  updateHumanityCounters();
+  startTypewriter();
+}
+
+function updateHumanityCounters() {
+  document.getElementById('h-voices').textContent    = state.humanityMessages.length + 94320;
+  document.getElementById('h-countries').textContent = 47;
+}
+
+function renderMasonry() {
+  const wall = document.getElementById('masonry-wall');
+  wall.innerHTML = '';
+  state.humanityMessages.forEach((m, i) => {
+    const card = document.createElement('div');
+    card.className = `voice-card ${m.emotion}`;
+    card.innerHTML = `
+      <div class="voice-flag">${m.flag || '🌍'}</div>
+      <div class="voice-author">${m.author} · ${m.year}</div>
+      <div class="voice-text">${m.text}</div>
+      <div class="voice-footer">
+        <span class="voice-emotion">${m.emotion.toUpperCase()}</span>
+        <button class="voice-like" id="like-${i}" onclick="likeMsg(${i})">♥ ${m.likes}</button>
+      </div>`;
+    wall.appendChild(card);
+  });
+}
+
+function likeMsg(i) {
+  state.humanityMessages[i].likes++;
+  const btn = document.getElementById('like-' + i);
+  if (btn) {
+    btn.textContent = '♥ ' + state.humanityMessages[i].likes;
+    btn.classList.add('liked');
+  }
+}
+
+function startTypewriter() {
+  const countryEl = document.getElementById('tw-country');
+  const textEl    = document.getElementById('tw-text');
+  const cursor    = document.getElementById('tw-cursor');
+
+  function tick() {
+    const msg = TW_MESSAGES[twIdx];
+    if (!twDeleting) {
+      const t = msg.text.slice(0, twCharIdx++);
+      textEl.textContent = t;
+      countryEl.textContent = msg.country;
+      textEl.appendChild(cursor);
+      if (twCharIdx > msg.text.length) {
+        twDeleting = true;
+        setTimeout(tick, 2500);
+        return;
+      }
+    } else {
+      twCharIdx = Math.max(0, twCharIdx - 2);
+      textEl.textContent = msg.text.slice(0, twCharIdx);
+      textEl.appendChild(cursor);
+      if (twCharIdx <= 0) {
+        twDeleting = false;
+        twIdx = (twIdx + 1) % TW_MESSAGES.length;
+        twCharIdx = 0;
+      }
+    }
+    setTimeout(tick, twDeleting ? 30 : 55);
+  }
+  tick();
+}
+
+function updateHCharCount() {
+  document.getElementById('h-char').textContent = document.getElementById('h-message').value.length;
+}
+
+function selectHEmotion(e, btn) {
+  state.hEmotion = e;
+  document.querySelectorAll('#h-emotion-picker .emotion-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+async function submitHumanityMsg() {
+  const text = document.getElementById('h-message').value.trim();
+  if (!text) { alert('Please write a message.'); return; }
+
+  if (moderateText(text)) {
+    const w = document.getElementById('h-mod-warning');
+    w.style.display = 'block';
+    w.textContent   = 'This message will not travel through generations. The words you leave today shape tomorrow. Write with love.';
+    return;
+  }
+
+  document.getElementById('h-mod-warning').style.display = 'none';
+  const country = document.getElementById('h-country').value || 'the world';
+  const name    = document.getElementById('h-name').value    || `A voice from ${country}`;
+  const msg = {
+    author:  name,
+    country,
+    flag:    FLAG_MAP[country] || '🌍',
+    text,
+    emotion: state.hEmotion,
+    year:    new Date().getFullYear(),
+    likes:   0,
+  };
+
+  showSubmitAnimation(() => {
+    state.humanityMessages.unshift(msg);
+    renderMasonry();
+    updateHumanityCounters();
+    document.getElementById('h-message').value = '';
+    document.getElementById('h-char').textContent = '0';
+  });
+}
+
+function scrollToCompose() {
+  document.getElementById('compose-humanity').scrollIntoView({ behavior: 'smooth' });
+}
+
+// =====================================================
+// CHALLENGES TAB
+// =====================================================
+
+function initChallenges() { renderChallenges(); }
+
+function renderChallenges() {
+  const container = document.getElementById('challenges-container');
+  container.innerHTML = '';
+  const decades = ['2020s', '2030s', '2040s'];
+
+  state.challenges.forEach((ch, ci) => {
+    const div = document.createElement('div');
+    div.className = 'challenge-card';
+    div.innerHTML = `
+      <div class="decade-label decade-2020s">${decades[ci % 3]}</div>
+      <div class="challenge-q">"${ch.q}"</div>
+      ${ch.answers.map(a => `
+        <div class="answer-item">
+          <div class="answer-author">${a.author} · ${a.year}</div>
+          <div class="answer-text">${a.text}</div>
+        </div>`).join('')}
+      <button class="btn-answer" onclick="toggleAnswer(${ci})">ANSWER THIS CHALLENGE</button>
+      <div class="answer-form" id="ans-${ci}">
+        <textarea class="form-textarea" id="ans-txt-${ci}" placeholder="Your answer, sealed to time..." style="min-height:70px;margin-top:.5rem"></textarea>
+        <button class="btn-submit" style="margin-top:.5rem;font-size:.7rem;padding:.6rem" onclick="submitAnswer(${ci})">SEAL MY ANSWER</button>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+function toggleAnswer(i) {
+  document.getElementById('ans-' + i).classList.toggle('open');
+}
+
+function submitAnswer(i) {
+  const text = document.getElementById('ans-txt-' + i).value.trim();
+  if (!text) return;
+  state.challenges[i].answers.push({ author: state.user.first, year: new Date().getFullYear(), text });
+  renderChallenges();
+}
+
+function createChallenge() {
+  const q = document.getElementById('new-challenge').value.trim();
+  if (!q) return;
+  state.challenges.unshift({ q, answers: [] });
+  document.getElementById('new-challenge').value = '';
+  renderChallenges();
+}
+
+// =====================================================
+// BOOK OF LIFE TAB
+// =====================================================
+
+function initBook() {
+  const stepper   = document.getElementById('stepper');
+  const container = document.getElementById('chapters-container');
+  stepper.innerHTML = container.innerHTML = '';
+
+  BOOK_CHAPTERS.forEach((ch, i) => {
+    // Step dot
+    const dot = document.createElement('div');
+    dot.className = 'step-dot' + (i === 0 ? ' active' : '');
+    dot.textContent = i + 1;
+    dot.onclick = () => goToChapter(i);
+    stepper.appendChild(dot);
+
+    // Chapter
+    const div = document.createElement('div');
+    div.className = 'chapter' + (i === 0 ? ' active' : '');
+    div.id = 'chapter-' + i;
+    div.innerHTML = `
+      <div class="chapter-title">CHAPTER ${i + 1} — ${ch.title}</div>
+      <div class="chapter-sub">${ch.sub}</div>
+      ${ch.fields.map((f, fi) => `
+        <div class="form-group">
+          <label>${f.l.toUpperCase()}</label>
+          <textarea class="form-textarea" id="book-${i}-${fi}" placeholder="${f.p}"
+            style="min-height:80px" onchange="saveBook(${i},${fi})"></textarea>
+        </div>`).join('')}
+      <div class="step-btns">
+        ${i > 0
+          ? `<button class="btn-prev" onclick="goToChapter(${i - 1})">← PREVIOUS</button>`
+          : '<div></div>'}
+        ${i < 5
+          ? `<button class="btn-next" onclick="goToChapter(${i + 1})">NEXT CHAPTER →</button>`
+          : `<button class="btn-next" onclick="exportBookPDF()">✦ EXPORT BOOK OF LIFE</button>`}
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+function goToChapter(i) {
+  state.currentChapter = i;
+  document.querySelectorAll('.chapter').forEach((c, ci) => c.classList.toggle('active', ci === i));
+  document.querySelectorAll('.step-dot').forEach((d, di) => {
+    d.classList.toggle('active', di === i);
+    d.classList.toggle('done',   di < i);
+  });
+  document.getElementById('progress-fill').style.width = ((i + 1) / 6 * 100) + '%';
+}
+
+function saveBook(ch, fi) {
+  state.bookData[`${ch}-${fi}`] = document.getElementById(`book-${ch}-${fi}`).value;
+}
+
+function exportBookPDF() {
+  if (!state.isPremium) { document.getElementById('upgrade-modal').classList.add('open'); return; }
+  alert('PDF export would be generated here with jsPDF library (Premium feature).');
+}
+
+// =====================================================
+// ORIGINS TAB
+// =====================================================
+
+let originRowCount = 3;
+
+function drawOriginChart() {
+  const canvas = document.getElementById('origin-chart');
+  if (!canvas) return;
+  const ctx    = canvas.getContext('2d');
+  const colors = ['#00FFD1','#C084FC','#FFB347','#FF6B9D','#7DD3FC','#86EFAC'];
+  const data   = [{ label: 'France', pct: 40 }, { label: 'Senegal', pct: 35 }, { label: 'Vietnam', pct: 25 }];
+
+  ctx.clearRect(0, 0, 200, 200);
+  let start = 0;
+  data.forEach((d, i) => {
+    const angle = (d.pct / 100) * Math.PI * 2;
+    ctx.beginPath(); ctx.moveTo(100, 100);
+    ctx.arc(100, 100, 80, start, start + angle);
+    ctx.fillStyle = colors[i % colors.length]; ctx.fill();
+    start += angle;
+  });
+  // Donut hole
+  ctx.beginPath(); ctx.arc(100, 100, 45, 0, Math.PI * 2);
+  ctx.fillStyle = '#FEFCF7'; ctx.fill();
+
+  // Legend
+  document.getElementById('origin-legend').innerHTML = data.map((d, i) => `
+    <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.3rem">
+      <div style="width:10px;height:10px;border-radius:50%;background:${colors[i % colors.length]};flex-shrink:0"></div>
+      <span>${d.label}: ${d.pct}%</span>
+    </div>`).join('');
+}
+
+function addOriginRow() {
+  originRowCount++;
+  const row = document.createElement('div');
+  row.className = 'origin-row';
+  row.innerHTML = `
+    <input type="text"   class="form-input" placeholder="Country" id="or-${originRowCount - 1}-country">
+    <input type="number" class="form-input" placeholder="%" id="or-${originRowCount - 1}-pct" min="0" max="100" onchange="updateTotal()">
+    <span style="color:var(--gold);font-size:.8rem">%</span>`;
+  document.getElementById('origin-rows').appendChild(row);
+}
+
+function updateTotal() {
+  let total = 0;
+  for (let i = 0; i < originRowCount; i++) {
+    const el = document.getElementById(`or-${i}-pct`);
+    if (el) total += parseInt(el.value) || 0;
+  }
+  const bar = document.getElementById('origin-total');
+  if (total === 100) {
+    bar.className   = 'total-bar total-ok';
+    bar.textContent = '✓ Total: 100% — perfect';
+  } else if (total < 100) {
+    bar.className   = 'total-bar total-low';
+    bar.textContent = `⚠ Total: ${total}% — incomplete`;
+  } else {
+    bar.className   = 'total-bar total-over';
+    bar.textContent = `✗ Total: ${total}% — exceeds 100%, cannot save`;
+  }
+}
+
+// ── Family Pact ───────────────────────────────────────
+function signPacte() {
+  if (state.pacte) { alert('You have already signed the Family Pact.'); return; }
+  state.pacte = true;
+  const signers = document.getElementById('pacte-signers');
+  const s = document.createElement('div');
+  s.className   = 'signer';
+  s.textContent = `🛡 ${state.user.first} · ${new Date().getFullYear()}`;
+  signers.appendChild(s);
+  alert(`Thank you, ${state.user.first}. You are now a Guardian of the Chain. 🛡\n\nYou will receive an annual reminder by email.`);
+}
+
+// =====================================================
+// INVITE MODAL
+// =====================================================
+
+function openInvite() {
+  document.getElementById('invite-modal').classList.add('open');
+  const qrDiv = document.getElementById('qr-display');
+  qrDiv.innerHTML = '';
+  try {
+    new QRCode(qrDiv, {
+      text:       `https://legacychain.app/?famille=${state.familyName}`,
+      width:      120, height: 120,
+      colorDark:  '#8B6914',
+      colorLight: '#FEFCF7',
+    });
+  } catch (e) { /* QRCode library may not be loaded */ }
+}
+
+function closeInvite() {
+  document.getElementById('invite-modal').classList.remove('open');
+}
+
+function copyLink() {
+  const btn = document.getElementById('copy-btn');
+  navigator.clipboard.writeText(`https://legacychain.app/?famille=${state.familyName}`).catch(() => {});
+  btn.textContent = 'COPIED!'; btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 2000);
+}
+
+function shareWA() {
+  const msg = encodeURIComponent(`Join the memorial chain of our family 👨‍👩‍👧‍👦\nLeave a message for future generations: https://legacychain.app/?famille=${state.familyName}`);
+  window.open(`https://wa.me/?text=${msg}`, '_blank');
+}
+
+// =====================================================
+// UPGRADE MODAL
+// =====================================================
+
+function simulateUpgrade() {
+  state.isPremium = true;
+  document.getElementById('upgrade-modal').classList.remove('open');
+  document.getElementById('premium-badge').style.display = 'inline-block';
+  // Raise the character limit for the message textarea
+  document.getElementById('msg-text').maxLength = 500;
+  document.getElementById('char-count').parentElement.innerHTML =
+    `<span id="char-count">0</span>/500`;
+
+  showSubmitAnimation(() => {
+    setTimeout(() => alert(
+      '✦ Welcome, Founding Voice of Humanity!\n\n' +
+      'Your golden badge has been awarded.\n' +
+      '"Your voice will travel through the generations."\n\n' +
+      '(In a real implementation, Stripe would process the $10 payment and Resend would send a confirmation email.)'
+    ), 200);
+  });
+}
+
+
+// ── Scrolling message ticker ──────────────────────────
+function renderTicker() {
+  const ticker = document.getElementById('chain-ticker');
+  if (!ticker) return;
+  // Duplicate messages for seamless loop
+  const msgs = [...state.messages, ...state.messages];
+  ticker.innerHTML = msgs.map(m => `
+    <div class="ticker-card">
+      <div class="ticker-dot ${m.emotion}"></div>
+      <div>
+        <div class="ticker-meta">${m.author.toUpperCase()} · ${m.year}</div>
+        <div class="ticker-text">${m.text}</div>
+      </div>
+    </div>`).join('');
+}
+
+
+// ── Facebook Share ────────────────────────────────────
+function shareFacebook() {
+  var url   = encodeURIComponent('https://legacy-chain.vercel.app');
+  var quote = encodeURIComponent('I just sealed a message for future generations on LegacyChain. What will YOU leave behind?');
+  window.open(
+    'https://www.facebook.com/sharer/sharer.php?u=' + url + '&quote=' + quote,
+    'fb-share', 'width=600,height=400'
+  );
+}
+
+// ── Pixel: track key actions ──────────────────────────
+function trackPixelEvent(event, data) {
+  if (typeof fbq !== 'undefined') fbq('track', event, data || {});
+}
+// Called on login
+function trackLogin()   { trackPixelEvent('Lead'); }
+// Called on premium click
+function trackPremium() { trackPixelEvent('InitiateCheckout', { value: 10, currency: 'USD' }); }
+
+
+// ── Hide splash — multiple fallbacks ─────────────────
+function hideSplash() {
+  const splash = document.getElementById('splash');
+  if (!splash) return;
+  splash.classList.add('hidden');
+  setTimeout(() => { if (splash.parentNode) splash.remove(); }, 800);
+}
+// Primary: after 1.8s minimum (matches animation)
+setTimeout(hideSplash, 1800);
+// Fallback 1: on load event
+window.addEventListener('load', () => setTimeout(hideSplash, 200));
+// Fallback 2: hard kill after 3s no matter what
+setTimeout(hideSplash, 3000);
+
+
+</script>
+
+<!-- ── Privacy Policy modal ── -->
+<div id="privacy-modal">
+  <div class="legal-box">
+    <button class="modal-close" onclick="document.getElementById('privacy-modal').classList.remove('open')" style="position:absolute;top:1rem;right:1rem">×</button>
+    <h2>PRIVACY POLICY</h2>
+    <p>Last updated: June 2026</p>
+
+    <h3>1. DATA WE COLLECT</h3>
+    <p>LegacyChain collects the name you provide during registration, messages you voluntarily write, and basic usage data (pages visited, actions taken). We do not collect sensitive personal data without your explicit consent.</p>
+
+    <h3>2. HOW WE USE YOUR DATA</h3>
+    <p>Your data is used solely to provide the LegacyChain service — storing your messages, displaying your family chain, and delivering time-locked capsules at the scheduled date. We never sell your data to third parties.</p>
+
+    <h3>3. DATA STORAGE</h3>
+    <p>Messages are stored securely. Time-locked messages are encrypted and inaccessible until the unlock date you set. We use industry-standard security practices.</p>
+
+    <h3>4. THIRD-PARTY SERVICES</h3>
+    <p>We use Facebook Login (optional) for authentication, and may use analytics tools to improve the service. Facebook's privacy policy applies to any data processed through their services.</p>
+
+    <h3>5. YOUR RIGHTS</h3>
+    <p>You may request deletion of your account and all associated data at any time by contacting us at hello@legacychain.app. We will process your request within 30 days.</p>
+
+    <h3>6. CONTACT</h3>
+    <p>For any privacy-related questions: hello@legacychain.app</p>
+  </div>
+</div>
+
+<!-- ── Terms of Service modal ── -->
+<div id="terms-modal">
+  <div class="legal-box" style="background:#0a0818;border:1px solid var(--glass-border);border-radius:16px;padding:2rem;max-width:600px;width:100%;max-height:80vh;overflow-y:auto;position:relative">
+    <button class="modal-close" onclick="document.getElementById('terms-modal').classList.remove('open')" style="position:absolute;top:1rem;right:1rem">×</button>
+    <h2>TERMS OF SERVICE</h2>
+    <p>Last updated: June 2026</p>
+
+    <h3>1. ACCEPTANCE</h3>
+    <p>By using LegacyChain, you agree to these terms. If you do not agree, please do not use the service.</p>
+
+    <h3>2. THE SERVICE</h3>
+    <p>LegacyChain provides a platform to create and store digital messages for future generations. The free tier allows up to 10 messages. The premium tier ($10 one-time) provides unlimited access.</p>
+
+    <h3>3. YOUR CONTENT</h3>
+    <p>You retain full ownership of the messages and content you create. By posting, you grant LegacyChain a license to store and deliver your content as part of the service. You are responsible for ensuring your content is lawful and respectful.</p>
+
+    <h3>4. PROHIBITED CONTENT</h3>
+    <p>You may not post content that is hateful, violent, illegal, or harmful to others. LegacyChain reserves the right to remove content that violates these terms.</p>
+
+    <h3>5. PREMIUM PAYMENT</h3>
+    <p>Premium access is a one-time payment of $10 USD. Payments are processed securely via Stripe. Refunds are available within 14 days of purchase if no premium features have been used.</p>
+
+    <h3>6. CONTACT</h3>
+    <p>hello@legacychain.app</p>
+  </div>
+</div>
+
+<!-- ── App footer ── -->
+<div class="app-footer" id="app-footer" style="display:none">
+  <div class="app-footer-links">
+    <a href="#" onclick="document.getElementById('privacy-modal').classList.add('open');return false">Privacy Policy</a>
+    <a href="#" onclick="document.getElementById('terms-modal').classList.add('open');return false">Terms of Service</a>
+    <a href="mailto:hello@legacychain.app">Contact</a>
+    <a href="https://legacy-chain.vercel.app">legacy-chain.vercel.app</a>
+  </div>
+  <div class="app-footer-copy">© 2026 LegacyChain · A blockchain of love · All rights reserved</div>
+</div>
+
+
+// ── Show footer when app loads ────────────────────────
+function showAppFooter() {
+  const f = document.getElementById('app-footer');
+  if (f) f.style.display = 'block';
+}
+
+</body>
+</html>
