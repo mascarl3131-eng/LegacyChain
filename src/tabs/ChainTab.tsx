@@ -1,0 +1,309 @@
+import { useState, useRef } from 'react';
+import { useStore } from '@/lib/store';
+import { t } from '@/lib/i18n';
+import { BANNED_WORDS } from '@/lib/data';
+
+const EMOJIS = ['hope', 'love', 'wisdom', 'memory', 'warning'];
+const EMO_COLORS: Record<string, string> = {
+  hope: '#00FFD1', love: '#FF6B9D', wisdom: '#C084FC', memory: '#FFB347', warning: '#FF2D55',
+};
+
+export default function ChainTab() {
+  const { lang, user, premium, familyName, emo, setEmo, msgs, addMsg, setImmersiveMsg, setUpgradeOpen, setShowSubmitAnim, showNotif } = useStore();
+  const [msgType, setMsgType] = useState('standard');
+  const [msgText, setMsgText] = useState('');
+  const [babyName, setBabyName] = useState('');
+  const [babyDob, setBabyDob] = useState('');
+  const [capName, setCapName] = useState('');
+  const [capDate, setCapDate] = useState('');
+  const [unlockYr, setUnlockYr] = useState('');
+  const [modWarn, setModWarn] = useState('');
+  const [photoData, setPhotoData] = useState<string | null>(null);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recSeconds, setRecSeconds] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const waveCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  const charMax = premium ? 500 : 300;
+
+  const isBanned = (txt: string) => BANNED_WORDS.some((w: string) => txt.toLowerCase().includes(w));
+
+  const handleSubmit = () => {
+    const txt = msgText.trim();
+    if (!txt) return;
+
+    if (isBanned(txt)) {
+      setModWarn(t('modBanned', lang));
+      setMsgText('');
+      return;
+    }
+
+    if (msgs.length >= 10 && !premium) {
+      setUpgradeOpen(true);
+      return;
+    }
+
+    const newMsg = {
+      id: Date.now().toString(),
+      a: user?.first || 'Anonymous',
+      y: new Date().getFullYear(),
+      text: txt,
+      e: emo as 'hope' | 'love' | 'wisdom' | 'memory' | 'warning',
+      type: msgType as 'standard' | 'birth' | 'capsule',
+      lock: unlockYr ? parseInt(unlockYr) : null,
+      baby: msgType === 'birth' ? babyName || null : null,
+      dy: msgType === 'birth' && babyDob ? new Date(babyDob).getFullYear() + 18 : null,
+      audioUrl: audioBlob ? URL.createObjectURL(audioBlob) : null,
+      photo: photoData,
+    };
+
+    setShowSubmitAnim(true);
+    setTimeout(() => {
+      addMsg(newMsg);
+      setMsgText('');
+      setBabyName('');
+      setBabyDob('');
+      setCapName('');
+      setCapDate('');
+      setUnlockYr('');
+      setPhotoData(null);
+      setAudioBlob(null);
+      setModWarn('');
+      showNotif('Message sealed ✦', '#00FFD1');
+    }, 1500);
+  };
+
+  const toggleRecording = async () => {
+    if (!premium) { setUpgradeOpen(true); return; }
+    if (!isRecording) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const recorder = new MediaRecorder(stream);
+        const chunks: Blob[] = [];
+        recorder.ondataavailable = e => chunks.push(e.data);
+        recorder.onstop = () => {
+          const blob = new Blob(chunks, { type: 'audio/webm' });
+          setAudioBlob(blob);
+          stream.getTracks().forEach(t => t.stop());
+        };
+        recorder.start();
+        mediaRecorderRef.current = recorder;
+        setIsRecording(true);
+        setRecSeconds(0);
+        recIntervalRef.current = setInterval(() => {
+          setRecSeconds(s => {
+            if (s >= 179) { recorder.stop(); setIsRecording(false); if (recIntervalRef.current) clearInterval(recIntervalRef.current); return 180; }
+            return s + 1;
+          });
+        }, 1000);
+      } catch { alert('Microphone access denied.'); }
+    } else {
+      mediaRecorderRef.current?.stop();
+      setIsRecording(false);
+      if (recIntervalRef.current) clearInterval(recIntervalRef.current);
+    }
+  };
+
+  const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => setPhotoData(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const replyTo = (msg: typeof msgs[0]) => {
+    setMsgText(`[↩ ${msg.a}, ${new Date().getFullYear() - msg.y}y later] `);
+  };
+
+  return (
+    <div>
+      <div className="font-display" style={{ fontSize: '0.95rem', color: '#00FFD1', letterSpacing: '0.15em', marginBottom: '0.3rem' }}>
+        {t('chainTitle', lang)}
+      </div>
+      <div style={{ fontSize: '0.68rem', color: 'rgba(239,246,255,0.35)', letterSpacing: '0.1em', marginBottom: '1.5rem' }}>
+        {familyName.toUpperCase()} · {new Date().getFullYear()}
+      </div>
+
+      {/* Timeline */}
+      <div>
+        {msgs.map((m, i) => (
+          <div key={m.id} style={{ position: 'relative', marginBottom: '1.4rem', paddingLeft: '2.2rem' }}>
+            {i < msgs.length - 1 && (
+              <div style={{
+                content: '""',
+                position: 'absolute',
+                left: 9,
+                top: 26,
+                bottom: '-1.4rem',
+                width: 1,
+                background: 'linear-gradient(to bottom,rgba(0,255,209,0.25),transparent)',
+              }} />
+            )}
+            <div style={{
+              position: 'absolute', left: 4, top: 14, width: 11, height: 11, borderRadius: '50%',
+              border: `2px solid ${EMO_COLORS[m.e] || '#00FFD1'}`, background: '#04030A',
+              boxShadow: `0 0 7px ${EMO_COLORS[m.e] || '#00FFD1'}66`,
+            }} />
+            <div className="glass-card">
+              {m.type === 'birth' && m.baby && (
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: 'rgba(255,179,71,0.08)', border: '1px solid rgba(255,179,71,0.28)', color: '#FFB347', fontSize: '0.63rem', padding: '0.22rem 0.6rem', borderRadius: 20, marginBottom: '0.6rem' }}>
+                  👶 {m.baby} · {m.dy || '—'} · in {(m.dy || new Date().getFullYear()) - new Date().getFullYear()} years
+                </div>
+              )}
+              {m.type === 'capsule' && (
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: 'rgba(255,179,71,0.07)', border: '1px solid rgba(255,179,71,0.26)', color: '#FFB347', fontSize: '0.63rem', padding: '0.22rem 0.6rem', borderRadius: 20, marginBottom: '0.6rem' }}>
+                  ⊙ Collective capsule
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.55rem' }}>
+                <span style={{ fontSize: '0.7rem', color: '#00FFD1', letterSpacing: '0.08em' }}>{m.a}</span>
+                <span style={{ fontSize: '0.62rem', color: 'rgba(239,246,255,0.28)' }}>{m.y}</span>
+              </div>
+              <div style={{ fontSize: '0.82rem', lineHeight: 1.75, color: 'rgba(239,246,255,0.8)' }}>{m.text}</div>
+              {m.photo && <img src={m.photo} alt="" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid #00FFD1', marginTop: '0.4rem', display: 'block' }} />}
+              {m.lock && <div style={{ fontSize: '0.6rem', color: 'rgba(239,246,255,0.25)', marginTop: '0.28rem' }}>🔒 Sealed until {m.lock}</div>}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.65rem', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.57rem', letterSpacing: '0.1em', padding: '0.15rem 0.5rem', borderRadius: 3, background: 'rgba(0,255,209,0.05)', border: '1px solid rgba(0,255,209,0.13)', color: 'rgba(239,246,255,0.38)', textTransform: 'uppercase' }}>{m.e}</span>
+                <button className="btn-sec" style={{ fontSize: '0.58rem', padding: '0.22rem 0.5rem' }} onClick={() => setImmersiveMsg(m)}>👁 READ</button>
+                <button className="btn-sec" style={{ fontSize: '0.58rem', padding: '0.22rem 0.5rem' }} onClick={() => replyTo(m)}>↩ REPLY</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Seal Form */}
+      <div className="glass-card" style={{ marginTop: '1rem' }}>
+        <div style={{ fontSize: '0.7rem', letterSpacing: '0.16em', color: '#00FFD1', marginBottom: '1rem' }}>{t('sealMsg', lang)}</div>
+
+        <div style={{ marginBottom: '0.85rem' }}>
+          <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('msgType', lang)}</label>
+          <select className="form-select" value={msgType} onChange={e => setMsgType(e.target.value)}>
+            <option value="standard">{t('standard', lang)}</option>
+            <option value="birth">{t('birth', lang)}</option>
+            <option value="capsule">{t('capsule', lang)}</option>
+          </select>
+        </div>
+
+        {msgType === 'birth' && (
+          <div>
+            <div style={{ marginBottom: '0.85rem' }}>
+              <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('babyName', lang)}</label>
+              <input type="text" className="form-input" value={babyName} onChange={e => setBabyName(e.target.value)} placeholder="Lucas..." />
+            </div>
+            <div style={{ marginBottom: '0.85rem' }}>
+              <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('babyDob', lang)}</label>
+              <input type="date" className="form-input" value={babyDob} onChange={e => setBabyDob(e.target.value)} />
+            </div>
+          </div>
+        )}
+
+        {msgType === 'capsule' && (
+          <div>
+            <div style={{ marginBottom: '0.85rem' }}>
+              <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('capName', lang)}</label>
+              <input type="text" className="form-input" value={capName} onChange={e => setCapName(e.target.value)} />
+            </div>
+            <div style={{ marginBottom: '0.85rem' }}>
+              <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('capDate', lang)}</label>
+              <input type="date" className="form-input" value={capDate} onChange={e => setCapDate(e.target.value)} />
+            </div>
+          </div>
+        )}
+
+        <div style={{ marginBottom: '0.85rem' }}>
+          <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('yourMsg', lang)}</label>
+          <textarea className="form-textarea" value={msgText} onChange={e => setMsgText(e.target.value)} maxLength={charMax} rows={4} />
+          <div style={{ textAlign: 'right', fontSize: '0.6rem', color: 'rgba(239,246,255,0.25)', marginTop: '0.2rem' }}>
+            {msgText.length}/{charMax}
+          </div>
+        </div>
+
+        {/* Photo Upload */}
+        <div style={{ marginBottom: '0.85rem' }}>
+          <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>
+            PHOTO {!premium && <span style={{ color: '#FFB347', fontSize: '0.56rem' }}>✦ PREMIUM</span>}
+          </label>
+          <div
+            onClick={() => premium ? photoInputRef.current?.click() : setUpgradeOpen(true)}
+            style={{ border: '1px dashed rgba(0,255,209,0.22)', borderRadius: 10, padding: '1rem', textAlign: 'center', cursor: 'pointer' }}
+          >
+            <input ref={photoInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhoto} />
+            {photoData ? (
+              <img src={photoData} alt="" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '2px solid #00FFD1', margin: '0.5rem auto 0', display: 'block' }} />
+            ) : (
+              <div style={{ fontSize: '0.62rem', color: 'rgba(239,246,255,0.28)' }}>📸 Tap to attach a photo</div>
+            )}
+          </div>
+        </div>
+
+        {/* Audio Recorder */}
+        <div style={{ marginBottom: '0.85rem' }}>
+          <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>
+            AUDIO {!premium && <span style={{ color: '#FFB347', fontSize: '0.56rem' }}>✦ PREMIUM · MAX 3 MIN</span>}
+          </label>
+          <div style={{ background: 'rgba(0,255,209,0.04)', border: '1px solid rgba(0,255,209,0.2)', borderRadius: 12, padding: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+              <button
+                onClick={toggleRecording}
+                style={{
+                  width: 46, height: 46, borderRadius: '50%', border: `2px solid ${isRecording ? '#FF2D55' : '#00FFD1'}`,
+                  background: 'transparent', color: isRecording ? '#FF2D55' : '#00FFD1', fontSize: '1.1rem',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  animation: isRecording ? 'pulse-rec 1s infinite' : 'none',
+                }}
+              >
+                {isRecording ? '⏹' : '🎙'}
+              </button>
+              <div style={{ height: 36, background: 'rgba(0,255,209,0.05)', borderRadius: 6, overflow: 'hidden', flex: 1 }}>
+                <canvas ref={waveCanvasRef} style={{ width: '100%', height: '100%' }} />
+              </div>
+              <span style={{ fontSize: '0.75rem', color: isRecording ? '#FF2D55' : '#00FFD1', letterSpacing: '0.1em', flexShrink: 0 }}>
+                {Math.floor(recSeconds / 60)}:{(recSeconds % 60).toString().padStart(2, '0')}
+              </span>
+            </div>
+            <div style={{ fontSize: '0.6rem', color: 'rgba(239,246,255,0.28)', textAlign: 'center' }}>
+              {audioBlob ? '✓ Audio recorded' : isRecording ? 'Recording...' : 'Tap to start recording'}
+            </div>
+          </div>
+        </div>
+
+        {/* Emotion */}
+        <div style={{ marginBottom: '0.85rem' }}>
+          <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('emotion', lang)}</label>
+          <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+            {EMOJIS.map(e => (
+              <button key={e} className={`emo-btn sel-${e === emo ? e : ''}`} onClick={() => setEmo(e)}>
+                {t(`e${e.charAt(0).toUpperCase() + e.slice(1)}`, lang)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Unlock Year */}
+        <div style={{ marginBottom: '0.85rem' }}>
+          <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>
+            {t('unlockYr', lang)} <span style={{ opacity: 0.4 }}>(optional)</span>
+          </label>
+          <input type="number" className="form-input" value={unlockYr} onChange={e => setUnlockYr(e.target.value)} placeholder="e.g. 2045" min={2025} max={2150} />
+        </div>
+
+        {modWarn && (
+          <div style={{ background: 'rgba(255,45,85,0.07)', border: '1px solid rgba(255,45,85,0.28)', color: '#FF2D55', fontSize: '0.7rem', padding: '0.85rem', borderRadius: 8, marginTop: '0.65rem', lineHeight: 1.65, textAlign: 'center' }}>
+            {modWarn}
+          </div>
+        )}
+
+        <button className="btn-primary" onClick={handleSubmit}>{t('sealBtn', lang)}</button>
+      </div>
+
+      {!premium && (
+        <button className="btn-amber" onClick={() => setUpgradeOpen(true)}>{t('premiumBtn', lang)}</button>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,111 @@
+import { useRef, useCallback } from 'react';
+import { useStore } from '@/lib/store';
+
+export default function AppNav() {
+  const { user, premium, setSideMenuOpen, setPage } = useStore();
+  const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleLogoDown = useCallback(() => {
+    longPressRef.current = setTimeout(() => {
+      const pwd = prompt('Admin password:');
+      if (pwd === 'legacy2025') {
+        setPage('admin');
+      }
+    }, 1500);
+  }, [setPage]);
+
+  const handleLogoUp = useCallback(() => {
+    if (longPressRef.current) clearTimeout(longPressRef.current);
+  }, []);
+
+  if (!user) return null;
+
+  return (
+    <nav
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 46,
+        zIndex: 999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 1rem',
+        background: 'rgba(4,3,10,0.97)',
+        borderBottom: '1px solid rgba(0,255,209,0.13)',
+      }}
+    >
+      <button
+        onClick={() => setSideMenuOpen(true)}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          padding: '0.4rem 0.3rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 5,
+        }}
+        aria-label="Menu"
+      >
+        <div style={{ width: 20, height: 2, background: '#00FFD1', borderRadius: 1 }} />
+        <div style={{ width: 20, height: 2, background: '#00FFD1', borderRadius: 1 }} />
+        <div style={{ width: 20, height: 2, background: '#00FFD1', borderRadius: 1 }} />
+      </button>
+
+      <div
+        className="font-display"
+        style={{
+          fontSize: '0.82rem',
+          color: '#00FFD1',
+          letterSpacing: '0.15em',
+          cursor: 'pointer',
+          userSelect: 'none',
+        }}
+        onMouseDown={handleLogoDown}
+        onMouseUp={handleLogoUp}
+        onMouseLeave={handleLogoUp}
+        onTouchStart={handleLogoDown}
+        onTouchEnd={handleLogoUp}
+      >
+        ⬡ LEGACYCHAIN
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+        <div
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg,#00FFD1,#C084FC)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '0.68rem',
+            fontWeight: 700,
+            color: '#04030A',
+          }}
+        >
+          {user.first[0].toUpperCase()}
+        </div>
+        {premium && (
+          <span
+            style={{
+              background: 'linear-gradient(135deg,#FFB347,#c44d00)',
+              color: '#04030A',
+              fontSize: '0.52rem',
+              padding: '0.12rem 0.38rem',
+              borderRadius: 3,
+              fontWeight: 700,
+              letterSpacing: '0.07em',
+            }}
+          >
+            ✦
+          </span>
+        )}
+      </div>
+    </nav>
+  );
+}
