@@ -38,6 +38,15 @@ export default function AuthTest() {
     setMessage('👋 Déconnecté')
   }
 
+  const handleGoogleLogin = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+    })
+    if (error) {
+      setMessage('Erreur Google: ' + error.message)
+    }
+  }
+
   return (
     <div style={{ padding: 40, maxWidth: 400, margin: '0 auto' }}>
       <h1>🔐 Test Supabase Auth</h1>
@@ -68,6 +77,13 @@ export default function AuthTest() {
           </button>
           <button onClick={handleLogin}>
             Se connecter
+          </button>
+          <br />
+          <button 
+            onClick={handleGoogleLogin}
+            style={{ background: '#DB4437', color: 'white', padding: 10, marginTop: 10, width: '100%' }}
+          >
+            🔴 Se connecter avec Google
           </button>
         </div>
       )}
