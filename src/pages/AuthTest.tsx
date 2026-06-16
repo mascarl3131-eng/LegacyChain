@@ -5,10 +5,10 @@ export default function AuthTest() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<any>(null)
 
   const handleSignup = async () => {
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
     })
@@ -26,7 +26,7 @@ export default function AuthTest() {
     })
     if (error) {
       setMessage('Erreur: ' + error.message)
-    } else {
+    } else if (data.user) {
       setUser(data.user)
       setMessage('✅ Connecté ! Bienvenue ' + data.user.email)
     }
@@ -39,7 +39,7 @@ export default function AuthTest() {
   }
 
   const handleGoogleLogin = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
     })
     if (error) {
@@ -95,4 +95,4 @@ export default function AuthTest() {
       )}
     </div>
   )
-};
+}
