@@ -77,23 +77,23 @@ interface AppActions {
 const StoreContext = createContext<(AppState & AppActions) | null>(null);
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [page, setPage] = useState<<PageName>('onboarding');
+  const [page, setPage] = useState<PageName>('onboarding');
   const [tab, setTab] = useState<TabName>('chain');
-  const [lang, setLangState] = useState<<LangCode>('en');
+  const [lang, setLangState] = useState<LangCode>('en');
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<<Session | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [premium, setPremium] = useState(false);
   const [familyName, setFamilyName] = useState('Doe');
   const [emo, setEmo] = useState('hope');
   const [hEmo, setHEmo] = useState('hope');
   const [msgs, setMsgs] = useState<Message[]>([]);
-  const [hMsgs, setHMsgs] = useState<<HumanityMessage[]>([]);
-  const [challenges, setChallenges] = useState<<Challenge[]>(getChallenges());
-  const [bookData, setBookData] = useState<<Record<string, string>>({});
+  const [hMsgs, setHMsgs] = useState<HumanityMessage[]>([]);
+  const [challenges, setChallenges] = useState<Challenge[]>(getChallenges());
+  const [bookData, setBookData] = useState<Record<string, string>>({});
   const [chapter, setChapter] = useState(0);
   const [pacte, setPacte] = useState(false);
-  const [originRows, setOriginRows] = useState<<OriginRow[]>([
+  const [originRows, setOriginRows] = useState<OriginRow[]>([
     { c: 'France', p: 40 },
     { c: 'Senegal', p: 35 },
     { c: 'Vietnam', p: 25 },

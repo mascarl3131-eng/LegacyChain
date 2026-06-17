@@ -19,7 +19,7 @@ export default function LandingPage() {
   const [twC, setTwC] = useState(0);
   const [twDel, setTwDel] = useState(false);
   const [counters, setCounters] = useState({ fam: 0, msg: 0, cap: 0 });
-  const typewriterRef = useRef<<HTMLSpanElement>(null);
+  const typewriterRef = useRef<HTMLSpanElement>(null);
 
   const phrases = TYPEWRITER_PHRASES[lang] || TYPEWRITER_PHRASES.en;
 
@@ -27,7 +27,7 @@ export default function LandingPage() {
   useEffect(() => {
     if (page !== 'landing') return;
 
-    let timeout: ReturnType<<typeof setTimeout>;
+    let timeout: ReturnType<typeof setTimeout>;
 
     function tick() {
       const p = phrases[twI];
