@@ -1,11 +1,66 @@
-import AuthTest from './pages/AuthTest'
+import { useEffect } from 'react';
+import { useStore } from './lib/store';
+import OnboardingPage from './pages/OnboardingPage';
+import LandingPage from './pages/LandingPage';
+import AppPage from './pages/AppPage';
+import AdminPage from './pages/AdminPage';
+import Notification from './components/Notification';
+import NebulaBackground from './components/NebulaBackground';
 
 function App() {
+  const { page, loading, session, user, setPage } = useStore();
+
+  // Auto-redirect: if logged in, go to app; if not, go to landing
+  useEffect(() => {
+    if (!loading) {
+      if (session && user && page === 'landing') {
+        setPage('app');
+      }
+    }
+  }, [loading, session, user, page, setPage]);
+
+  // Onboarding only on first visit (no session)
+  useEffect(() => {
+    if (!loading && !session && !user) {
+      // Check if already seen onboarding
+      const seen = localStorage.getItem('legacychain-onboarding');
+      if (!seen) {
+        setPage('onboarding');
+      } else {
+        setPage('landing');
+      }
+    }
+  }, [loading, session, user, setPage]);
+
+  if (loading) {
+    return (
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#050510',
+        color: '#00FFD1',
+        fontFamily: "'Cinzel',serif",
+        fontSize: '1.2rem',
+        zIndex: 9999,
+      }}>
+        <div>Chargement...</div>
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <AuthTest />
+    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden' }}>
+      <NebulaBackground />
+      {page === 'onboarding' && <OnboardingPage />}
+      {page === 'landing' && <LandingPage />}
+      {page === 'app' && <AppPage />}
+      {page === 'admin' && <AdminPage />}
+      <Notification />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
