@@ -6,7 +6,7 @@ import type { Message, HumanityMessage, Challenge, TreeNode, OriginRow } from '.
 import { getDemoMsgs, getDemoHumanity, getChallenges, INITIAL_TREE } from './data';
 
 export type TabName = 'chain' | 'tree' | 'origins' | 'mural' | 'challenges' | 'book' | 'humanity';
-export type PageName = 'onboarding' | 'landing' | 'app' | 'admin';
+export type PageName = 'landing' | 'landing' | 'app' | 'admin';
 
 interface User {
   name: string;
@@ -77,7 +77,7 @@ interface AppActions {
 const StoreContext = createContext<(AppState & AppActions) | null>(null);
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [page, setPage] = useState<PageName>('onboarding');
+  const [page, setPage] = useState<PageName>('landing');
   const [tab, setTab] = useState<TabName>('chain');
   const [lang, setLangState] = useState<LangCode>('en');
   const [user, setUser] = useState<User | null>(null);
