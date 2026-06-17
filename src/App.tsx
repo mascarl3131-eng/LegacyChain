@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useStore } from './lib/store';
+import { supabase } from './lib/supabase';
 import OnboardingPage from './pages/OnboardingPage';
 import LandingPage from './pages/LandingPage';
 import AppPage from './pages/AppPage';
@@ -9,6 +10,25 @@ import NebulaBackground from './components/NebulaBackground';
 
 function App() {
   const { page, loading, session, user, setPage } = useStore();
+
+  // Handle OAuth callback hash from Supabase
+  useEffect(() => {
+    const handleAuthCallback = async () => {
+      const hash = window.location.hash;
+      if (hash && hash.includes('access_token')) {
+        // Supabase automatically handles the hash
+        const { data, error } = await supabase.auth.getSession();
+        if (data.session) {
+          console.log('Session récupérée:', data.session.user.email);
+          window.location.hash = ''; // Clean the hash
+        }
+        if (error) {
+          console.error('Erreur auth:', error);
+        }
+      }
+    };
+    handleAuthCallback();
+  }, []);
 
   // Auto-redirect: if logged in, go to app; if not, go to landing
   useEffect(() => {
@@ -22,7 +42,6 @@ function App() {
   // Onboarding only on first visit (no session)
   useEffect(() => {
     if (!loading && !session && !user) {
-      // Check if already seen onboarding
       const seen = localStorage.getItem('legacychain-onboarding');
       if (!seen) {
         setPage('onboarding');
