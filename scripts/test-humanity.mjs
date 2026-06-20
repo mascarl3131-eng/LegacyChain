@@ -34,10 +34,29 @@ const messages = Array.from({ length: 45 }, (_, index) => ({
 }));
 
 await page.route('**/api/humanity-messages?**', async route => {
+  const requestUrl = new URL(route.request().url());
+  const requestedPage = Number(requestUrl.searchParams.get('page') || 1);
+  const requestedCountry = requestUrl.searchParams.get('country');
+  const requestedYear = requestUrl.searchParams.get('year');
+  const requestedSearch = requestUrl.searchParams.get('search')?.toLowerCase();
+  const matching = messages.filter(item =>
+    (!requestedCountry || item.country === requestedCountry)
+    && (!requestedYear || String(new Date(item.created_at).getFullYear()) === requestedYear)
+    && (!requestedSearch || `${item.display_name} ${item.country} ${item.message}`.toLowerCase().includes(requestedSearch))
+  );
+  const start = (requestedPage - 1) * 20;
   await route.fulfill({
     status: 200,
     contentType: 'application/json',
-    body: JSON.stringify({ messages, total: messages.length, page: 1, perPage: 100 }),
+    body: JSON.stringify({
+      messages: matching.slice(start, start + 20),
+      total: matching.length,
+      page: requestedPage,
+      perPage: 20,
+      countries,
+      years: [2026, 2025, 2024],
+      countryCounts: { France: 15, Sénégal: 15, Vietnam: 15 },
+    }),
   });
 });
 
@@ -52,6 +71,11 @@ await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('but
 await page.getByText("VOIX DE L'HUMANITÉ", { exact: true }).waitFor();
 await page.locator('svg[role="img"]').waitFor();
 await page.getByText(/45 voix récentes/).waitFor();
+await page.getByRole('button', { name: 'PAYS', exact: true }).click();
+await page.getByRole('button', { name: /France · 15/ }).waitFor();
+await page.getByRole('button', { name: 'ANNÉES', exact: true }).click();
+await page.getByRole('button', { name: '2026', exact: true }).waitFor();
+await page.getByRole('button', { name: 'TOUS', exact: true }).click();
 if (await page.locator('article').count() !== 20) throw new Error('La première page ne contient pas 20 voix.');
 
 await page.getByRole('button').filter({ has: page.locator('svg.lucide-chevron-right') }).click();
@@ -59,8 +83,10 @@ await page.getByText('2 / 3', { exact: true }).waitFor();
 if (await page.locator('article').count() !== 20) throw new Error('La deuxième page ne contient pas 20 voix.');
 
 await page.locator('select.form-select').nth(0).selectOption({ label: 'France' });
+await page.waitForFunction(() => document.querySelectorAll('article').length === 15);
 if (await page.locator('article').count() !== 15) throw new Error('Le filtre par pays ne retourne pas les 15 voix attendues.');
 await page.locator('input[placeholder*="Rechercher"]').fill('numéro 1');
+await page.waitForTimeout(450);
 if (await page.locator('article').count() < 1) throw new Error('La recherche ne retourne aucun résultat.');
 
 const dimensions = await page.evaluate(() => ({

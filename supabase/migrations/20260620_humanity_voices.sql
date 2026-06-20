@@ -110,3 +110,23 @@ drop trigger if exists humanity_report_count_trigger on public.humanity_reports;
 create trigger humanity_report_count_trigger
 after insert on public.humanity_reports
 for each row execute function public.refresh_humanity_report_count();
+
+create or replace function public.humanity_country_counts()
+returns table(country text, message_count bigint)
+language sql stable security definer set search_path = public as $$
+  select hm.country, count(*)::bigint
+  from public.humanity_messages hm
+  where hm.visibility = 'public' and hm.status = 'published'
+  group by hm.country
+  order by count(*) desc, hm.country asc;
+$$;
+
+create or replace function public.humanity_year_counts()
+returns table(year integer, message_count bigint)
+language sql stable security definer set search_path = public as $$
+  select extract(year from hm.created_at)::integer, count(*)::bigint
+  from public.humanity_messages hm
+  where hm.visibility = 'public' and hm.status = 'published'
+  group by extract(year from hm.created_at)
+  order by year desc;
+$$;

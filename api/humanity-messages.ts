@@ -43,17 +43,15 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const { data, count, error } = await query.range(offset, offset + perPage - 1);
     if (error) return res.status(500).json({ error: error.message });
 
-    const { data: facets } = await admin
-      .from('humanity_messages')
-      .select('country,created_at')
-      .eq('visibility', 'public')
-      .eq('status', 'published')
-      .order('created_at', { ascending: false })
-      .limit(1000);
-
-    const countries = [...new Set((facets || []).map(item => item.country))].sort();
-    const years = [...new Set((facets || []).map(item => new Date(item.created_at).getUTCFullYear()))].sort((a, b) => b - a);
-    return res.status(200).json({ messages: data || [], total: count || 0, page, perPage, countries, years });
+    const [{ data: countryRows }, { data: yearRows }] = await Promise.all([
+      admin.rpc('humanity_country_counts'),
+      admin.rpc('humanity_year_counts'),
+    ]);
+    const countryCounts = Object.fromEntries((countryRows || []).map(item => [item.country, Number(item.message_count)]));
+    const countries = Object.keys(countryCounts);
+    const yearCounts = Object.fromEntries((yearRows || []).map(item => [String(item.year), Number(item.message_count)]));
+    const years = Object.keys(yearCounts).map(Number);
+    return res.status(200).json({ messages: data || [], total: count || 0, page, perPage, countries, years, countryCounts, yearCounts });
   }
 
   if (req.method === 'POST') {
@@ -103,4 +101,3 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   return res.status(405).json({ error: 'Method not allowed' });
 }
-

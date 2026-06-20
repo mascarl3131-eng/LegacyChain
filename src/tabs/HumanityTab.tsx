@@ -32,14 +32,20 @@ function getVisitorId() {
 export default function HumanityTab() {
   const { lang, session, user, hEmo, setHEmo, setShowSubmitAnim, showNotif } = useStore();
   const [voices, setVoices] = useState<Voice[]>([]);
+  const [total, setTotal] = useState(0);
+  const [facetCountries, setFacetCountries] = useState<string[]>([]);
+  const [facetYears, setFacetYears] = useState<number[]>([]);
+  const [facetCountryCounts, setFacetCountryCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [sampleMode, setSampleMode] = useState(false);
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [country, setCountry] = useState('');
   const [year, setYear] = useState('');
   const [emotion, setEmotion] = useState('');
   const [audience, setAudience] = useState('');
   const [sort, setSort] = useState('newest');
+  const [viewMode, setViewMode] = useState<'all' | 'country' | 'year'>('all');
   const [page, setPage] = useState(1);
   const [liked, setLiked] = useState<Record<string, string>>({});
   const [hName, setHName] = useState('');
@@ -53,27 +59,57 @@ export default function HumanityTab() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const initialCountry = params.get('voiceCountry');
-    if (initialCountry) setCountry(initialCountry);
+    if (initialCountry) {
+      setCountry(initialCountry);
+      setViewMode('country');
+    }
   }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedQuery(query.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [query]);
 
   useEffect(() => {
     let active = true;
     const loadVoices = async () => {
       setLoading(true);
       try {
-        const response = await fetch('/api/humanity-messages?perPage=100&sort=newest');
+        const params = new URLSearchParams({
+          page: String(page),
+          perPage: String(PER_PAGE),
+          sort,
+        });
+        if (debouncedQuery) params.set('search', debouncedQuery);
+        if (country) params.set('country', country);
+        if (year) params.set('year', year);
+        if (emotion) params.set('emotion', emotion);
+        if (audience) params.set('audience', audience);
+        const response = await fetch(`/api/humanity-messages?${params}`);
         if (!response.ok) throw new Error('Voices database unavailable');
         const data = await response.json();
         if (!active) return;
         setVoices(data.messages || []);
+        setTotal(data.total || 0);
+        setFacetCountries(data.countries || []);
+        setFacetYears(data.years || []);
+        setFacetCountryCounts(data.countryCounts || {});
         setSampleMode(false);
       } catch {
         if (!active) return;
-        setVoices(getDemoHumanity(lang).map(item => ({
+        const samples = getDemoHumanity(lang).map(item => ({
           id: item.id, display_name: item.a, show_profile: false, country: item.c, message: item.text,
           emotion: item.e, audience: 'future', language: lang, reaction_count: item.likes,
           created_at: `${item.y}-06-20T00:00:00Z`,
-        })));
+        }));
+        setVoices(samples);
+        setTotal(samples.length);
+        setFacetCountries([...new Set(samples.map(item => item.country))].sort());
+        setFacetYears([...new Set(samples.map(item => new Date(item.created_at).getFullYear()))].sort((a, b) => b - a));
+        setFacetCountryCounts(samples.reduce<Record<string, number>>((acc, item) => {
+          acc[item.country] = (acc[item.country] || 0) + 1;
+          return acc;
+        }, {}));
         setSampleMode(true);
       } finally {
         if (active) setLoading(false);
@@ -81,15 +117,10 @@ export default function HumanityTab() {
     };
     void loadVoices();
     return () => { active = false; };
-  }, [lang]);
-
-  const countries = useMemo(() => [...new Set(voices.map(item => item.country))].sort(), [voices]);
-  const years = useMemo(() => [...new Set(voices.map(item => new Date(item.created_at).getFullYear()))].sort((a, b) => b - a), [voices]);
-  const countryCounts = useMemo(() => voices.reduce<Record<string, number>>((acc, item) => {
-    acc[item.country] = (acc[item.country] || 0) + 1; return acc;
-  }, {}), [voices]);
+  }, [audience, country, debouncedQuery, emotion, lang, page, sort, year]);
 
   const filtered = useMemo(() => {
+    if (!sampleMode) return voices;
     const result = voices.filter(item => {
       const haystack = `${item.display_name} ${item.country} ${item.message}`.toLocaleLowerCase();
       return (!query || haystack.includes(query.toLocaleLowerCase()))
@@ -103,17 +134,32 @@ export default function HumanityTab() {
       : sort === 'oldest'
         ? +new Date(a.created_at) - +new Date(b.created_at)
         : +new Date(b.created_at) - +new Date(a.created_at));
-  }, [audience, country, emotion, query, sort, voices, year]);
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
-  const displayed = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  }, [audience, country, emotion, query, sampleMode, sort, voices, year]);
+  const effectiveTotal = sampleMode ? filtered.length : total;
+  const pageCount = Math.max(1, Math.ceil(effectiveTotal / PER_PAGE));
+  const displayed = sampleMode ? filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE) : filtered;
   const featured = filtered[0];
   useEffect(() => setPage(1), [audience, country, emotion, query, sort, year]);
 
   const selectCountry = (value: string) => {
     setCountry(value);
+    setPage(1);
     const url = new URL(window.location.href);
     if (value) url.searchParams.set('voiceCountry', value); else url.searchParams.delete('voiceCountry');
     window.history.replaceState({}, '', url);
+  };
+
+  const selectView = (next: 'all' | 'country' | 'year') => {
+    setViewMode(next);
+    setPage(1);
+    if (next === 'all') {
+      selectCountry('');
+      setYear('');
+    } else if (next === 'country') {
+      setYear('');
+    } else {
+      selectCountry('');
+    }
   };
 
   const react = async (voice: Voice, reaction: string) => {
@@ -177,7 +223,10 @@ export default function HumanityTab() {
 
     setShowSubmitAnim(true);
     setHMsg(''); setHName(''); setFormError('');
-    if (visibility === 'public') setVoices(items => [data.message, ...items].slice(0, 100));
+    if (visibility === 'public') {
+      setVoices(items => [data.message, ...items].slice(0, PER_PAGE));
+      setTotal(value => value + 1);
+    }
     showNotif(t('voiceSealed', lang), '#00FFD1');
   };
 
@@ -186,17 +235,40 @@ export default function HumanityTab() {
       <header style={{ textAlign: 'center', padding: '1.4rem .5rem 1.1rem' }}>
         <div className="font-display" style={{ fontSize: 'clamp(1.25rem,6vw,2.2rem)', color: '#EFF6FF', letterSpacing: '.12em' }}>{t('hvTitle', lang)}</div>
         <p style={{ fontSize: '.7rem', color: 'rgba(239,246,255,.38)', lineHeight: 1.7 }}>{t('hvSub', lang)}</p>
-        <div style={{ fontSize: '.62rem', color: 'rgba(239,246,255,.35)' }}><strong style={{ color: '#00FFD1' }}>{voices.length}</strong> {t('recentVoices', lang)} · <strong style={{ color: '#00FFD1' }}>{countries.length}</strong> {t('countries', lang)}</div>
+        <div style={{ fontSize: '.62rem', color: 'rgba(239,246,255,.35)' }}><strong style={{ color: '#00FFD1' }}>{total}</strong> {t('recentVoices', lang)} · <strong style={{ color: '#00FFD1' }}>{facetCountries.length}</strong> {t('countries', lang)}</div>
         {sampleMode && <div style={{ color: '#FFB347', fontSize: '.52rem', marginTop: '.45rem' }}>{t('sampleVoicesNotice', lang)}</div>}
       </header>
 
-      <HumanityWorldMap counts={countryCounts} selectedCountry={country} onSelect={selectCountry} />
+      <HumanityWorldMap counts={facetCountryCounts} selectedCountry={country} onSelect={value => { setViewMode('country'); selectCountry(value); }} />
 
       <div className="glass-card" style={{ marginTop: '.75rem', padding: '.8rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: '.35rem', marginBottom: '.65rem' }}>
+          {([
+            ['all', 'viewAllVoices'],
+            ['country', 'viewByCountry'],
+            ['year', 'viewByYear'],
+          ] as const).map(([mode, label]) => (
+            <button key={mode} className="btn-sec" onClick={() => selectView(mode)} style={{
+              borderColor: viewMode === mode ? '#00FFD1' : undefined,
+              color: viewMode === mode ? '#00FFD1' : undefined,
+              background: viewMode === mode ? 'rgba(0,255,209,.06)' : undefined,
+            }}>{t(label, lang)}</button>
+          ))}
+        </div>
+        {viewMode === 'country' && (
+          <div style={{ display: 'flex', gap: '.35rem', overflowX: 'auto', paddingBottom: '.5rem', marginBottom: '.3rem' }}>
+            {facetCountries.map(item => <button key={item} className="btn-sec" onClick={() => selectCountry(item)} style={{ whiteSpace: 'nowrap', borderColor: country === item ? '#FFB347' : undefined, color: country === item ? '#FFB347' : undefined }}>{item} · {facetCountryCounts[item] || 0}</button>)}
+          </div>
+        )}
+        {viewMode === 'year' && (
+          <div style={{ display: 'flex', gap: '.35rem', overflowX: 'auto', paddingBottom: '.5rem', marginBottom: '.3rem' }}>
+            {facetYears.map(item => <button key={item} className="btn-sec" onClick={() => { setYear(String(item)); setPage(1); }} style={{ whiteSpace: 'nowrap', borderColor: year === String(item) ? '#FFB347' : undefined, color: year === String(item) ? '#FFB347' : undefined }}>{item}</button>)}
+          </div>
+        )}
         <div style={{ position: 'relative', marginBottom: '.45rem' }}><Search size={14} style={{ position: 'absolute', left: 10, top: 11, color: 'rgba(239,246,255,.3)' }} /><input className="form-input" value={query} onChange={event => setQuery(event.target.value)} placeholder={t('searchVoices', lang)} style={{ paddingLeft: 32 }} /></div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '.4rem' }}>
-          <select className="form-select" value={country} onChange={event => selectCountry(event.target.value)}><option value="">{t('allCountries', lang)}</option>{countries.map(item => <option key={item}>{item}</option>)}</select>
-          <select className="form-select" value={year} onChange={event => setYear(event.target.value)}><option value="">{t('allYears', lang)}</option>{years.map(item => <option key={item}>{item}</option>)}</select>
+          <select className="form-select" value={country} onChange={event => { setViewMode(event.target.value ? 'country' : viewMode); selectCountry(event.target.value); }}><option value="">{t('allCountries', lang)}</option>{facetCountries.map(item => <option key={item}>{item}</option>)}</select>
+          <select className="form-select" value={year} onChange={event => { setViewMode(event.target.value ? 'year' : viewMode); setYear(event.target.value); setPage(1); }}><option value="">{t('allYears', lang)}</option>{facetYears.map(item => <option key={item}>{item}</option>)}</select>
           <select className="form-select" value={emotion} onChange={event => setEmotion(event.target.value)}><option value="">{t('allEmotions', lang)}</option>{EMOTIONS.map(item => <option key={item} value={item}>{t(`e${item[0].toUpperCase()}${item.slice(1)}`, lang)}</option>)}</select>
           <select className="form-select" value={audience} onChange={event => setAudience(event.target.value)}><option value="">{t('allAudiences', lang)}</option>{AUDIENCES.map(item => <option key={item} value={item}>{t(AUDIENCE_KEYS[item], lang)}</option>)}</select>
           <select className="form-select" value={sort} onChange={event => setSort(event.target.value)} style={{ gridColumn: '1 / -1' }}><option value="newest">{t('newestFirst', lang)}</option><option value="oldest">{t('oldestFirst', lang)}</option><option value="popular">{t('mostSupported', lang)}</option></select>

@@ -40,9 +40,9 @@ export default function SideMenu() {
   };
 
   const renderMenuItem = ({ id, icon, labelKey }: { id: TabName; icon: string; labelKey: string }) => (
-    <div key={id} onClick={() => handleTab(id)} style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.75rem 1.2rem', fontSize: '0.78rem', color: tab === id ? '#00FFD1' : 'rgba(239,246,255,0.6)', cursor: 'pointer', letterSpacing: '0.06em', transition: 'all 0.2s', borderLeft: tab === id ? '2px solid #00FFD1' : '2px solid transparent', background: tab === id ? 'rgba(0,255,209,0.04)' : 'transparent' }}>
+    <button type="button" key={id} onClick={() => handleTab(id)} style={{ width: '100%', border: 'none', display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.75rem 1.2rem', fontFamily: "'DM Mono',monospace", fontSize: '0.78rem', color: tab === id ? '#00FFD1' : 'rgba(239,246,255,0.6)', cursor: 'pointer', textAlign: 'left', letterSpacing: '0.06em', transition: 'all 0.2s', borderLeft: tab === id ? '2px solid #00FFD1' : '2px solid transparent', background: tab === id ? 'rgba(0,255,209,0.04)' : 'transparent' }}>
       {icon} {t(labelKey, lang)}
-    </div>
+    </button>
   );
 
   return (

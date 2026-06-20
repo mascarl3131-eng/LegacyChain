@@ -29,8 +29,9 @@ const destinations = [
 
 for (const [menuLabel, heading] of destinations) {
   await page.getByRole('button', { name: 'Menu' }).click();
-  await page.waitForTimeout(350);
-  await page.getByText(menuLabel, { exact: false }).last().click();
+  const drawer = page.locator('div[aria-hidden="false"]');
+  await drawer.waitFor();
+  await drawer.getByRole('button', { name: menuLabel, exact: false }).click();
   await page.getByText(heading, { exact: true }).waitFor();
 }
 
