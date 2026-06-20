@@ -9,6 +9,21 @@ import { getDemoMsgs, getDemoHumanity, getChallenges, INITIAL_TREE } from './dat
 export type TabName = 'chain' | 'tree' | 'origins' | 'mural' | 'challenges' | 'book' | 'humanity';
 export type PageName = 'onboarding' | 'landing' | 'app' | 'admin';
 
+const SUPPORTED_LANGS: LangCode[] = ['en', 'fr', 'es', 'pt', 'de', 'it', 'ar', 'zh', 'ja', 'ko', 'ru', 'hi', 'sw', 'nl'];
+
+function getInitialLanguage(): LangCode {
+  const saved = localStorage.getItem('legacychain-language');
+  if (saved && SUPPORTED_LANGS.includes(saved as LangCode)) return saved as LangCode;
+
+  const candidates = navigator.languages?.length ? navigator.languages : [navigator.language];
+  for (const locale of candidates) {
+    const normalized = locale.toLowerCase();
+    const exact = normalized.split('-')[0] as LangCode;
+    if (SUPPORTED_LANGS.includes(exact)) return exact;
+  }
+  return 'en';
+}
+
 interface User {
   name: string;
   first: string;
@@ -85,7 +100,7 @@ const StoreContext = createContext<(AppState & AppActions) | null>(null);
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [page, setPage] = useState<PageName>('landing');
   const [tab, setTab] = useState<TabName>('chain');
-  const [lang, setLangState] = useState<LangCode>('en');
+  const [lang, setLangState] = useState<LangCode>(getInitialLanguage);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -181,8 +196,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const setLang = useCallback((l: LangCode) => {
     setLangState(l);
+    localStorage.setItem('legacychain-language', l);
     document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = l;
   }, []);
+
+  useEffect(() => {
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   const showNotif = useCallback((msg: string, color: string = '#00FFD1') => {
     setNotif({ msg, color });
