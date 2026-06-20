@@ -108,7 +108,7 @@ export default function DnaWorldMap({ origins }: { origins: OriginRow[] }) {
         </Mercator>
       </svg>
 
-      <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 5 }}>
+      <div className="desktop-zoom-controls" style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 5 }}>
         <button type="button" onClick={() => setZoom(value => Math.min(1.7, value + 0.15))} className="btn-sec" style={{ width: 32, height: 32, padding: 0, fontSize: '0.9rem' }} aria-label="Zoom in">+</button>
         <button type="button" onClick={() => setZoom(value => Math.max(0.85, value - 0.15))} className="btn-sec" style={{ width: 32, height: 32, padding: 0, fontSize: '0.9rem' }} aria-label="Zoom out">−</button>
         <button type="button" onClick={() => setZoom(1)} className="btn-sec" style={{ height: 32, padding: '0 0.55rem', fontSize: '0.5rem' }} aria-label="Reset zoom">100%</button>

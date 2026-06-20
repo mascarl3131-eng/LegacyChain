@@ -242,7 +242,8 @@
   }
 
   body {
-    overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    touch-action: pan-x pan-y pinch-zoom;
   }
 
   .glass-card {
@@ -260,6 +261,10 @@
   }
 
   .bottom-ticker {
+    display: none !important;
+  }
+
+  .desktop-zoom-controls {
     display: none !important;
   }
 

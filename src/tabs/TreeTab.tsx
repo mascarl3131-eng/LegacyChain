@@ -107,7 +107,7 @@ export default function TreeTab() {
 
       {view === 'tree' ? (
         <div ref={viewportRef} className="glass-card" style={{ padding: 0, overflow: 'hidden', marginTop: '0.75rem', position: 'relative' }}>
-          <div style={{ position: 'absolute', zIndex: 3, top: 9, right: 9, display: 'flex', gap: 5 }}>
+          <div className="desktop-zoom-controls" style={{ position: 'absolute', zIndex: 3, top: 9, right: 9, display: 'flex', gap: 5 }}>
             <button className="btn-sec" onClick={() => setZoom(value => Math.min(1.55, value + 0.12))} style={{ width: 32, height: 32, padding: 0 }} aria-label="Zoom in"><ZoomIn size={14} /></button>
             <button className="btn-sec" onClick={() => setZoom(value => Math.max(0.72, value - 0.12))} style={{ width: 32, height: 32, padding: 0 }} aria-label="Zoom out"><ZoomOut size={14} /></button>
             <button className="btn-sec" onClick={resetView} style={{ width: 32, height: 32, padding: 0 }} aria-label="Reset"><Focus size={14} /></button>
