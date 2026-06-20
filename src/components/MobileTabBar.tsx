@@ -1,13 +1,13 @@
-import { BookOpen, Dna, Link2, Network, Trophy } from 'lucide-react';
+import { BookOpen, Dna, Globe2, Link2, Network } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import type { TabName } from '@/lib/store';
 
 const ITEMS: { id: TabName; label: string; icon: typeof Link2 }[] = [
   { id: 'chain', label: 'navChain', icon: Link2 },
+  { id: 'humanity', label: 'navHumanity', icon: Globe2 },
   { id: 'tree', label: 'navTree', icon: Network },
   { id: 'origins', label: 'navOrigins', icon: Dna },
-  { id: 'challenges', label: 'navChal', icon: Trophy },
   { id: 'book', label: 'navBook', icon: BookOpen },
 ];
 

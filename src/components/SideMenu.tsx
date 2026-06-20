@@ -4,18 +4,15 @@ import type { TabName } from '@/lib/store';
 
 const FAMILY_TABS: { id: TabName; icon: string; labelKey: string }[] = [
   { id: 'chain', icon: '⬡', labelKey: 'navChain' },
+  { id: 'humanity', icon: '🌍', labelKey: 'navHumanity' },
   { id: 'tree', icon: '🌳', labelKey: 'navTree' },
   { id: 'origins', icon: '🧬', labelKey: 'navOrigins' },
-  { id: 'mural', icon: '🎨', labelKey: 'navMural' },
 ];
 
 const LEGACY_TABS: { id: TabName; icon: string; labelKey: string }[] = [
-  { id: 'challenges', icon: '🏆', labelKey: 'navChal' },
   { id: 'book', icon: '📖', labelKey: 'navBook' },
-];
-
-const WORLD_TABS: { id: TabName; icon: string; labelKey: string }[] = [
-  { id: 'humanity', icon: '🌍', labelKey: 'navHumanity' },
+  { id: 'challenges', icon: '🏆', labelKey: 'navChal' },
+  { id: 'mural', icon: '🎨', labelKey: 'navMural' },
 ];
 
 function SectionTitle({ children }: { children: string }) {
@@ -87,10 +84,6 @@ export default function SideMenu() {
         <Divider />
         <SectionTitle>{t('legacySection', lang)}</SectionTitle>
         {LEGACY_TABS.map(renderMenuItem)}
-
-        <Divider />
-        <SectionTitle>{t('worldSection', lang)}</SectionTitle>
-        {WORLD_TABS.map(renderMenuItem)}
 
         <Divider />
         <SectionTitle>{t('accountSection', lang)}</SectionTitle>
