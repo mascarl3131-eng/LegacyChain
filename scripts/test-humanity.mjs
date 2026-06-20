@@ -77,6 +77,8 @@ await page.getByRole('button', { name: 'ANNÉES', exact: true }).click();
 await page.getByRole('button', { name: '2026', exact: true }).waitFor();
 await page.getByRole('button', { name: 'TOUS', exact: true }).click();
 if (await page.locator('article').count() !== 20) throw new Error('La première page ne contient pas 20 voix.');
+const publishingCountrySelect = page.locator('section select.form-select').first();
+if (await publishingCountrySelect.locator('option').count() < 240) throw new Error('La liste complète des pays est absente.');
 
 await page.getByRole('button').filter({ has: page.locator('svg.lucide-chevron-right') }).click();
 await page.getByText('2 / 3', { exact: true }).waitFor();
@@ -86,7 +88,7 @@ await page.locator('select.form-select').nth(0).selectOption({ label: 'France' }
 await page.waitForFunction(() => document.querySelectorAll('article').length === 15);
 if (await page.locator('article').count() !== 15) throw new Error('Le filtre par pays ne retourne pas les 15 voix attendues.');
 await page.locator('input[placeholder*="Rechercher"]').fill('numéro 1');
-await page.waitForTimeout(450);
+await page.waitForFunction(() => document.querySelectorAll('article').length > 0);
 if (await page.locator('article').count() < 1) throw new Error('La recherche ne retourne aucun résultat.');
 
 const dimensions = await page.evaluate(() => ({

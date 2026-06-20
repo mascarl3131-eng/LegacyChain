@@ -58,13 +58,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const body = req.body || {};
     const message = String(body.message || '').trim();
     const country = String(body.country || '').trim();
+    const countryCode = String(body.countryCode || '').trim().toUpperCase();
     const emotion = String(body.emotion || '');
     const audience = String(body.audience || '');
     const visibility = body.visibility === 'family' ? 'family' : 'public';
     const language = String(body.language || 'en').slice(0, 5);
     const user = await getAuthenticatedUser(req);
 
-    if (message.length < 3 || message.length > 500 || !country || !ALLOWED_EMOTIONS.has(emotion) || !ALLOWED_AUDIENCES.has(audience)) {
+    if (message.length < 3 || message.length > 500 || !country || !/^[A-Z]{2}$/.test(countryCode) || !ALLOWED_EMOTIONS.has(emotion) || !ALLOWED_AUDIENCES.has(audience)) {
       return res.status(400).json({ error: 'Invalid voice data' });
     }
     if (BLOCKED_TERMS.some(term => message.toLowerCase().includes(term))) {
@@ -85,7 +86,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         display_name: displayName,
         show_profile: showProfile,
         country,
-        country_code: String(body.countryCode || '').slice(0, 3) || null,
+        country_code: countryCode,
         message,
         emotion,
         audience,

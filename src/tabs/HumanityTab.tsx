@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, ExternalLink, Flag, HandHeart, Heart, Langua
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { FLAGS, BANNED_WORDS, getDemoHumanity } from '@/lib/data';
+import { countryFlag, getCountryOptions } from '@/lib/countries';
 import HumanityWorldMap from '@/components/HumanityWorldMap';
 
 const EMOTIONS = ['hope', 'love', 'wisdom', 'peace', 'warning', 'memory'];
@@ -49,12 +50,13 @@ export default function HumanityTab() {
   const [page, setPage] = useState(1);
   const [liked, setLiked] = useState<Record<string, string>>({});
   const [hName, setHName] = useState('');
-  const [hCountry, setHCountry] = useState('');
+  const [hCountryCode, setHCountryCode] = useState('');
   const [hAudience, setHAudience] = useState('future');
   const [hMsg, setHMsg] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'family'>('public');
   const [showProfile, setShowProfile] = useState(false);
   const [formError, setFormError] = useState('');
+  const countryOptions = useMemo(() => getCountryOptions(lang), [lang]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -205,8 +207,9 @@ export default function HumanityTab() {
 
   const submit = async () => {
     const text = hMsg.trim();
+    const selectedCountry = countryOptions.find(item => item.code === hCountryCode);
     setFormError('');
-    if (!text || !hCountry.trim()) return setFormError(t('completeRequired', lang));
+    if (!text || !selectedCountry) return setFormError(t('completeRequired', lang));
     if (BANNED_WORDS.some(word => text.toLowerCase().includes(word))) return setFormError(t('modBanned', lang));
     if (visibility === 'family' && !session) return setFormError(t('loginForFamilyVoice', lang));
 
@@ -214,15 +217,16 @@ export default function HumanityTab() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
       body: JSON.stringify({
-        message: text, country: hCountry.trim(), emotion: hEmo, audience: hAudience,
-        visibility, language: lang, displayName: hName.trim(), showProfile,
+        message: text, country: selectedCountry.canonicalName, countryCode: selectedCountry.code,
+        emotion: hEmo, audience: hAudience, visibility, language: lang,
+        displayName: hName.trim(), showProfile,
       }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) return setFormError(data.error || t('publishError', lang));
 
     setShowSubmitAnim(true);
-    setHMsg(''); setHName(''); setFormError('');
+    setHMsg(''); setHName(''); setHCountryCode(''); setFormError('');
     if (visibility === 'public') {
       setVoices(items => [data.message, ...items].slice(0, PER_PAGE));
       setTotal(value => value + 1);
@@ -286,7 +290,7 @@ export default function HumanityTab() {
       <div style={{ marginTop: '.75rem' }}>
         {loading ? <div className="glass-card" style={{ textAlign: 'center' }}>{t('loadingVoices', lang)}</div> : displayed.map(voice => {
           const activeReaction = liked[voice.id];
-          const flag = FLAGS[voice.country] || '🌍';
+          const flag = voice.country_code ? countryFlag(voice.country_code) : FLAGS[voice.country] || '🌍';
           return (
             <article key={voice.id} className="glass-card" style={{ marginBottom: '.7rem', borderTopColor: EMO_GLOW[voice.emotion] }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: '.7rem' }}>
@@ -315,7 +319,10 @@ export default function HumanityTab() {
 
       <section className="glass-card">
         <div style={{ color: '#00FFD1', fontSize: '.7rem', letterSpacing: '.15em', marginBottom: '.8rem' }}>{t('leaveVoice', lang)}</div>
-        <input className="form-input" value={hCountry} onChange={event => setHCountry(event.target.value)} placeholder={t('country', lang)} style={{ marginBottom: '.55rem' }} />
+        <select className="form-select" value={hCountryCode} onChange={event => setHCountryCode(event.target.value)} style={{ marginBottom: '.55rem' }}>
+          <option value="">{t('selectCountry', lang)}</option>
+          {countryOptions.map(item => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}
+        </select>
         <input className="form-input" value={hName} onChange={event => setHName(event.target.value)} placeholder={`${t('yourName', lang)} (${t('optional', lang)})`} style={{ marginBottom: '.55rem' }} />
         <select className="form-select" value={hAudience} onChange={event => setHAudience(event.target.value)} style={{ marginBottom: '.55rem' }}>{AUDIENCES.map(item => <option key={item} value={item}>{t(AUDIENCE_KEYS[item], lang)}</option>)}</select>
         <textarea className="form-textarea" value={hMsg} onChange={event => setHMsg(event.target.value)} maxLength={500} placeholder={t('yourMsg', lang)} />
