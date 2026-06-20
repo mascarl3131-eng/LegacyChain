@@ -23,6 +23,7 @@ export default function AppNav() {
 
   return (
     <nav
+      className="app-nav"
       style={{
         position: 'fixed',
         top: 0,

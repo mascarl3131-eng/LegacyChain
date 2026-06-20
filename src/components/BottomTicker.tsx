@@ -13,6 +13,7 @@ export default function BottomTicker() {
 
   return (
     <div
+      className="bottom-ticker"
       style={{
         position: 'fixed',
         bottom: 0,

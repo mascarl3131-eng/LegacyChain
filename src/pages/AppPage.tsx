@@ -12,6 +12,8 @@ import MuralTab from '@/tabs/MuralTab';
 import ChallengesTab from '@/tabs/ChallengesTab';
 import BookTab from '@/tabs/BookTab';
 import HumanityTab from '@/tabs/HumanityTab';
+import MobileTabBar from '@/components/MobileTabBar';
+import InstallAppPrompt from '@/components/InstallAppPrompt';
 
 const TABS: Record<string, React.FC> = {
   chain: ChainTab,
@@ -47,6 +49,7 @@ export default function AppPage() {
       <SideMenu />
 
       <div
+        className="app-scroll-region"
         style={{
           position: 'fixed',
           top: 46,
@@ -64,6 +67,8 @@ export default function AppPage() {
       </div>
 
       <BottomTicker />
+      <MobileTabBar />
+      <InstallAppPrompt />
     </div>
   );
 }

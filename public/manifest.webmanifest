@@ -1,0 +1,19 @@
+{
+  "name": "LegacyChain",
+  "short_name": "LegacyChain",
+  "description": "Préservez les histoires, les voix et l'héritage de votre famille.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#04030A",
+  "theme_color": "#04030A",
+  "icons": [
+    {
+      "src": "/legacychain-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
