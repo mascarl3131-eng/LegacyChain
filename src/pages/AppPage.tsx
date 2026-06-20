@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Bug } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { getDemoMsgs, getDemoHumanity } from '@/lib/data';
@@ -14,6 +15,7 @@ import BookTab from '@/tabs/BookTab';
 import HumanityTab from '@/tabs/HumanityTab';
 import MobileTabBar from '@/components/MobileTabBar';
 import InstallAppPrompt from '@/components/InstallAppPrompt';
+import BugReportModal from '@/components/BugReportModal';
 
 const TABS: Record<string, React.FC> = {
   chain: ChainTab,
@@ -27,6 +29,7 @@ const TABS: Record<string, React.FC> = {
 
 export default function AppPage() {
   const { page, tab, user, lang, setMsgs, setHMsgs, showNotif } = useStore();
+  const [bugReportOpen, setBugReportOpen] = useState(false);
 
   useEffect(() => {
     if (page === 'app' && user) {
@@ -69,6 +72,21 @@ export default function AppPage() {
       <BottomTicker />
       <MobileTabBar />
       <InstallAppPrompt />
+      <button
+        type="button"
+        onClick={() => setBugReportOpen(true)}
+        aria-label={t('reportBug', lang)}
+        title={t('reportBug', lang)}
+        style={{
+          position: 'fixed', right: 14, bottom: 78, zIndex: 120,
+          width: 42, height: 42, borderRadius: '50%', display: 'grid', placeItems: 'center',
+          border: '1px solid rgba(0,255,209,.38)', background: 'rgba(4,3,10,.94)',
+          color: '#00FFD1', cursor: 'pointer', boxShadow: '0 8px 30px rgba(0,0,0,.4)',
+        }}
+      >
+        <Bug size={18} />
+      </button>
+      <BugReportModal open={bugReportOpen} onClose={() => setBugReportOpen(false)} />
     </div>
   );
 }

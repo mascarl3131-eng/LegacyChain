@@ -4,6 +4,7 @@ import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { TREE_LINKS } from '@/lib/data';
 import type { TreeNode } from '@/lib/data';
+import MessageMedia from '@/components/MessageMedia';
 
 const GEN_COLORS = ['#C084FC', '#00FFD1', '#FFB347'];
 const GEN_Y = [70, 190, 310];
@@ -266,6 +267,7 @@ export default function TreeTab() {
             <div key={message.id} style={{ padding: '0.7rem 0', borderTop: '1px solid rgba(0,255,209,0.13)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.56rem', color: '#00FFD1', marginBottom: '0.3rem' }}><MessageCircle size={12} /> {message.y}</div>
               <div style={{ fontSize: '0.65rem', lineHeight: 1.65, color: 'rgba(239,246,255,0.72)' }}>{message.text}</div>
+              <MessageMedia message={message} lang={lang} />
             </div>
           )) : <div style={{ fontSize: '0.65rem', color: 'rgba(239,246,255,0.3)', paddingTop: '0.4rem' }}>{t('noMessages', lang)}</div>}
         </div>

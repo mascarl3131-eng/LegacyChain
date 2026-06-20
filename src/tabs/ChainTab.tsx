@@ -3,6 +3,7 @@ import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { BANNED_WORDS } from '@/lib/data';
 import UnlockYearPicker from '@/components/UnlockYearPicker';
+import MessageMedia from '@/components/MessageMedia';
 
 const EMOJIS = ['hope', 'love', 'wisdom', 'memory', 'warning'];
 const EMO_COLORS: Record<string, string> = {
@@ -165,7 +166,7 @@ export default function ChainTab() {
                 <span style={{ fontSize: '0.62rem', color: 'rgba(239,246,255,0.28)' }}>{m.y}</span>
               </div>
               <div style={{ fontSize: '0.82rem', lineHeight: 1.75, color: 'rgba(239,246,255,0.8)' }}>{m.text}</div>
-              {m.photo && <img src={m.photo} alt="" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid #00FFD1', marginTop: '0.4rem', display: 'block' }} />}
+              <MessageMedia message={m} lang={lang} compact />
               {m.lock && <div style={{ fontSize: '0.6rem', color: 'rgba(239,246,255,0.25)', marginTop: '0.28rem' }}>🔒 {t('sealedUntil', lang)} {m.lock}</div>}
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.65rem', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '0.57rem', letterSpacing: '0.1em', padding: '0.15rem 0.5rem', borderRadius: 3, background: 'rgba(0,255,209,0.05)', border: '1px solid rgba(0,255,209,0.13)', color: 'rgba(239,246,255,0.38)', textTransform: 'uppercase' }}>{t(`e${m.e.charAt(0).toUpperCase() + m.e.slice(1)}`, lang)}</span>
@@ -247,6 +248,7 @@ export default function ChainTab() {
           <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>
             {t('audio', lang)} {!premium && <span style={{ color: '#FFB347', fontSize: '0.56rem' }}>✦ PREMIUM · 3 MIN</span>}
           </label>
+          <p style={{ margin: '0 0 .55rem', color: 'rgba(239,246,255,.38)', fontSize: '.54rem', lineHeight: 1.6 }}>{t('voiceLegacyPhrase', lang)}</p>
           <div style={{ background: 'rgba(0,255,209,0.04)', border: '1px solid rgba(0,255,209,0.2)', borderRadius: 12, padding: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
               <button

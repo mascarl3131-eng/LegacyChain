@@ -2,13 +2,15 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { Download, Redo2, RotateCcw, Save, Trash2, Undo2 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
+import MessageMedia from '@/components/MessageMedia';
 
 type Tool = 'brush' | 'glow' | 'eraser';
 
 const COLORS = ['#00FFD1', '#C084FC', '#FFB347', '#FF6B9D', '#EFF6FF', '#FF2D55'];
 
 export default function MuralTab() {
-  const { lang, premium, user, familyName, setUpgradeOpen } = useStore();
+  const { lang, premium, user, familyName, msgs, setUpgradeOpen } = useStore();
+  const familyMedia = msgs.filter(message => message.photo || message.audioUrl);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [tool, setTool] = useState<Tool>('brush');
   const [color, setColor] = useState('#00FFD1');
@@ -229,6 +231,23 @@ export default function MuralTab() {
       <div style={{ fontSize: '0.58rem', color: 'rgba(239,246,255,0.18)', textAlign: 'center', marginTop: '0.5rem' }}>
         <RotateCcw size={10} style={{ display: 'inline', marginRight: 4 }} /> {t('muralAutosave', lang)} · {t('signed', lang)} : {user?.first} · {new Date().getFullYear()}
       </div>
+
+      <section className="glass-card" style={{ marginTop: '1rem' }}>
+        <div style={{ color: '#00FFD1', fontSize: '.66rem', letterSpacing: '.12em', marginBottom: '.3rem' }}>{t('familyMediaGallery', lang)}</div>
+        <p style={{ color: 'rgba(239,246,255,.38)', fontSize: '.54rem', lineHeight: 1.6, margin: '0 0 .8rem' }}>{t('familyMediaGalleryDesc', lang)}</p>
+        {familyMedia.length ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: '.65rem' }}>
+            {familyMedia.map(message => (
+              <article key={message.id} style={{ padding: '.65rem', borderRadius: 10, background: 'rgba(0,255,209,.025)', border: '1px solid rgba(0,255,209,.12)' }}>
+                <div style={{ color: 'rgba(239,246,255,.7)', fontSize: '.6rem' }}>{message.a} · {message.y}</div>
+                <MessageMedia message={message} lang={lang} />
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '1rem', color: 'rgba(239,246,255,.28)', fontSize: '.58rem', border: '1px dashed rgba(0,255,209,.14)', borderRadius: 9 }}>{t('noFamilyMedia', lang)}</div>
+        )}
+      </section>
     </div>
   );
 }

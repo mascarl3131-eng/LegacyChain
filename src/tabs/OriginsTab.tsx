@@ -3,6 +3,7 @@ import { t } from '@/lib/i18n';
 import { CHART_COLORS, DNA_SERVICES } from '@/lib/data';
 import DnaImportPanel from '@/components/DnaImportPanel';
 import DnaWorldMap from '@/components/DnaWorldMap';
+import DnaQuickGuide from '@/components/DnaQuickGuide';
 
 export default function OriginsTab() {
   const { lang, user, originRows, setOriginRows, pacte, setPacte, showNotif } = useStore();
@@ -33,6 +34,8 @@ export default function OriginsTab() {
         <strong style={{ color: '#FFB347', display: 'block', marginBottom: '0.22rem' }}>{t('dnaWarnTitle', lang)}</strong>
         <span>{t('dnaWarnText', lang)}</span>
       </div>
+
+      <DnaQuickGuide lang={lang} />
 
       <DnaImportPanel
         lang={lang}

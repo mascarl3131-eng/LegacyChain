@@ -40,6 +40,7 @@ interface AppState {
   user: User | null;
   session: Session | null;
   premium: boolean;
+  premiumPreview: boolean;
   premiumLoading: boolean;
   premiumCheckoutLoading: boolean;
   premiumCheckoutError: string | null;
@@ -70,6 +71,7 @@ interface AppActions {
   setUser: (u: User | null) => void;
   purchasePremium: () => Promise<void>;
   refreshPremium: () => Promise<void>;
+  setPremiumPreview: (enabled: boolean) => Promise<boolean>;
   setFamilyName: (f: string) => void;
   setEmo: (e: string) => void;
   setHEmo: (e: string) => void;
@@ -105,6 +107,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [premium, setPremium] = useState(false);
+  const [premiumPreview, setPremiumPreviewState] = useState(false);
   const [premiumLoading, setPremiumLoading] = useState(false);
   const [premiumCheckoutLoading, setPremiumCheckoutLoading] = useState(false);
   const [premiumCheckoutError, setPremiumCheckoutError] = useState<string | null>(null);
@@ -218,6 +221,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
     await loadPremium(session.user.id);
   }, [loadPremium, session?.user.id]);
+
+  const setPremiumPreview = useCallback(async (enabled: boolean) => {
+    if (!session?.access_token) return false;
+    try {
+      const response = await fetch('/api/admin-premium-preview', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ enabled }),
+      });
+      if (!response.ok) return false;
+      setPremiumPreviewState(enabled);
+      return true;
+    } catch {
+      return false;
+    }
+  }, [session?.access_token]);
 
   const purchasePremium = useCallback(async () => {
     setPremiumCheckoutError(null);
@@ -357,6 +379,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
+    setPremiumPreviewState(false);
     setUser(null);
     setSession(null);
     setPage('landing');
@@ -364,12 +387,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [showNotif]);
 
   const value: AppState & AppActions = {
-    page, tab, lang, user, session, premium, premiumLoading, premiumCheckoutLoading,
+    page, tab, lang, user, session, premium: premium || premiumPreview, premiumPreview, premiumLoading, premiumCheckoutLoading,
     premiumCheckoutError, familyName, emo, hEmo,
     msgs, hMsgs, challenges, bookData, chapter, pacte, originRows,
     treeNodes, sideMenuOpen, inviteOpen, upgradeOpen, immersiveMsg,
     showSubmitAnim, notif, loading,
-    setPage, setTab, setLang, setUser, purchasePremium, refreshPremium, setFamilyName,
+    setPage, setTab, setLang, setUser, purchasePremium, refreshPremium, setPremiumPreview, setFamilyName,
     setEmo, setHEmo, addMsg: (m) => setMsgs(prev => [m, ...prev]),
     setMsgs, addHMsg: (m) => setHMsgs(prev => [m, ...prev]), setHMsgs,
     setChallenges, setBookData, setChapter, setPacte, setOriginRows,

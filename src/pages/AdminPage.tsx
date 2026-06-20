@@ -1,8 +1,20 @@
+import { useState } from 'react';
+import { Crown, ShieldCheck } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 
 export default function AdminPage() {
-  const { setPage, msgs, hMsgs, premium, lang } = useStore();
+  const { setPage, msgs, hMsgs, premium, premiumPreview, setPremiumPreview, session, lang } = useStore();
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState('');
+
+  const togglePremiumPreview = async () => {
+    setPreviewLoading(true);
+    setPreviewError('');
+    const ok = await setPremiumPreview(!premiumPreview);
+    if (!ok) setPreviewError(t('godModeUnauthorized', lang));
+    setPreviewLoading(false);
+  };
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(4,3,10,0.98)', overflowY: 'auto', padding: '1.5rem' }}>
@@ -23,6 +35,24 @@ export default function AdminPage() {
             <div style={{ fontSize: '0.58rem', color: 'rgba(239,246,255,0.35)', letterSpacing: '0.1em' }}>PREMIUM</div>
           </div>
         </div>
+
+        <section className="glass-card" style={{ marginBottom: '1.5rem', borderColor: 'rgba(255,179,71,.3)', background: 'linear-gradient(135deg,rgba(255,179,71,.07),rgba(192,132,252,.04))' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', marginBottom: '.6rem' }}>
+            <span style={{ width: 34, height: 34, borderRadius: 9, display: 'grid', placeItems: 'center', color: '#FFB347', background: 'rgba(255,179,71,.1)', border: '1px solid rgba(255,179,71,.25)' }}><Crown size={18} /></span>
+            <div>
+              <div style={{ color: '#FFB347', fontSize: '.68rem', letterSpacing: '.12em' }}>{t('godModeTitle', lang)}</div>
+              <div style={{ color: 'rgba(239,246,255,.38)', fontSize: '.53rem', marginTop: '.2rem' }}>{t('godModeDesc', lang)}</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.35rem', color: session ? '#00FFD1' : '#FF6B6B', fontSize: '.52rem', marginBottom: '.7rem' }}>
+            <ShieldCheck size={13} /> {session ? session.user.email : t('godModeLoginRequired', lang)}
+          </div>
+          <button className={premiumPreview ? 'btn-sec' : 'btn-amber'} onClick={() => void togglePremiumPreview()} disabled={previewLoading || !session} style={{ width: '100%' }}>
+            {previewLoading ? t('sending', lang) : premiumPreview ? t('godModeDisable', lang) : t('godModeEnable', lang)}
+          </button>
+          {premiumPreview && <div style={{ color: '#FFB347', fontSize: '.54rem', textAlign: 'center', marginTop: '.55rem' }}>{t('godModeActive', lang)}</div>}
+          {previewError && <div style={{ color: '#FF6B6B', fontSize: '.54rem', marginTop: '.55rem' }}>{previewError}</div>}
+        </section>
 
         <div style={{ fontSize: '0.68rem', letterSpacing: '0.15em', color: '#00FFD1', marginBottom: '0.9rem' }}>{t('pendingReview', lang)}</div>
 
