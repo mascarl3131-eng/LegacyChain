@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '@/lib/store';
+import { t } from '@/lib/i18n';
 
 export default function ImmersiveReader() {
-  const { immersiveMsg, setImmersiveMsg } = useStore();
+  const { immersiveMsg, setImmersiveMsg, lang } = useStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [soundOn, setSoundOn] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -61,7 +62,7 @@ export default function ImmersiveReader() {
     if (!soundOn || !immersiveMsg) return;
 
     try {
-      if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      if (!audioCtxRef.current) audioCtxRef.current = new AudioContext();
       const ctx = audioCtxRef.current;
       ctx.resume();
 
@@ -122,13 +123,13 @@ export default function ImmersiveReader() {
         onClick={() => setImmersiveMsg(null)}
         style={{ position: 'absolute', top: '1.2rem', right: '1.2rem', zIndex: 3, background: 'transparent', border: '1px solid rgba(0,255,209,0.13)', color: 'rgba(239,246,255,0.35)', fontFamily: "'DM Mono',monospace", fontSize: '0.7rem', padding: '0.35rem 0.7rem', borderRadius: 4, cursor: 'pointer' }}
       >
-        × CLOSE
+        × {t('close', lang)}
       </button>
       <button
         onClick={toggleSound}
         style={{ position: 'absolute', bottom: 'calc(1.2rem + 32px)', right: '1.2rem', zIndex: 3, background: 'transparent', border: '1px solid rgba(0,255,209,0.13)', color: 'rgba(239,246,255,0.35)', fontFamily: "'DM Mono',monospace", fontSize: '0.7rem', padding: '0.35rem 0.7rem', borderRadius: 4, cursor: 'pointer' }}
       >
-        {soundOn ? '♫ ON' : '♫ SOUND'}
+        {soundOn ? `♫ ${t('soundOn', lang)}` : `♫ ${t('sound', lang)}`}
       </button>
     </div>
   );

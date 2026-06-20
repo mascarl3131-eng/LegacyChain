@@ -1,164 +1,216 @@
-import { useState, useRef, useEffect } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { Focus, List, Maximize2, MessageCircle, Network, Plus, Search, UserRound, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { TREE_LINKS } from '@/lib/data';
 import type { TreeNode } from '@/lib/data';
 
 const GEN_COLORS = ['#C084FC', '#00FFD1', '#FFB347'];
-const GEN_LABELS = ['GRANDPARENTS', 'PARENTS', 'CHILDREN'];
+const GEN_Y = [70, 190, 310];
 
 export default function TreeTab() {
   const { lang, msgs, treeNodes, setTreeNodes } = useStore();
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [links, setLinks] = useState<[number, number][]>(TREE_LINKS);
   const [showAdd, setShowAdd] = useState(false);
-  const [selectedMem, setSelectedMem] = useState<TreeNode | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [view, setView] = useState<'tree' | 'list'>('tree');
+  const [generation, setGeneration] = useState<'all' | number>('all');
+  const [query, setQuery] = useState('');
+  const [zoom, setZoom] = useState(1);
   const [fn, setFn] = useState('');
   const [ln, setLn] = useState('');
   const [by, setBy] = useState('');
   const [rel, setRel] = useState('child');
-  const svgRef = useRef<SVGSVGElement>(null);
-  const [svgW, setSvgW] = useState(520);
+  const [relativeTo, setRelativeTo] = useState(treeNodes[3]?.id || treeNodes[0]?.id || 0);
 
-  useEffect(() => {
-    const updateW = () => {
-      const w = svgRef.current?.parentElement?.offsetWidth || 520;
-      setSvgW(Math.min(w, 600));
-    };
-    updateW();
-    window.addEventListener('resize', updateW);
-    return () => window.removeEventListener('resize', updateW);
-  }, []);
+  const selectedMem = treeNodes.find(node => node.id === selectedId) || null;
+  const visibleNodes = useMemo(() => treeNodes.filter(node => {
+    const matchesGeneration = generation === 'all' || node.gen === generation;
+    const matchesQuery = node.n.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase());
+    return matchesGeneration && matchesQuery;
+  }), [generation, query, treeNodes]);
+  const visibleIds = new Set(visibleNodes.map(node => node.id));
 
-  const H = 340;
-  const scaled = treeNodes.map(n => ({
-    ...n,
-    x: n.x * (svgW / 600),
-    y: n.y * (H / 340),
-  }));
+  const getNodeMsgs = (name: string) => msgs.filter(message => message.a === name.split(' ')[0]);
+  const generationLabel = (gen: number) => t(['genGrandparents', 'genParents', 'genChildren'][gen], lang);
 
   const addMember = () => {
     if (!fn.trim()) return;
+    const reference = treeNodes.find(node => node.id === relativeTo) || treeNodes[0];
+    let gen = reference?.gen ?? 1;
+    if (rel === 'parent') gen = Math.max(0, gen - 1);
+    if (rel === 'grandparent') gen = 0;
+    if (rel === 'child') gen = Math.min(2, gen + 1);
+
+    const sameGeneration = treeNodes.filter(node => node.gen === gen);
+    const id = Math.max(0, ...treeNodes.map(node => node.id)) + 1;
     const newNode: TreeNode = {
-      id: Math.max(...treeNodes.map(t => t.id)) + 1,
-      n: `${fn.trim()} ${ln.trim() || 'Doe'}`,
+      id,
+      n: `${fn.trim()} ${ln.trim() || reference?.n.split(' ').slice(1).join(' ') || 'Doe'}`,
       b: parseInt(by) || new Date().getFullYear(),
-      x: 50 + Math.random() * 480,
-      y: 340,
-      gen: 2,
+      x: 110 + sameGeneration.length * 145,
+      y: GEN_Y[gen],
+      gen,
     };
+
     setTreeNodes([...treeNodes, newNode]);
-    setFn(''); setLn(''); setBy(''); setShowAdd(false);
+    if (reference) {
+      setLinks(current => [...current, rel === 'parent' || rel === 'grandparent' ? [id, reference.id] : [reference.id, id]]);
+    }
+    setFn('');
+    setLn('');
+    setBy('');
+    setShowAdd(false);
+    setSelectedId(id);
   };
 
-  const getNodeMsgs = (name: string) => msgs.filter(m => m.a === name.split(' ')[0]);
+  const resetView = () => {
+    setZoom(1);
+    setGeneration('all');
+    setQuery('');
+  };
 
   return (
     <div>
-      <div className="font-display" style={{ fontSize: '0.95rem', color: '#00FFD1', letterSpacing: '0.15em', marginBottom: '0.3rem' }}>{t('treeTitle', lang)}</div>
-      <div style={{ fontSize: '0.68rem', color: 'rgba(239,246,255,0.35)', letterSpacing: '0.1em', marginBottom: '1.5rem' }}>{t('treeSub', lang)}</div>
-
-      <div className="glass-card" style={{ padding: '1rem', overflowX: 'auto' }}>
-        <svg ref={svgRef} viewBox={`0 0 ${svgW} ${H}`} width="100%" height={H} style={{ display: 'block', overflow: 'visible' }}>
-          <defs>
-            <filter id="glow-v" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-          </defs>
-
-          {[0, 1, 2].map(g => (
-            <text key={g} x={6} y={[55, 165, 278][g] + 4} fontFamily="'DM Mono',monospace" fontSize={6} fill={GEN_COLORS[g]} opacity={0.4} letterSpacing={1}>{GEN_LABELS[g]}</text>
-          ))}
-
-          {TREE_LINKS.map(([a, b], li) => {
-            const A = scaled.find(n => n.id === a);
-            const B = scaled.find(n => n.id === b);
-            if (!A || !B) return null;
-            const mx = (A.x + B.x) / 2;
-            return (
-              <g key={li}>
-                <path d={`M${A.x},${A.y} Q${mx},${(A.y + B.y) / 2} ${B.x},${B.y}`} fill="none" stroke={`url(#grad-${li})`} strokeWidth={1.5} strokeLinecap="round" strokeDasharray="4,4" opacity={0.7}>
-                  <animate attributeName="stroke-dashoffset" from="0" to="-16" dur="2s" repeatCount="indefinite" />
-                </path>
-                <defs><linearGradient id={`grad-${li}`} x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor={GEN_COLORS[A.gen]} stopOpacity={0.6} /><stop offset="100%" stopColor={GEN_COLORS[B.gen]} stopOpacity={0.6} /></linearGradient></defs>
-              </g>
-            );
-          })}
-
-          {scaled.map(m => {
-            const col = GEN_COLORS[m.gen];
-            const nodeMsgs = getNodeMsgs(m.n);
-            const hasMsg = nodeMsgs.length > 0;
-            const r = hasMsg ? 30 : 24;
-            const firstName = m.n.split(' ')[0];
-
-            return (
-              <g key={m.id} onClick={() => { setSelectedMem(m); }} style={{ cursor: 'pointer' }}>
-                <circle cx={m.x} cy={m.y} r={r + 18} fill={col} opacity={hasMsg ? 0.15 : 0.05}>
-                  {hasMsg && <><animate attributeName="r" values={`${r + 14};${r + 22};${r + 14}`} dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values=".7;.3;.7" dur="3s" repeatCount="indefinite" /></>}
-                </circle>
-                <circle cx={m.x} cy={m.y} r={r} fill="rgba(4,3,10,0.85)" stroke={col} strokeWidth={hasMsg ? 2 : 1.5} filter={hasMsg ? 'url(#glow-v)' : undefined} />
-                <circle cx={m.x} cy={m.y} r={r - 6} fill="none" stroke={col} strokeWidth={0.5} opacity={0.3} strokeDasharray="3,3" />
-                <circle cx={m.x} cy={m.y - 4} r={9} fill={col} opacity={0.15} />
-                <text x={m.x} y={m.y - 1} textAnchor="middle" dominantBaseline="middle" fontFamily="'Cinzel',serif" fontSize={9} fontWeight={600} fill={col} filter={hasMsg ? 'url(#glow-v)' : undefined}>{firstName[0]}</text>
-                <text x={m.x} y={m.y + 11} textAnchor="middle" fontFamily="'DM Mono',monospace" fontSize={7.5} fontWeight={500} fill="#EFF6FF" opacity={0.9}>{firstName}</text>
-                <rect x={m.x - 14} y={m.y + r + 2} width={28} height={11} rx={5} fill={col} opacity={0.12} stroke={col} strokeWidth={0.5} strokeOpacity={0.4} />
-                <text x={m.x} y={m.y + r + 9} textAnchor="middle" fontFamily="'DM Mono',monospace" fontSize={6.5} fill={col} opacity={0.8}>{m.b}</text>
-                {hasMsg && (
-                  <>
-                    <circle cx={m.x + r - 4} cy={m.y - r + 4} r={5} fill="#00FFD1" filter="url(#glow-v)">
-                      <animate attributeName="r" values="4;6;4" dur="2s" repeatCount="indefinite" />
-                    </circle>
-                    <text x={m.x + r - 4} y={m.y - r + 8} textAnchor="middle" fontFamily="'DM Mono',monospace" fontSize={5.5} fill="#04030A" fontWeight={700}>{nodeMsgs.length}</text>
-                  </>
-                )}
-              </g>
-            );
-          })}
-        </svg>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
+        <div>
+          <div className="font-display" style={{ fontSize: '0.95rem', color: '#00FFD1', letterSpacing: '0.15em', marginBottom: '0.3rem' }}>{t('treeTitle', lang)}</div>
+          <div style={{ fontSize: '0.68rem', color: 'rgba(239,246,255,0.35)', letterSpacing: '0.1em' }}>{t('treeSub', lang)}</div>
+        </div>
+        <div style={{ color: 'rgba(239,246,255,0.35)', fontSize: '0.55rem', textAlign: 'right', lineHeight: 1.6 }}>
+          <strong style={{ color: '#00FFD1', fontSize: '0.72rem' }}>{treeNodes.length}</strong> {t('membersCount', lang)}<br />
+          3 {t('generationsCount', lang)}
+        </div>
       </div>
 
-      <button className="btn-sec" style={{ marginTop: '0.9rem' }} onClick={() => setShowAdd(!showAdd)}>{t('addMember', lang)}</button>
+      <div style={{ display: 'flex', gap: '0.45rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative', flex: '1 1 170px' }}>
+          <Search size={14} style={{ position: 'absolute', left: 10, top: 11, color: 'rgba(239,246,255,0.3)' }} />
+          <input className="form-input" value={query} onChange={event => setQuery(event.target.value)} placeholder={t('searchMember', lang)} style={{ paddingLeft: 32, minHeight: 36 }} />
+        </div>
+        <button className="btn-sec" onClick={() => setView(view === 'tree' ? 'list' : 'tree')} style={{ minHeight: 36, display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+          {view === 'tree' ? <List size={14} /> : <Network size={14} />} {view === 'tree' ? t('listView', lang) : t('treeView', lang)}
+        </button>
+      </div>
 
-      {showAdd && (
-        <div className="glass-card" style={{ marginTop: '0.9rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
-            <div style={{ marginBottom: '0.85rem' }}>
-              <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('firstName', lang)}</label>
-              <input type="text" className="form-input" value={fn} onChange={e => setFn(e.target.value)} />
-            </div>
-            <div style={{ marginBottom: '0.85rem' }}>
-              <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('lastName', lang)}</label>
-              <input type="text" className="form-input" value={ln} onChange={e => setLn(e.target.value)} />
-            </div>
-            <div style={{ marginBottom: '0.85rem' }}>
-              <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('birthYear', lang)}</label>
-              <input type="number" className="form-input" value={by} onChange={e => setBy(e.target.value)} />
-            </div>
-            <div style={{ marginBottom: '0.85rem' }}>
-              <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('relation', lang)}</label>
-              <select className="form-select" value={rel} onChange={e => setRel(e.target.value)}>
-                {['parent', 'child', 'sibling', 'grandparent', 'partner'].map(r => (
-                  <option key={r} value={r}>{t(r, lang)}</option>
-                ))}
-              </select>
+      <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.55rem', overflowX: 'auto', paddingBottom: 3 }}>
+        {(['all', 0, 1, 2] as const).map(item => {
+          const active = generation === item;
+          return (
+            <button key={item} className="btn-sec" onClick={() => setGeneration(item)} style={{ whiteSpace: 'nowrap', borderColor: active ? (item === 'all' ? '#00FFD1' : GEN_COLORS[item]) : undefined, color: active ? (item === 'all' ? '#00FFD1' : GEN_COLORS[item]) : undefined }}>
+              {item === 'all' ? t('allGenerations', lang) : generationLabel(item)}
+            </button>
+          );
+        })}
+      </div>
+
+      {view === 'tree' ? (
+        <div ref={viewportRef} className="glass-card" style={{ padding: 0, overflow: 'hidden', marginTop: '0.75rem', position: 'relative' }}>
+          <div style={{ position: 'absolute', zIndex: 3, top: 9, right: 9, display: 'flex', gap: 5 }}>
+            <button className="btn-sec" onClick={() => setZoom(value => Math.min(1.55, value + 0.12))} style={{ width: 32, height: 32, padding: 0 }} aria-label="Zoom in"><ZoomIn size={14} /></button>
+            <button className="btn-sec" onClick={() => setZoom(value => Math.max(0.72, value - 0.12))} style={{ width: 32, height: 32, padding: 0 }} aria-label="Zoom out"><ZoomOut size={14} /></button>
+            <button className="btn-sec" onClick={resetView} style={{ width: 32, height: 32, padding: 0 }} aria-label="Reset"><Focus size={14} /></button>
+            <button className="btn-sec" onClick={() => void viewportRef.current?.requestFullscreen()} style={{ width: 32, height: 32, padding: 0 }} aria-label="Fullscreen"><Maximize2 size={14} /></button>
+          </div>
+
+          <div style={{ overflow: 'auto', minHeight: 390 }}>
+            <div style={{ width: 700, height: 390, transform: `scale(${zoom})`, transformOrigin: 'center center', transition: 'transform .2s ease' }}>
+              <svg viewBox="0 0 700 390" width="700" height="390" style={{ display: 'block' }}>
+                {links.map(([from, to], index) => {
+                  const a = treeNodes.find(node => node.id === from);
+                  const b = treeNodes.find(node => node.id === to);
+                  if (!a || !b || !visibleIds.has(a.id) || !visibleIds.has(b.id)) return null;
+                  const ax = a.x + 55;
+                  const bx = b.x + 55;
+                  return <path key={index} d={`M${ax},${a.y + 32} C${ax},${(a.y + b.y) / 2} ${bx},${(a.y + b.y) / 2} ${bx},${b.y - 32}`} fill="none" stroke="rgba(0,255,209,0.28)" strokeWidth="1.4" />;
+                })}
+              </svg>
+
+              {visibleNodes.map(node => {
+                const color = GEN_COLORS[node.gen];
+                const nodeMsgs = getNodeMsgs(node.n);
+                const active = selectedId === node.id;
+                return (
+                  <button
+                    type="button"
+                    key={node.id}
+                    onClick={() => setSelectedId(node.id)}
+                    style={{
+                      position: 'absolute', left: node.x, top: node.y - 32, width: 110, minHeight: 64,
+                      borderRadius: 12, border: `1px solid ${active ? color : `${color}66`}`,
+                      background: active ? `${color}18` : 'rgba(4,3,10,0.92)', color: '#EFF6FF',
+                      boxShadow: active ? `0 0 20px ${color}22` : 'none', cursor: 'pointer', padding: '0.55rem',
+                      fontFamily: "'DM Mono',monospace", textAlign: 'left',
+                    }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                      <span style={{ width: 28, height: 28, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${color}18`, color, flexShrink: 0 }}><UserRound size={15} /></span>
+                      <span style={{ minWidth: 0 }}>
+                        <strong style={{ display: 'block', fontSize: '0.63rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{node.n.split(' ')[0]}</strong>
+                        <small style={{ color: 'rgba(239,246,255,0.36)', fontSize: '0.52rem' }}>{node.b}</small>
+                      </span>
+                    </span>
+                    {nodeMsgs.length > 0 && <span style={{ position: 'absolute', right: 6, top: 6, minWidth: 17, height: 17, borderRadius: 9, background: '#00FFD1', color: '#04030A', fontSize: '0.48rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>{nodeMsgs.length}</span>}
+                  </button>
+                );
+              })}
             </div>
           </div>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: '0.5rem', marginTop: '0.75rem' }}>
+          {visibleNodes.map(node => (
+            <button key={node.id} type="button" onClick={() => setSelectedId(node.id)} className="glass-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', cursor: 'pointer', color: '#EFF6FF' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <UserRound size={18} color={GEN_COLORS[node.gen]} />
+                <span><strong style={{ display: 'block', fontSize: '0.7rem' }}>{node.n}</strong><small style={{ color: 'rgba(239,246,255,0.35)' }}>{generationLabel(node.gen)} · {node.b}</small></span>
+              </span>
+              <span style={{ fontSize: '0.56rem', color: '#00FFD1' }}>{getNodeMsgs(node.n).length} {t('messages', lang)}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      <button className="btn-primary" style={{ marginTop: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem' }} onClick={() => setShowAdd(true)}>
+        <Plus size={15} /> {t('addMember', lang).replace('+ ', '')}
+      </button>
+
+      {showAdd && (
+        <div className="glass-card" style={{ marginTop: '0.9rem', position: 'relative' }}>
+          <button type="button" onClick={() => setShowAdd(false)} style={{ position: 'absolute', right: 10, top: 10, border: 0, background: 'transparent', color: 'rgba(239,246,255,.4)', cursor: 'pointer' }}><X size={16} /></button>
+          <div style={{ color: '#00FFD1', fontSize: '0.68rem', letterSpacing: '0.12em', marginBottom: '0.8rem' }}>{t('addMember', lang).replace('+ ', '')}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
+            <input type="text" className="form-input" value={fn} onChange={event => setFn(event.target.value)} placeholder={t('firstName', lang)} />
+            <input type="text" className="form-input" value={ln} onChange={event => setLn(event.target.value)} placeholder={t('lastName', lang)} />
+            <input type="number" className="form-input" value={by} onChange={event => setBy(event.target.value)} placeholder={t('birthYear', lang)} min="1850" max={new Date().getFullYear()} />
+            <select className="form-select" value={rel} onChange={event => setRel(event.target.value)}>
+              {['parent', 'child', 'sibling', 'grandparent', 'partner'].map(relation => <option key={relation} value={relation}>{t(relation, lang)}</option>)}
+            </select>
+          </div>
+          <label style={{ display: 'block', fontSize: '0.57rem', color: 'rgba(239,246,255,.35)', margin: '0.7rem 0 0.3rem' }}>{t('relativeTo', lang)}</label>
+          <select className="form-select" value={relativeTo} onChange={event => setRelativeTo(Number(event.target.value))}>
+            {treeNodes.map(node => <option key={node.id} value={node.id}>{node.n}</option>)}
+          </select>
           <button className="btn-primary" onClick={addMember}>{t('addToTree', lang)}</button>
         </div>
       )}
 
       {selectedMem && (
-        <div className="glass-card" style={{ marginTop: '0.9rem' }}>
-          <div style={{ fontSize: '0.7rem', color: '#00FFD1', letterSpacing: '0.12em', marginBottom: '0.9rem' }}>
-            {selectedMem.n} · {getNodeMsgs(selectedMem.n).length} message{getNodeMsgs(selectedMem.n).length !== 1 ? 's' : ''}
+        <div className="glass-card" style={{ marginTop: '0.9rem', borderColor: `${GEN_COLORS[selectedMem.gen]}55` }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.7rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <span style={{ width: 38, height: 38, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${GEN_COLORS[selectedMem.gen]}18`, color: GEN_COLORS[selectedMem.gen] }}><UserRound size={19} /></span>
+              <div><strong style={{ display: 'block', color: '#EFF6FF', fontSize: '0.75rem' }}>{selectedMem.n}</strong><small style={{ color: 'rgba(239,246,255,.35)' }}>{generationLabel(selectedMem.gen)} · {selectedMem.b}</small></div>
+            </div>
+            <button type="button" onClick={() => setSelectedId(null)} style={{ border: 0, background: 'transparent', color: 'rgba(239,246,255,.4)', cursor: 'pointer' }}><X size={16} /></button>
           </div>
-          <div>
-            {getNodeMsgs(selectedMem.n).length ? getNodeMsgs(selectedMem.n).map(msg => (
-              <div key={msg.id} style={{ padding: '0.7rem 0', borderTop: '1px solid rgba(0,255,209,0.13)' }}>
-                <div style={{ fontSize: '0.58rem', color: 'rgba(239,246,255,0.3)', marginBottom: '0.3rem' }}>{msg.e.toUpperCase()} · {msg.y}</div>
-                <div style={{ fontSize: '0.65rem', lineHeight: 1.65, color: 'rgba(239,246,255,0.88)' }}>{msg.text}</div>
-              </div>
-            )) : (
-              <div style={{ fontSize: '0.72rem', color: 'rgba(239,246,255,0.28)', padding: '0.8rem 0' }}>No messages yet.</div>
-            )}
-          </div>
+          {getNodeMsgs(selectedMem.n).length ? getNodeMsgs(selectedMem.n).map(message => (
+            <div key={message.id} style={{ padding: '0.7rem 0', borderTop: '1px solid rgba(0,255,209,0.13)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.56rem', color: '#00FFD1', marginBottom: '0.3rem' }}><MessageCircle size={12} /> {message.y}</div>
+              <div style={{ fontSize: '0.65rem', lineHeight: 1.65, color: 'rgba(239,246,255,0.72)' }}>{message.text}</div>
+            </div>
+          )) : <div style={{ fontSize: '0.65rem', color: 'rgba(239,246,255,0.3)', paddingTop: '0.4rem' }}>{t('noMessages', lang)}</div>}
         </div>
       )}
     </div>

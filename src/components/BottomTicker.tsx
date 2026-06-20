@@ -1,9 +1,13 @@
-import { TICKER_MSGS } from '@/lib/data';
+import { getDemoHumanity } from '@/lib/data';
 import { useStore } from '@/lib/store';
 
 export default function BottomTicker() {
-  const { page } = useStore();
-  const items = [...TICKER_MSGS, ...TICKER_MSGS];
+  const { page, lang } = useStore();
+  const localized = getDemoHumanity(lang).slice(0, 8).map(message => ({
+    f: message.f,
+    t: `${message.c} · ${message.y} — “${message.text}”`,
+  }));
+  const items = [...localized, ...localized];
 
   if (page !== 'app') return null;
 

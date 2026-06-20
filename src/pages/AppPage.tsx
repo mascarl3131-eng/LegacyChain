@@ -35,7 +35,7 @@ export default function AppPage() {
       }, 800);
       return () => clearTimeout(timer);
     }
-  }, [page, user, lang]);
+  }, [lang, page, setHMsgs, setMsgs, showNotif, user]);
 
   if (page !== 'app') return null;
 

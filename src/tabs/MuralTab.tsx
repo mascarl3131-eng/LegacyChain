@@ -96,7 +96,7 @@ export default function MuralTab() {
 
   const addText = () => {
     if (!premium) return;
-    const txt = prompt('Add text to the mural:');
+    const txt = prompt(t('addTextPrompt', lang));
     if (!txt) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -140,9 +140,9 @@ export default function MuralTab() {
     return (
       <div>
         <div className="font-display" style={{ fontSize: '0.95rem', color: '#00FFD1', letterSpacing: '0.15em', marginBottom: '0.3rem' }}>{t('navMural', lang)}</div>
-        <div style={{ fontSize: '0.68rem', color: 'rgba(239,246,255,0.35)', letterSpacing: '0.1em', marginBottom: '1.5rem' }}>Collaborative canvas for your family</div>
+        <div style={{ fontSize: '0.68rem', color: 'rgba(239,246,255,0.35)', letterSpacing: '0.1em', marginBottom: '1.5rem' }}>{t('muralSub', lang)}</div>
         <div className="glass-card" style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: '0.72rem', color: 'rgba(255,179,71,0.7)', marginBottom: '0.75rem', lineHeight: 1.65 }}>🎨 Family Mural is a premium feature. Draw, write and build your family's collaborative artwork together.</p>
+          <p style={{ fontSize: '0.72rem', color: 'rgba(255,179,71,0.7)', marginBottom: '0.75rem', lineHeight: 1.65 }}>🎨 {t('muralPremiumDesc', lang)}</p>
           <button className="btn-amber" style={{ marginTop: 0 }} onClick={() => setUpgradeOpen(true)}>✦ {t('unlockBtn', lang)}</button>
         </div>
       </div>
@@ -152,16 +152,16 @@ export default function MuralTab() {
   return (
     <div>
       <div className="font-display" style={{ fontSize: '0.95rem', color: '#00FFD1', letterSpacing: '0.15em', marginBottom: '0.3rem' }}>{t('navMural', lang)}</div>
-      <div style={{ fontSize: '0.68rem', color: 'rgba(239,246,255,0.35)', letterSpacing: '0.1em', marginBottom: '1.5rem' }}>Collaborative canvas — draw together across time</div>
+      <div style={{ fontSize: '0.68rem', color: 'rgba(239,246,255,0.35)', letterSpacing: '0.1em', marginBottom: '1.5rem' }}>{t('muralSub', lang)}</div>
 
       <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.75rem', alignItems: 'center' }}>
         {(['brush', 'glow', 'eraser'] as Tool[]).map(tl => (
           <button key={tl} className="btn-sec" style={{ fontSize: '0.62rem', borderColor: tool === tl ? '#00FFD1' : undefined, color: tool === tl ? '#00FFD1' : undefined }} onClick={() => setTool(tl)}>
-            {tl === 'brush' ? '✏️ BRUSH' : tl === 'glow' ? '✨ GLOW' : '⬜ ERASE'}
+            {tl === 'brush' ? `✏️ ${t('brush', lang)}` : tl === 'glow' ? `✨ ${t('glow', lang)}` : `⬜ ${t('erase', lang)}`}
           </button>
         ))}
-        <button className="btn-sec" style={{ fontSize: '0.62rem' }} onClick={addText}>T TEXT</button>
-        <button className="btn-sec" style={{ fontSize: '0.62rem' }} onClick={addYear}>📅 YEAR</button>
+        <button className="btn-sec" style={{ fontSize: '0.62rem' }} onClick={addText}>T {t('textTool', lang)}</button>
+        <button className="btn-sec" style={{ fontSize: '0.62rem' }} onClick={addYear}>📅 {t('yearTool', lang)}</button>
         <div style={{ display: 'flex', gap: '0.3rem', marginLeft: '0.2rem' }}>
           {COLORS.map(c => (
             <div key={c} onClick={() => setColor(c)} style={{ width: 20, height: 20, borderRadius: '50%', background: c, cursor: 'pointer', flexShrink: 0, border: color === c ? '2px solid #fff' : 'none' }} />
@@ -174,11 +174,11 @@ export default function MuralTab() {
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.7rem' }}>
-        <button className="btn-sec" style={{ flex: 1, fontSize: '0.62rem' }} onClick={exportPng}>⬇ EXPORT PNG</button>
-        <button className="btn-sec" style={{ flex: 1, fontSize: '0.62rem' }} onClick={clearCanvas}>🗑 CLEAR</button>
+        <button className="btn-sec" style={{ flex: 1, fontSize: '0.62rem' }} onClick={exportPng}>⬇ {t('exportPng', lang)}</button>
+        <button className="btn-sec" style={{ flex: 1, fontSize: '0.62rem' }} onClick={clearCanvas}>🗑 {t('clear', lang)}</button>
       </div>
       <div style={{ fontSize: '0.58rem', color: 'rgba(239,246,255,0.18)', textAlign: 'center', marginTop: '0.5rem' }}>
-        Signed: {user?.first} · {new Date().getFullYear()}
+        {t('signed', lang)} : {user?.first} · {new Date().getFullYear()}
       </div>
     </div>
   );

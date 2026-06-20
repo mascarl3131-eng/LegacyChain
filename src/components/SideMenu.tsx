@@ -18,39 +18,32 @@ const WORLD_TABS: { id: TabName; icon: string; labelKey: string }[] = [
   { id: 'humanity', icon: '🌍', labelKey: 'navHumanity' },
 ];
 
+function SectionTitle({ children }: { children: string }) {
+  return (
+    <div style={{ fontSize: '0.55rem', letterSpacing: '0.25em', color: 'rgba(239,246,255,0.25)', padding: '0.4rem 1.2rem', textTransform: 'uppercase' }}>
+      {children}
+    </div>
+  );
+}
+
+function Divider() {
+  return <div style={{ height: 1, background: 'rgba(0,255,209,0.13)', margin: '0.4rem 1.2rem' }} />;
+}
+
 export default function SideMenu() {
-  const { sideMenuOpen, setSideMenuOpen, tab, setTab, lang, setLang, premium, setUpgradeOpen, setInviteOpen } = useStore();
+  const {
+    sideMenuOpen, setSideMenuOpen, tab, setTab, lang, setLang, premium,
+    setUpgradeOpen, setInviteOpen, user, session, loginWithGoogle,
+    loginWithFacebook, logout,
+  } = useStore();
 
   const handleTab = (id: TabName) => {
     setTab(id);
     setSideMenuOpen(false);
   };
 
-  const SectionTitle = ({ children }: { children: string }) => (
-    <div style={{ fontSize: '0.55rem', letterSpacing: '0.25em', color: 'rgba(239,246,255,0.25)', padding: '0.4rem 1.2rem', textTransform: 'uppercase' as const }}>
-      {children}
-    </div>
-  );
-
-  const Divider = () => <div style={{ height: 1, background: 'rgba(0,255,209,0.13)', margin: '0.4rem 1.2rem' }} />;
-
-  const MenuItem = ({ id, icon, labelKey }: { id: TabName; icon: string; labelKey: string }) => (
-    <div
-      onClick={() => handleTab(id)}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.7rem',
-        padding: '0.75rem 1.2rem',
-        fontSize: '0.78rem',
-        color: tab === id ? '#00FFD1' : 'rgba(239,246,255,0.6)',
-        cursor: 'pointer',
-        letterSpacing: '0.06em',
-        transition: 'all 0.2s',
-        borderLeft: tab === id ? '2px solid #00FFD1' : '2px solid transparent',
-        background: tab === id ? 'rgba(0,255,209,0.04)' : 'transparent',
-      }}
-    >
+  const renderMenuItem = ({ id, icon, labelKey }: { id: TabName; icon: string; labelKey: string }) => (
+    <div key={id} onClick={() => handleTab(id)} style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.75rem 1.2rem', fontSize: '0.78rem', color: tab === id ? '#00FFD1' : 'rgba(239,246,255,0.6)', cursor: 'pointer', letterSpacing: '0.06em', transition: 'all 0.2s', borderLeft: tab === id ? '2px solid #00FFD1' : '2px solid transparent', background: tab === id ? 'rgba(0,255,209,0.04)' : 'transparent' }}>
       {icon} {t(labelKey, lang)}
     </div>
   );
@@ -89,15 +82,53 @@ export default function SideMenu() {
         </div>
 
         <SectionTitle>{t('familySection', lang)}</SectionTitle>
-        {FAMILY_TABS.map(t => <MenuItem key={t.id} {...t} />)}
+        {FAMILY_TABS.map(renderMenuItem)}
 
         <Divider />
         <SectionTitle>{t('legacySection', lang)}</SectionTitle>
-        {LEGACY_TABS.map(t => <MenuItem key={t.id} {...t} />)}
+        {LEGACY_TABS.map(renderMenuItem)}
 
         <Divider />
         <SectionTitle>{t('worldSection', lang)}</SectionTitle>
-        {WORLD_TABS.map(t => <MenuItem key={t.id} {...t} />)}
+        {WORLD_TABS.map(renderMenuItem)}
+
+        <Divider />
+        <SectionTitle>{t('accountSection', lang)}</SectionTitle>
+        <div style={{ margin: '0.25rem 1.2rem 0.8rem', padding: '0.85rem', borderRadius: 10, background: session ? 'rgba(0,255,209,0.045)' : 'rgba(255,179,71,0.045)', border: `1px solid ${session ? 'rgba(0,255,209,0.2)' : 'rgba(255,179,71,0.25)'}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: session ? '0.65rem' : '0.5rem' }}>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: session ? 'linear-gradient(135deg,#00FFD1,#C084FC)' : 'rgba(255,179,71,0.13)', border: session ? 'none' : '1px solid rgba(255,179,71,0.35)', color: session ? '#04030A' : '#FFB347', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.72rem', flexShrink: 0 }}>
+              {user?.first?.[0]?.toUpperCase() || '?'}
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: '0.62rem', color: session ? '#00FFD1' : '#FFB347', letterSpacing: '0.08em', marginBottom: '0.18rem' }}>
+                {session ? t('connectedAs', lang) : t('guestMode', lang)}
+              </div>
+              <div style={{ fontSize: '0.66rem', color: 'rgba(239,246,255,0.68)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {session?.user.email || user?.name || t('guestMode', lang)}
+              </div>
+            </div>
+          </div>
+
+          {session ? (
+            <button type="button" onClick={() => void logout()} style={{ width: '100%', padding: '0.55rem', borderRadius: 7, border: '1px solid rgba(239,246,255,0.15)', background: 'rgba(239,246,255,0.03)', color: 'rgba(239,246,255,0.62)', fontFamily: "'DM Mono',monospace", fontSize: '0.62rem', cursor: 'pointer' }}>
+              {t('logoutBtn', lang)}
+            </button>
+          ) : (
+            <>
+              <p style={{ fontSize: '0.57rem', color: 'rgba(239,246,255,0.38)', lineHeight: 1.55, margin: '0 0 0.65rem' }}>
+                {t('guestModeDesc', lang)}
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.42rem' }}>
+                <button type="button" onClick={() => void loginWithGoogle()} style={{ width: '100%', padding: '0.58rem', borderRadius: 7, border: '1px solid rgba(255,255,255,0.9)', background: '#fff', color: '#252525', fontFamily: "'DM Mono',monospace", fontSize: '0.62rem', cursor: 'pointer' }}>
+                  G&nbsp;&nbsp;{t('googleLogin', lang)}
+                </button>
+                <button type="button" onClick={() => void loginWithFacebook()} style={{ width: '100%', padding: '0.58rem', borderRadius: 7, border: '1px solid #2d88ff', background: '#1877F2', color: '#fff', fontFamily: "'DM Mono',monospace", fontSize: '0.62rem', cursor: 'pointer' }}>
+                  f&nbsp;&nbsp;{t('fbLogin', lang)}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
 
         <Divider />
         <SectionTitle>{t('settings', lang)}</SectionTitle>

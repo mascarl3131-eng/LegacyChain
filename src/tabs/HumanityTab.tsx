@@ -11,7 +11,7 @@ const EMO_GLOW: Record<string, string> = {
 export default function HumanityTab() {
   const { lang, hMsgs, addHMsg, hEmo, setHEmo, setShowSubmitAnim, showNotif } = useStore();
   const [hName, setHName] = useState('');
-  const [hCountry, setHCountry] = useState('Australia');
+  const [hCountry, setHCountry] = useState('');
   const [hTo, setHTo] = useState('To future generations');
   const [hMsg, setHMsg] = useState('');
   const [hMod, setHMod] = useState('');
@@ -34,8 +34,8 @@ export default function HumanityTab() {
       return;
     }
 
-    const country = hCountry.trim() || 'the world';
-    const name = hName.trim() || `A voice from ${country}`;
+    const country = hCountry.trim() || t('worldLabel', lang);
+    const name = hName.trim() || t('voiceFrom', lang).replace('{place}', country);
     const flag = FLAGS[country] || '🌍';
 
     const newMsg = {
@@ -54,7 +54,7 @@ export default function HumanityTab() {
       addHMsg(newMsg);
       setHMsg('');
       setHMod('');
-      showNotif('Voice sealed ✦', '#00FFD1');
+      showNotif(t('voiceSealed', lang), '#00FFD1');
     }, 1500);
   };
 
@@ -86,7 +86,7 @@ export default function HumanityTab() {
             <div style={{ fontSize: '0.62rem', color: 'rgba(0,255,209,0.62)', letterSpacing: '0.07em', marginBottom: '0.35rem' }}>{m.a} · {m.y}</div>
             <div style={{ fontSize: '0.78rem', lineHeight: 1.7, color: 'rgba(239,246,255,0.78)' }}>{m.text}</div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.6rem' }}>
-              <span style={{ fontSize: '0.55rem', letterSpacing: '0.1em', color: 'rgba(239,246,255,0.25)', border: '1px solid rgba(0,255,209,0.13)', padding: '0.1rem 0.4rem', borderRadius: 2, textTransform: 'uppercase' }}>{m.e}</span>
+              <span style={{ fontSize: '0.55rem', letterSpacing: '0.1em', color: 'rgba(239,246,255,0.25)', border: '1px solid rgba(0,255,209,0.13)', padding: '0.1rem 0.4rem', borderRadius: 2, textTransform: 'uppercase' }}>{t(`e${m.e.charAt(0).toUpperCase() + m.e.slice(1)}`, lang)}</span>
               <button style={{ background: 'transparent', border: 'none', color: 'rgba(239,246,255,0.25)', fontFamily: "'DM Mono',monospace", fontSize: '0.62rem', cursor: 'pointer' }}>
                 ♥ {m.likes}
               </button>
@@ -100,7 +100,7 @@ export default function HumanityTab() {
         <div style={{ fontSize: '0.7rem', letterSpacing: '0.16em', color: '#00FFD1', marginBottom: '1rem' }}>{t('leaveVoice', lang)}</div>
 
         <div style={{ marginBottom: '0.85rem' }}>
-          <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('yourName', lang)} <span style={{ opacity: 0.4 }}>(optional)</span></label>
+          <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('yourName', lang)} <span style={{ opacity: 0.4 }}>({t('optional', lang)})</span></label>
           <input type="text" className="form-input" value={hName} onChange={e => setHName(e.target.value)} />
         </div>
 

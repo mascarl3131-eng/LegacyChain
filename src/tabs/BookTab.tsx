@@ -21,20 +21,20 @@ export default function BookTab() {
     const win = window.open('', '_blank');
     if (!win) return;
     const year = new Date().getFullYear();
-    let html = `<!DOCTYPE html><html><head><title>Book of Life</title><style>
+    let html = `<!DOCTYPE html><html lang="${lang}"><head><meta charset="utf-8"><title>${t('bookTitle', lang)}</title><style>
       body{font-family:Georgia,serif;max-width:700px;margin:2rem auto;padding:1rem;line-height:1.8;color:#1a1a2e}
       h1{text-align:center}h2{font-size:1.1rem;margin:1.5rem 0 0.5rem;color:#1a1a4e;border-bottom:1px solid #ddd;padding-bottom:0.3rem}
       p{margin:0.5rem 0;font-size:0.95rem}.pdf-footer{margin-top:2rem;text-align:center;font-size:0.75rem;color:#999;border-top:1px solid #eee;padding-top:1rem}
     </style></head><body>`;
-    html += `<h1>📖 Book of Life — ${user?.name || 'Anonymous'}</h1><p style="text-align:center;font-size:0.7rem;color:#666;margin-bottom:1rem">Written in ${year}</p>`;
+    html += `<h1>📖 ${t('bookTitle', lang)} — ${user?.name || ''}</h1><p style="text-align:center;font-size:0.7rem;color:#666;margin-bottom:1rem">${t('writtenIn', lang)} ${year}</p>`;
     chs.forEach((ch, i) => {
-      html += `<h2>Ch.${i + 1} — ${ch.t}</h2>`;
+      html += `<h2>${t('chapterAbbr', lang)}${i + 1} — ${ch.t}</h2>`;
       ch.fields.forEach((f, fi) => {
         const val = bookData[`${i}-${fi}`];
         if (val) html += `<p><strong>${f.l}:</strong><br>${val.replace(/\n/g, '<br>')}</p>`;
       });
     });
-    html += `<div class="pdf-footer">LegacyChain · A blockchain of love · ${year}<br>Written by ${user?.name || 'Anonymous'}</div></body></html>`;
+    html += `<div class="pdf-footer">LegacyChain · ${t('landingFooter', lang)} · ${year}<br>${t('writtenBy', lang)} ${user?.name || ''}</div></body></html>`;
     win.document.write(html);
     win.document.close();
     setTimeout(() => win.print(), 500);
@@ -73,7 +73,7 @@ export default function BookTab() {
       {chs.map((ch, ci) => (
         <div key={ci} style={{ display: ci === chapter ? 'block' : 'none' }}>
           <div className="font-display" style={{ fontSize: '0.9rem', color: '#00FFD1', marginBottom: '0.35rem', letterSpacing: '0.1em' }}>
-            CH.{ci + 1} — {ch.t}
+            {t('chapterAbbr', lang)}{ci + 1} — {ch.t}
           </div>
           <div style={{ fontSize: '0.7rem', color: 'rgba(239,246,255,0.35)', marginBottom: '1.3rem', lineHeight: 1.7 }}>{ch.s}</div>
 
@@ -97,7 +97,7 @@ export default function BookTab() {
             {ci < chs.length - 1 ? (
               <button className="btn-primary" style={{ flex: 1 }} onClick={() => setChapter(ci + 1)}>{t('nextChapter', lang)}</button>
             ) : (
-              <button className="btn-primary" style={{ flex: 1 }} onClick={generatePDF}>✦ EXPORT PDF</button>
+              <button className="btn-primary" style={{ flex: 1 }} onClick={generatePDF}>{t('exportPdf', lang)}</button>
             )}
           </div>
         </div>
@@ -108,8 +108,8 @@ export default function BookTab() {
       {showPreview && (
         <div style={{ marginTop: '1rem' }}>
           <div style={{ background: 'white', borderRadius: 8, padding: '1.5rem', color: '#1a1a2e', fontFamily: 'serif', maxHeight: 280, overflowY: 'auto' }}>
-            <h1 style={{ fontSize: '1.1rem', textAlign: 'center', marginBottom: '0.5rem', color: '#0d0d1a' }}>📖 Book of Life — {user?.name}</h1>
-            <p style={{ textAlign: 'center', fontSize: '0.7rem', color: '#666', marginBottom: '1rem' }}>Written in {new Date().getFullYear()}</p>
+            <h1 style={{ fontSize: '1.1rem', textAlign: 'center', marginBottom: '0.5rem', color: '#0d0d1a' }}>📖 {t('bookTitle', lang)} — {user?.name}</h1>
+            <p style={{ textAlign: 'center', fontSize: '0.7rem', color: '#666', marginBottom: '1rem' }}>{t('writtenIn', lang)} {new Date().getFullYear()}</p>
             {chs.map((ch, i) => (
               <div key={i}>
                 <h2 style={{ fontSize: '0.85rem', margin: '1rem 0 0.3rem', color: '#1a1a4e', borderBottom: '1px solid #e0e0e0', paddingBottom: '0.2rem' }}>{ch.t}</h2>
@@ -120,10 +120,10 @@ export default function BookTab() {
               </div>
             ))}
             <div style={{ fontSize: '0.6rem', color: '#999', textAlign: 'center', marginTop: '1rem', borderTop: '1px solid #eee', paddingTop: '0.5rem' }}>
-              LegacyChain · A blockchain of love · {new Date().getFullYear()}<br />Written by {user?.name}
+              LegacyChain · {t('landingFooter', lang)} · {new Date().getFullYear()}<br />{t('writtenBy', lang)} {user?.name}
             </div>
           </div>
-          <button className="btn-primary" style={{ marginTop: '0.75rem' }} onClick={downloadPDF}>⬇ DOWNLOAD PDF</button>
+          <button className="btn-primary" style={{ marginTop: '0.75rem' }} onClick={downloadPDF}>⬇ {t('downloadPdf', lang)}</button>
         </div>
       )}
     </div>

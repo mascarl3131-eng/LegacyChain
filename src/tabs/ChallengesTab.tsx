@@ -18,7 +18,7 @@ export default function ChallengesTab() {
     const txt = answerText.trim();
     if (!txt) return;
     const updated = [...challenges];
-    updated[ci] = { ...updated[ci], ans: [...updated[ci].ans, { a: user?.first || 'Anonymous', y: new Date().getFullYear(), text: txt }] };
+    updated[ci] = { ...updated[ci], ans: [...updated[ci].ans, { a: user?.first || t('anonymous', lang), y: new Date().getFullYear(), text: txt }] };
     setChallenges(updated);
     setAnswerText('');
     setOpenForm(null);

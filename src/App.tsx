@@ -7,6 +7,7 @@ import AppPage from './pages/AppPage';
 import AdminPage from './pages/AdminPage';
 import Notification from './components/Notification';
 import NebulaBackground from './components/NebulaBackground';
+import UpgradeModal from './components/UpgradeModal';
 
 function App() {
   const { page, loading, session, user, setPage } = useStore();
@@ -77,6 +78,7 @@ function App() {
       {page === 'landing' && <LandingPage />}
       {page === 'app' && <AppPage />}
       {page === 'admin' && <AdminPage />}
+      <UpgradeModal />
       <Notification />
     </div>
   );

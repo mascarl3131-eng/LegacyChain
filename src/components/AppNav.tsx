@@ -1,18 +1,19 @@
 import { useRef, useCallback } from 'react';
 import { useStore } from '@/lib/store';
+import { t } from '@/lib/i18n';
 
 export default function AppNav() {
-  const { user, premium, setSideMenuOpen, setPage } = useStore();
+  const { user, session, premium, setSideMenuOpen, setPage, lang } = useStore();
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleLogoDown = useCallback(() => {
     longPressRef.current = setTimeout(() => {
-      const pwd = prompt('Admin password:');
+      const pwd = prompt(t('adminPassword', lang));
       if (pwd === 'legacy2025') {
         setPage('admin');
       }
     }, 1500);
-  }, [setPage]);
+  }, [lang, setPage]);
 
   const handleLogoUp = useCallback(() => {
     if (longPressRef.current) clearTimeout(longPressRef.current);
@@ -74,22 +75,29 @@ export default function AppNav() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-        <div
+        <button
+          type="button"
+          onClick={() => setSideMenuOpen(true)}
+          aria-label={t('accountSection', lang)}
           style={{
+            border: 'none',
+            padding: 0,
             width: 28,
             height: 28,
             borderRadius: '50%',
-            background: 'linear-gradient(135deg,#00FFD1,#C084FC)',
+            background: session ? 'linear-gradient(135deg,#00FFD1,#C084FC)' : 'rgba(255,179,71,0.12)',
+            outline: session ? 'none' : '1px solid rgba(255,179,71,0.5)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '0.68rem',
             fontWeight: 700,
-            color: '#04030A',
+            color: session ? '#04030A' : '#FFB347',
+            cursor: 'pointer',
           }}
         >
           {user.first[0].toUpperCase()}
-        </div>
+        </button>
         {premium && (
           <span
             style={{

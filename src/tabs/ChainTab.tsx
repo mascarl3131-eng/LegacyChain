@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { BANNED_WORDS } from '@/lib/data';
+import UnlockYearPicker from '@/components/UnlockYearPicker';
 
 const EMOJIS = ['hope', 'love', 'wisdom', 'memory', 'warning'];
 const EMO_COLORS: Record<string, string> = {
@@ -48,7 +49,7 @@ export default function ChainTab() {
 
     const newMsg = {
       id: Date.now().toString(),
-      a: user?.first || 'Anonymous',
+      a: user?.first || t('anonymous', lang),
       y: new Date().getFullYear(),
       text: txt,
       e: emo as 'hope' | 'love' | 'wisdom' | 'memory' | 'warning',
@@ -72,7 +73,7 @@ export default function ChainTab() {
       setPhotoData(null);
       setAudioBlob(null);
       setModWarn('');
-      showNotif('Message sealed ✦', '#00FFD1');
+      showNotif(t('messageSealed', lang), '#00FFD1');
     }, 1500);
   };
 
@@ -99,7 +100,7 @@ export default function ChainTab() {
             return s + 1;
           });
         }, 1000);
-      } catch { alert('Microphone access denied.'); }
+      } catch { alert(t('microphoneDenied', lang)); }
     } else {
       mediaRecorderRef.current?.stop();
       setIsRecording(false);
@@ -151,12 +152,12 @@ export default function ChainTab() {
             <div className="glass-card">
               {m.type === 'birth' && m.baby && (
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: 'rgba(255,179,71,0.08)', border: '1px solid rgba(255,179,71,0.28)', color: '#FFB347', fontSize: '0.63rem', padding: '0.22rem 0.6rem', borderRadius: 20, marginBottom: '0.6rem' }}>
-                  👶 {m.baby} · {m.dy || '—'} · in {(m.dy || new Date().getFullYear()) - new Date().getFullYear()} years
+                  👶 {m.baby} · {m.dy || '—'} · {t('inYears', lang).replace('{count}', String((m.dy || new Date().getFullYear()) - new Date().getFullYear()))}
                 </div>
               )}
               {m.type === 'capsule' && (
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: 'rgba(255,179,71,0.07)', border: '1px solid rgba(255,179,71,0.26)', color: '#FFB347', fontSize: '0.63rem', padding: '0.22rem 0.6rem', borderRadius: 20, marginBottom: '0.6rem' }}>
-                  ⊙ Collective capsule
+                  ⊙ {t('capsule', lang)}
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.55rem' }}>
@@ -165,11 +166,11 @@ export default function ChainTab() {
               </div>
               <div style={{ fontSize: '0.82rem', lineHeight: 1.75, color: 'rgba(239,246,255,0.8)' }}>{m.text}</div>
               {m.photo && <img src={m.photo} alt="" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid #00FFD1', marginTop: '0.4rem', display: 'block' }} />}
-              {m.lock && <div style={{ fontSize: '0.6rem', color: 'rgba(239,246,255,0.25)', marginTop: '0.28rem' }}>🔒 Sealed until {m.lock}</div>}
+              {m.lock && <div style={{ fontSize: '0.6rem', color: 'rgba(239,246,255,0.25)', marginTop: '0.28rem' }}>🔒 {t('sealedUntil', lang)} {m.lock}</div>}
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.65rem', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '0.57rem', letterSpacing: '0.1em', padding: '0.15rem 0.5rem', borderRadius: 3, background: 'rgba(0,255,209,0.05)', border: '1px solid rgba(0,255,209,0.13)', color: 'rgba(239,246,255,0.38)', textTransform: 'uppercase' }}>{m.e}</span>
-                <button className="btn-sec" style={{ fontSize: '0.58rem', padding: '0.22rem 0.5rem' }} onClick={() => setImmersiveMsg(m)}>👁 READ</button>
-                <button className="btn-sec" style={{ fontSize: '0.58rem', padding: '0.22rem 0.5rem' }} onClick={() => replyTo(m)}>↩ REPLY</button>
+                <span style={{ fontSize: '0.57rem', letterSpacing: '0.1em', padding: '0.15rem 0.5rem', borderRadius: 3, background: 'rgba(0,255,209,0.05)', border: '1px solid rgba(0,255,209,0.13)', color: 'rgba(239,246,255,0.38)', textTransform: 'uppercase' }}>{t(`e${m.e.charAt(0).toUpperCase() + m.e.slice(1)}`, lang)}</span>
+                <button className="btn-sec" style={{ fontSize: '0.58rem', padding: '0.22rem 0.5rem' }} onClick={() => setImmersiveMsg(m)}>👁 {t('read', lang)}</button>
+                <button className="btn-sec" style={{ fontSize: '0.58rem', padding: '0.22rem 0.5rem' }} onClick={() => replyTo(m)}>↩ {t('reply', lang)}</button>
               </div>
             </div>
           </div>
@@ -226,7 +227,7 @@ export default function ChainTab() {
         {/* Photo Upload */}
         <div style={{ marginBottom: '0.85rem' }}>
           <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>
-            PHOTO {!premium && <span style={{ color: '#FFB347', fontSize: '0.56rem' }}>✦ PREMIUM</span>}
+            {t('photo', lang)} {!premium && <span style={{ color: '#FFB347', fontSize: '0.56rem' }}>✦ PREMIUM</span>}
           </label>
           <div
             onClick={() => premium ? photoInputRef.current?.click() : setUpgradeOpen(true)}
@@ -236,7 +237,7 @@ export default function ChainTab() {
             {photoData ? (
               <img src={photoData} alt="" style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '2px solid #00FFD1', margin: '0.5rem auto 0', display: 'block' }} />
             ) : (
-              <div style={{ fontSize: '0.62rem', color: 'rgba(239,246,255,0.28)' }}>📸 Tap to attach a photo</div>
+              <div style={{ fontSize: '0.62rem', color: 'rgba(239,246,255,0.28)' }}>📸 {t('tapPhoto', lang)}</div>
             )}
           </div>
         </div>
@@ -244,7 +245,7 @@ export default function ChainTab() {
         {/* Audio Recorder */}
         <div style={{ marginBottom: '0.85rem' }}>
           <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>
-            AUDIO {!premium && <span style={{ color: '#FFB347', fontSize: '0.56rem' }}>✦ PREMIUM · MAX 3 MIN</span>}
+            {t('audio', lang)} {!premium && <span style={{ color: '#FFB347', fontSize: '0.56rem' }}>✦ PREMIUM · 3 MIN</span>}
           </label>
           <div style={{ background: 'rgba(0,255,209,0.04)', border: '1px solid rgba(0,255,209,0.2)', borderRadius: 12, padding: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
@@ -267,7 +268,7 @@ export default function ChainTab() {
               </span>
             </div>
             <div style={{ fontSize: '0.6rem', color: 'rgba(239,246,255,0.28)', textAlign: 'center' }}>
-              {audioBlob ? '✓ Audio recorded' : isRecording ? 'Recording...' : 'Tap to start recording'}
+              {audioBlob ? t('audioRecorded', lang) : isRecording ? t('recording', lang) : t('tapRecord', lang)}
             </div>
           </div>
         </div>
@@ -287,9 +288,9 @@ export default function ChainTab() {
         {/* Unlock Year */}
         <div style={{ marginBottom: '0.85rem' }}>
           <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>
-            {t('unlockYr', lang)} <span style={{ opacity: 0.4 }}>(optional)</span>
+            {t('unlockYr', lang)} <span style={{ opacity: 0.4 }}>({t('optional', lang)})</span>
           </label>
-          <input type="number" className="form-input" value={unlockYr} onChange={e => setUnlockYr(e.target.value)} placeholder="e.g. 2045" min={2025} max={2150} />
+          <UnlockYearPicker lang={lang} value={unlockYr} onChange={setUnlockYr} />
         </div>
 
         {modWarn && (

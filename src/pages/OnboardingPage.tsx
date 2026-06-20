@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '@/lib/store';
-import { OB_WORDS, LANGS } from '@/lib/i18n';
+import { OB_WORDS, LANGS, t } from '@/lib/i18n';
 import type { LangCode } from '@/lib/i18n';
 
 export default function OnboardingPage() {
@@ -175,13 +175,13 @@ export default function OnboardingPage() {
           letterSpacing: '0.1em',
         }}
       >
-        SKIP →
+        {t('skip', lang)}
       </button>
 
       {/* Center Text */}
       <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '1rem' }}>
         <p style={{ color: 'rgba(239,246,255,0.5)', marginTop: '0.8rem', fontSize: '0.8rem', letterSpacing: '0.12em' }}>
-          Every family deserves to travel through time
+          {t('obSub', lang)}
         </p>
       </div>
     </div>
