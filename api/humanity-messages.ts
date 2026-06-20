@@ -1,0 +1,106 @@
+import type { ApiRequest, ApiResponse } from './_lib/http.js';
+import { getAdminSupabase, getAuthenticatedUser } from './_lib/server.js';
+
+const ALLOWED_EMOTIONS = new Set(['hope', 'love', 'wisdom', 'peace', 'warning', 'memory']);
+const ALLOWED_AUDIENCES = new Set(['future', 'descendants', 'humanity', 'whoever']);
+const BLOCKED_TERMS = ['hate', 'kill', 'murder', 'racist', 'terrorist'];
+
+function getParams(req: ApiRequest) {
+  return new URL(req.url || '/', 'https://legacy-chain.vercel.app').searchParams;
+}
+
+export default async function handler(req: ApiRequest, res: ApiResponse) {
+  const admin = getAdminSupabase();
+
+  if (req.method === 'GET') {
+    const params = getParams(req);
+    const page = Math.max(1, Number(params.get('page') || 1));
+    const perPage = Math.min(100, Math.max(1, Number(params.get('perPage') || 20)));
+    const offset = (page - 1) * perPage;
+    const country = params.get('country');
+    const emotion = params.get('emotion');
+    const audience = params.get('audience');
+    const year = Number(params.get('year') || 0);
+    const search = params.get('search')?.trim();
+    const sort = params.get('sort') === 'oldest' ? 'oldest' : params.get('sort') === 'popular' ? 'popular' : 'newest';
+
+    let query = admin
+      .from('humanity_messages')
+      .select('id,display_name,show_profile,country,country_code,message,emotion,audience,language,reaction_count,created_at', { count: 'exact' })
+      .eq('visibility', 'public')
+      .eq('status', 'published');
+
+    if (country) query = query.eq('country', country);
+    if (emotion && ALLOWED_EMOTIONS.has(emotion)) query = query.eq('emotion', emotion);
+    if (audience && ALLOWED_AUDIENCES.has(audience)) query = query.eq('audience', audience);
+    if (year >= 1900 && year <= 2200) {
+      query = query.gte('created_at', `${year}-01-01T00:00:00Z`).lt('created_at', `${year + 1}-01-01T00:00:00Z`);
+    }
+    if (search) query = query.or(`message.ilike.%${search.replaceAll(',', ' ')}%,country.ilike.%${search.replaceAll(',', ' ')}%`);
+    if (sort === 'popular') query = query.order('reaction_count', { ascending: false }).order('created_at', { ascending: false });
+    else query = query.order('created_at', { ascending: sort === 'oldest' });
+
+    const { data, count, error } = await query.range(offset, offset + perPage - 1);
+    if (error) return res.status(500).json({ error: error.message });
+
+    const { data: facets } = await admin
+      .from('humanity_messages')
+      .select('country,created_at')
+      .eq('visibility', 'public')
+      .eq('status', 'published')
+      .order('created_at', { ascending: false })
+      .limit(1000);
+
+    const countries = [...new Set((facets || []).map(item => item.country))].sort();
+    const years = [...new Set((facets || []).map(item => new Date(item.created_at).getUTCFullYear()))].sort((a, b) => b - a);
+    return res.status(200).json({ messages: data || [], total: count || 0, page, perPage, countries, years });
+  }
+
+  if (req.method === 'POST') {
+    const body = req.body || {};
+    const message = String(body.message || '').trim();
+    const country = String(body.country || '').trim();
+    const emotion = String(body.emotion || '');
+    const audience = String(body.audience || '');
+    const visibility = body.visibility === 'family' ? 'family' : 'public';
+    const language = String(body.language || 'en').slice(0, 5);
+    const user = await getAuthenticatedUser(req);
+
+    if (message.length < 3 || message.length > 500 || !country || !ALLOWED_EMOTIONS.has(emotion) || !ALLOWED_AUDIENCES.has(audience)) {
+      return res.status(400).json({ error: 'Invalid voice data' });
+    }
+    if (BLOCKED_TERMS.some(term => message.toLowerCase().includes(term))) {
+      return res.status(422).json({ error: 'Message requires moderation' });
+    }
+    if (visibility === 'family' && !user) return res.status(401).json({ error: 'Authentication required for family-only voices' });
+
+    const requestedName = String(body.displayName || '').trim().slice(0, 80);
+    const showProfile = Boolean(body.showProfile && user);
+    const displayName = showProfile
+      ? requestedName || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Anonymous'
+      : requestedName || `A voice from ${country}`;
+
+    const { data, error } = await admin
+      .from('humanity_messages')
+      .insert({
+        author_id: user?.id || null,
+        display_name: displayName,
+        show_profile: showProfile,
+        country,
+        country_code: String(body.countryCode || '').slice(0, 3) || null,
+        message,
+        emotion,
+        audience,
+        visibility,
+        language,
+        status: 'published',
+      })
+      .select('id,display_name,show_profile,country,country_code,message,emotion,audience,language,reaction_count,created_at')
+      .single();
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(201).json({ message: data });
+  }
+
+  return res.status(405).json({ error: 'Method not allowed' });
+}
+

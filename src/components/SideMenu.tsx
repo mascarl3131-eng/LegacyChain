@@ -53,24 +53,27 @@ export default function SideMenu() {
           style={{
             position: 'fixed',
             inset: 0,
-            zIndex: 299,
+            zIndex: 1099,
             background: 'rgba(4,3,10,0.6)',
           }}
         />
       )}
       <div
+        aria-hidden={!sideMenuOpen}
         style={{
           position: 'fixed',
           top: 0,
           left: sideMenuOpen ? 0 : -280,
           width: 260,
           height: '100%',
-          zIndex: 300,
+          zIndex: 1100,
           background: '#090716',
           borderRight: '1px solid rgba(0,255,209,0.13)',
           transition: 'left 0.3s',
           overflowY: 'auto',
           padding: '1.5rem 0 2rem',
+          pointerEvents: sideMenuOpen ? 'auto' : 'none',
+          visibility: sideMenuOpen ? 'visible' : 'hidden',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1.2rem 1.2rem', borderBottom: '1px solid rgba(0,255,209,0.13)', marginBottom: '0.5rem' }}>

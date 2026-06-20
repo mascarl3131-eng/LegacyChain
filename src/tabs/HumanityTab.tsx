@@ -1,178 +1,260 @@
-import { useState } from 'react';
-import { Heart, Search } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight, ExternalLink, Flag, HandHeart, Heart, Languages, Search, Share2, Sparkles } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
-import { FLAGS, BANNED_WORDS } from '@/lib/data';
+import { FLAGS, BANNED_WORDS, getDemoHumanity } from '@/lib/data';
+import HumanityWorldMap from '@/components/HumanityWorldMap';
 
-const H_EMOJIS = ['hope', 'love', 'wisdom', 'peace', 'warning', 'memory'];
-const EMO_GLOW: Record<string, string> = {
-  hope: '#00FFD1', love: '#FF6B9D', wisdom: '#C084FC', memory: '#FFB347', warning: '#FF2D55', peace: '#7DD3FC',
+const EMOTIONS = ['hope', 'love', 'wisdom', 'peace', 'warning', 'memory'];
+const AUDIENCES = ['future', 'descendants', 'humanity', 'whoever'];
+const AUDIENCE_KEYS: Record<string, string> = {
+  future: 'toFuture',
+  descendants: 'toDescendants',
+  humanity: 'toHumanity',
+  whoever: 'toWhoever',
+};
+const PER_PAGE = 20;
+const EMO_GLOW: Record<string, string> = { hope: '#00FFD1', love: '#FF6B9D', wisdom: '#C084FC', memory: '#FFB347', warning: '#FF2D55', peace: '#7DD3FC' };
+
+type Voice = {
+  id: string; display_name: string; show_profile: boolean; country: string; country_code?: string | null;
+  message: string; emotion: string; audience: string; language: string; reaction_count: number; created_at: string;
 };
 
+function getVisitorId() {
+  const current = localStorage.getItem('legacychain-visitor-id');
+  if (current) return current;
+  const id = crypto.randomUUID();
+  localStorage.setItem('legacychain-visitor-id', id);
+  return id;
+}
+
 export default function HumanityTab() {
-  const { lang, hMsgs, addHMsg, hEmo, setHEmo, setShowSubmitAnim, showNotif } = useStore();
+  const { lang, session, user, hEmo, setHEmo, setShowSubmitAnim, showNotif } = useStore();
+  const [voices, setVoices] = useState<Voice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sampleMode, setSampleMode] = useState(false);
+  const [query, setQuery] = useState('');
+  const [country, setCountry] = useState('');
+  const [year, setYear] = useState('');
+  const [emotion, setEmotion] = useState('');
+  const [audience, setAudience] = useState('');
+  const [sort, setSort] = useState('newest');
+  const [page, setPage] = useState(1);
+  const [liked, setLiked] = useState<Record<string, string>>({});
   const [hName, setHName] = useState('');
   const [hCountry, setHCountry] = useState('');
-  const [hTo, setHTo] = useState('To future generations');
+  const [hAudience, setHAudience] = useState('future');
   const [hMsg, setHMsg] = useState('');
-  const [hMod, setHMod] = useState('');
-  const [query, setQuery] = useState('');
-  const [emotionFilter, setEmotionFilter] = useState('all');
-  const [liked, setLiked] = useState<Set<string>>(new Set());
-  const visibleMessages = hMsgs.filter(message => {
-    const matchesEmotion = emotionFilter === 'all' || message.e === emotionFilter;
-    const haystack = `${message.a} ${message.c} ${message.text}`.toLocaleLowerCase();
-    return matchesEmotion && haystack.includes(query.toLocaleLowerCase());
-  });
+  const [visibility, setVisibility] = useState<'public' | 'family'>('public');
+  const [showProfile, setShowProfile] = useState(false);
+  const [formError, setFormError] = useState('');
 
-  const isBanned = (txt: string) => BANNED_WORDS.some(w => txt.toLowerCase().includes(w));
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const initialCountry = params.get('voiceCountry');
+    if (initialCountry) setCountry(initialCountry);
+  }, []);
 
-  const submitHumanity = async () => {
-    const txt = hMsg.trim();
-    if (!txt) return;
-
-    if (isBanned(txt)) {
-      setHMod(t('modBanned', lang));
-      return;
-    }
-
-    // Simulate AI moderation
-    const approved = Math.random() > 0.1;
-    if (!approved) {
-      setHMod(t('modBanned', lang));
-      return;
-    }
-
-    const country = hCountry.trim() || t('worldLabel', lang);
-    const name = hName.trim() || t('voiceFrom', lang).replace('{place}', country);
-    const flag = FLAGS[country] || '🌍';
-
-    const newMsg = {
-      id: Date.now().toString(),
-      a: name,
-      c: country,
-      f: flag,
-      text: txt,
-      e: hEmo as 'hope' | 'love' | 'wisdom' | 'memory' | 'warning' | 'peace',
-      y: new Date().getFullYear(),
-      likes: 0,
+  useEffect(() => {
+    let active = true;
+    const loadVoices = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('/api/humanity-messages?perPage=100&sort=newest');
+        if (!response.ok) throw new Error('Voices database unavailable');
+        const data = await response.json();
+        if (!active) return;
+        setVoices(data.messages || []);
+        setSampleMode(false);
+      } catch {
+        if (!active) return;
+        setVoices(getDemoHumanity(lang).map(item => ({
+          id: item.id, display_name: item.a, show_profile: false, country: item.c, message: item.text,
+          emotion: item.e, audience: 'future', language: lang, reaction_count: item.likes,
+          created_at: `${item.y}-06-20T00:00:00Z`,
+        })));
+        setSampleMode(true);
+      } finally {
+        if (active) setLoading(false);
+      }
     };
+    void loadVoices();
+    return () => { active = false; };
+  }, [lang]);
+
+  const countries = useMemo(() => [...new Set(voices.map(item => item.country))].sort(), [voices]);
+  const years = useMemo(() => [...new Set(voices.map(item => new Date(item.created_at).getFullYear()))].sort((a, b) => b - a), [voices]);
+  const countryCounts = useMemo(() => voices.reduce<Record<string, number>>((acc, item) => {
+    acc[item.country] = (acc[item.country] || 0) + 1; return acc;
+  }, {}), [voices]);
+
+  const filtered = useMemo(() => {
+    const result = voices.filter(item => {
+      const haystack = `${item.display_name} ${item.country} ${item.message}`.toLocaleLowerCase();
+      return (!query || haystack.includes(query.toLocaleLowerCase()))
+        && (!country || item.country === country)
+        && (!year || new Date(item.created_at).getFullYear() === Number(year))
+        && (!emotion || item.emotion === emotion)
+        && (!audience || item.audience === audience);
+    });
+    return [...result].sort((a, b) => sort === 'popular'
+      ? b.reaction_count - a.reaction_count
+      : sort === 'oldest'
+        ? +new Date(a.created_at) - +new Date(b.created_at)
+        : +new Date(b.created_at) - +new Date(a.created_at));
+  }, [audience, country, emotion, query, sort, voices, year]);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const displayed = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const featured = filtered[0];
+  useEffect(() => setPage(1), [audience, country, emotion, query, sort, year]);
+
+  const selectCountry = (value: string) => {
+    setCountry(value);
+    const url = new URL(window.location.href);
+    if (value) url.searchParams.set('voiceCountry', value); else url.searchParams.delete('voiceCountry');
+    window.history.replaceState({}, '', url);
+  };
+
+  const react = async (voice: Voice, reaction: string) => {
+    if (sampleMode) return;
+    const visitorId = getVisitorId();
+    const current = liked[voice.id];
+    setLiked(state => ({ ...state, [voice.id]: current === reaction ? '' : reaction }));
+    const response = await fetch('/api/humanity-reactions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+      body: JSON.stringify({ messageId: voice.id, visitorId, reaction }),
+    });
+    if (response.ok) {
+      const data = await response.json();
+      setVoices(items => items.map(item => item.id === voice.id ? { ...item, reaction_count: data.count } : item));
+    }
+  };
+
+  const share = async (voice: Voice) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('voice', voice.id);
+    const shareData = { title: 'LegacyChain · Voices of Humanity', text: voice.message, url: url.toString() };
+    try {
+      if (navigator.share) await navigator.share(shareData);
+      else {
+        await navigator.clipboard.writeText(url.toString());
+        showNotif(t('linkCopied', lang), '#00FFD1');
+      }
+    } catch {
+      // Closing the native share sheet is not an application error.
+    }
+  };
+
+  const report = async (voice: Voice) => {
+    if (sampleMode) return;
+    const reason = prompt(t('reportReason', lang));
+    if (!reason) return;
+    const response = await fetch('/api/humanity-reports', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+      body: JSON.stringify({ messageId: voice.id, visitorId: getVisitorId(), reason }),
+    });
+    if (response.ok) showNotif(t('reportSent', lang), '#FFB347');
+  };
+
+  const submit = async () => {
+    const text = hMsg.trim();
+    setFormError('');
+    if (!text || !hCountry.trim()) return setFormError(t('completeRequired', lang));
+    if (BANNED_WORDS.some(word => text.toLowerCase().includes(word))) return setFormError(t('modBanned', lang));
+    if (visibility === 'family' && !session) return setFormError(t('loginForFamilyVoice', lang));
+
+    const response = await fetch('/api/humanity-messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+      body: JSON.stringify({
+        message: text, country: hCountry.trim(), emotion: hEmo, audience: hAudience,
+        visibility, language: lang, displayName: hName.trim(), showProfile,
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) return setFormError(data.error || t('publishError', lang));
 
     setShowSubmitAnim(true);
-    setTimeout(() => {
-      addHMsg(newMsg);
-      setHMsg('');
-      setHMod('');
-      showNotif(t('voiceSealed', lang), '#00FFD1');
-    }, 1500);
+    setHMsg(''); setHName(''); setFormError('');
+    if (visibility === 'public') setVoices(items => [data.message, ...items].slice(0, 100));
+    showNotif(t('voiceSealed', lang), '#00FFD1');
   };
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ textAlign: 'center', padding: '2rem 0.5rem 1.5rem', borderBottom: '1px solid rgba(0,255,209,0.13)', marginBottom: '1.5rem' }}>
-        <div className="font-display" style={{ fontSize: 'clamp(1.3rem,6vw,2.4rem)', color: '#EFF6FF', letterSpacing: '0.12em', marginBottom: '0.6rem' }}>
-          {t('hvTitle', lang)}
-        </div>
-        <p style={{ fontSize: '0.75rem', color: 'rgba(239,246,255,0.36)', letterSpacing: '0.08em', maxWidth: 340, margin: '0 auto 0.8rem', lineHeight: 1.7 }}>
-          {t('hvSub', lang)}
-        </p>
-        <div style={{ fontSize: '0.68rem', color: 'rgba(239,246,255,0.35)', letterSpacing: '0.1em' }}>
-          <strong style={{ color: '#00FFD1' }}>{(hMsgs.length + 94314).toLocaleString()}</strong> {t('voices', lang)} · <strong style={{ color: '#00FFD1' }}>47</strong> {t('countries', lang)}
+      <header style={{ textAlign: 'center', padding: '1.4rem .5rem 1.1rem' }}>
+        <div className="font-display" style={{ fontSize: 'clamp(1.25rem,6vw,2.2rem)', color: '#EFF6FF', letterSpacing: '.12em' }}>{t('hvTitle', lang)}</div>
+        <p style={{ fontSize: '.7rem', color: 'rgba(239,246,255,.38)', lineHeight: 1.7 }}>{t('hvSub', lang)}</p>
+        <div style={{ fontSize: '.62rem', color: 'rgba(239,246,255,.35)' }}><strong style={{ color: '#00FFD1' }}>{voices.length}</strong> {t('recentVoices', lang)} · <strong style={{ color: '#00FFD1' }}>{countries.length}</strong> {t('countries', lang)}</div>
+        {sampleMode && <div style={{ color: '#FFB347', fontSize: '.52rem', marginTop: '.45rem' }}>{t('sampleVoicesNotice', lang)}</div>}
+      </header>
+
+      <HumanityWorldMap counts={countryCounts} selectedCountry={country} onSelect={selectCountry} />
+
+      <div className="glass-card" style={{ marginTop: '.75rem', padding: '.8rem' }}>
+        <div style={{ position: 'relative', marginBottom: '.45rem' }}><Search size={14} style={{ position: 'absolute', left: 10, top: 11, color: 'rgba(239,246,255,.3)' }} /><input className="form-input" value={query} onChange={event => setQuery(event.target.value)} placeholder={t('searchVoices', lang)} style={{ paddingLeft: 32 }} /></div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '.4rem' }}>
+          <select className="form-select" value={country} onChange={event => selectCountry(event.target.value)}><option value="">{t('allCountries', lang)}</option>{countries.map(item => <option key={item}>{item}</option>)}</select>
+          <select className="form-select" value={year} onChange={event => setYear(event.target.value)}><option value="">{t('allYears', lang)}</option>{years.map(item => <option key={item}>{item}</option>)}</select>
+          <select className="form-select" value={emotion} onChange={event => setEmotion(event.target.value)}><option value="">{t('allEmotions', lang)}</option>{EMOTIONS.map(item => <option key={item} value={item}>{t(`e${item[0].toUpperCase()}${item.slice(1)}`, lang)}</option>)}</select>
+          <select className="form-select" value={audience} onChange={event => setAudience(event.target.value)}><option value="">{t('allAudiences', lang)}</option>{AUDIENCES.map(item => <option key={item} value={item}>{t(AUDIENCE_KEYS[item], lang)}</option>)}</select>
+          <select className="form-select" value={sort} onChange={event => setSort(event.target.value)} style={{ gridColumn: '1 / -1' }}><option value="newest">{t('newestFirst', lang)}</option><option value="oldest">{t('oldestFirst', lang)}</option><option value="popular">{t('mostSupported', lang)}</option></select>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.45rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: '1 1 180px' }}>
-          <Search size={14} style={{ position: 'absolute', top: 11, left: 10, color: 'rgba(239,246,255,.3)' }} />
-          <input className="form-input" value={query} onChange={event => setQuery(event.target.value)} placeholder={t('searchVoices', lang)} style={{ paddingLeft: 32 }} />
+      {featured && page === 1 && (
+        <div className="glass-card" style={{ marginTop: '.75rem', borderColor: 'rgba(255,179,71,.28)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem', color: '#FFB347', fontSize: '.58rem', letterSpacing: '.12em', marginBottom: '.55rem' }}><Sparkles size={14} /> {t('featuredVoice', lang)}</div>
+          <div style={{ color: 'rgba(239,246,255,.82)', fontSize: '.8rem', lineHeight: 1.75 }}>{featured.message}</div>
+          <div style={{ color: 'rgba(239,246,255,.35)', fontSize: '.56rem', marginTop: '.55rem' }}>{featured.country} · {new Date(featured.created_at).getFullYear()}</div>
         </div>
-        <select className="form-select" value={emotionFilter} onChange={event => setEmotionFilter(event.target.value)} style={{ width: 'auto', minWidth: 130 }}>
-          <option value="all">{t('allEmotions', lang)}</option>
-          {H_EMOJIS.map(emotion => <option key={emotion} value={emotion}>{t(`e${emotion.charAt(0).toUpperCase()}${emotion.slice(1)}`, lang)}</option>)}
-        </select>
+      )}
+
+      <div style={{ marginTop: '.75rem' }}>
+        {loading ? <div className="glass-card" style={{ textAlign: 'center' }}>{t('loadingVoices', lang)}</div> : displayed.map(voice => {
+          const activeReaction = liked[voice.id];
+          const flag = FLAGS[voice.country] || '🌍';
+          return (
+            <article key={voice.id} className="glass-card" style={{ marginBottom: '.7rem', borderTopColor: EMO_GLOW[voice.emotion] }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '.7rem' }}>
+                <div><div style={{ color: '#00FFD1', fontSize: '.61rem' }}>{voice.show_profile ? voice.display_name : `${flag} ${voice.country}`}</div><div style={{ color: 'rgba(239,246,255,.28)', fontSize: '.51rem', marginTop: 2 }}>{new Date(voice.created_at).toLocaleDateString(lang)} · {t(AUDIENCE_KEYS[voice.audience] || 'toFuture', lang)}</div></div>
+                <span style={{ color: EMO_GLOW[voice.emotion], fontSize: '.5rem' }}>{t(`e${voice.emotion[0].toUpperCase()}${voice.emotion.slice(1)}`, lang)}</span>
+              </div>
+              <p style={{ color: 'rgba(239,246,255,.8)', fontSize: '.76rem', lineHeight: 1.75 }}>{voice.message}</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '.5rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '.25rem' }}>
+                  <button className="btn-sec" onClick={() => void react(voice, 'hope')} style={{ color: activeReaction === 'hope' ? '#FFB347' : undefined, padding: '.28rem .45rem' }} aria-label={t('supportVoice', lang)}><Sparkles size={12} /></button>
+                  <button className="btn-sec" onClick={() => void react(voice, 'love')} style={{ color: activeReaction === 'love' ? '#FF6B9D' : undefined, padding: '.28rem .45rem' }} aria-label={t('loveVoice', lang)}><Heart size={12} /></button>
+                  <button className="btn-sec" onClick={() => void react(voice, 'support')} style={{ color: activeReaction === 'support' ? '#00FFD1' : undefined, padding: '.28rem .45rem' }} aria-label={t('supportVoice', lang)}><HandHeart size={12} /></button>
+                </div>
+                <div style={{ display: 'flex', gap: '.25rem' }}><span style={{ color: 'rgba(239,246,255,.35)', fontSize: '.55rem', alignSelf: 'center' }}><Heart size={11} style={{ display: 'inline' }} /> {voice.reaction_count}</span><button className="btn-sec" onClick={() => void share(voice)} aria-label={t('shareVoice', lang)}><Share2 size={12} /></button><a className="btn-sec" href={`https://translate.google.com/?sl=auto&tl=${lang}&text=${encodeURIComponent(voice.message)}&op=translate`} target="_blank" rel="noreferrer" aria-label={t('translateVoice', lang)}><Languages size={12} /></a><button className="btn-sec" onClick={() => void report(voice)} aria-label={t('reportVoice', lang)}><Flag size={12} /></button></div>
+              </div>
+            </article>
+          );
+        })}
       </div>
 
-      {/* Masonry */}
-      <div style={{ columns: 1, gap: '0.75rem' }}>
-        {visibleMessages.map((m) => (
-          <div
-            key={m.id}
-            className="glass-card"
-            style={{ marginBottom: '0.75rem', breakInside: 'avoid', position: 'relative', overflow: 'hidden', paddingTop: '1rem' }}
-          >
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, opacity: 0.6, background: EMO_GLOW[m.e] || '#00FFD1' }} />
-            <div style={{ position: 'absolute', top: '0.65rem', right: '0.65rem', fontSize: '0.9rem' }}>{m.f}</div>
-            <div style={{ fontSize: '0.62rem', color: 'rgba(0,255,209,0.62)', letterSpacing: '0.07em', marginBottom: '0.35rem' }}>{m.a} · {m.y}</div>
-            <div style={{ fontSize: '0.78rem', lineHeight: 1.7, color: 'rgba(239,246,255,0.78)' }}>{m.text}</div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.6rem' }}>
-              <span style={{ fontSize: '0.55rem', letterSpacing: '0.1em', color: 'rgba(239,246,255,0.25)', border: '1px solid rgba(0,255,209,0.13)', padding: '0.1rem 0.4rem', borderRadius: 2, textTransform: 'uppercase' }}>{t(`e${m.e.charAt(0).toUpperCase() + m.e.slice(1)}`, lang)}</span>
-              <button
-                type="button"
-                onClick={() => setLiked(current => {
-                  const next = new Set(current);
-                  if (next.has(m.id)) next.delete(m.id); else next.add(m.id);
-                  return next;
-                })}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.28rem', background: 'transparent', border: 'none', color: liked.has(m.id) ? '#FF6B9D' : 'rgba(239,246,255,0.25)', fontFamily: "'DM Mono',monospace", fontSize: '0.62rem', cursor: 'pointer' }}
-              >
-                <Heart size={12} fill={liked.has(m.id) ? 'currentColor' : 'none'} /> {m.likes + (liked.has(m.id) ? 1 : 0)}
-              </button>
-            </div>
-          </div>
-        ))}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '.55rem', margin: '1rem 0' }}>
+        <button className="btn-sec" disabled={page <= 1} onClick={() => setPage(value => value - 1)}><ChevronLeft size={14} /></button>
+        <span style={{ color: 'rgba(239,246,255,.45)', fontSize: '.6rem' }}>{page} / {pageCount}</span>
+        <button className="btn-sec" disabled={page >= pageCount} onClick={() => setPage(value => value + 1)}><ChevronRight size={14} /></button>
       </div>
 
-      {/* Submit Form */}
-      <div className="glass-card" style={{ marginTop: '1rem' }}>
-        <div style={{ fontSize: '0.7rem', letterSpacing: '0.16em', color: '#00FFD1', marginBottom: '1rem' }}>{t('leaveVoice', lang)}</div>
-
-        <div style={{ marginBottom: '0.85rem' }}>
-          <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('yourName', lang)} <span style={{ opacity: 0.4 }}>({t('optional', lang)})</span></label>
-          <input type="text" className="form-input" value={hName} onChange={e => setHName(e.target.value)} />
-        </div>
-
-        <div style={{ marginBottom: '0.85rem' }}>
-          <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('country', lang)}</label>
-          <input type="text" className="form-input" value={hCountry} onChange={e => setHCountry(e.target.value)} />
-        </div>
-
-        <div style={{ marginBottom: '0.85rem' }}>
-          <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('toWhom', lang)}</label>
-          <select className="form-select" value={hTo} onChange={e => setHTo(e.target.value)}>
-            <option>{t('toFuture', lang)}</option>
-            <option>{t('toDescendants', lang)}</option>
-            <option>{t('toHumanity', lang)}</option>
-            <option>{t('toWhoever', lang)}</option>
-          </select>
-        </div>
-
-        <div style={{ marginBottom: '0.85rem' }}>
-          <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('yourMsg', lang)}</label>
-          <textarea className="form-textarea" value={hMsg} onChange={e => setHMsg(e.target.value)} maxLength={300} rows={4} />
-          <div style={{ textAlign: 'right', fontSize: '0.6rem', color: 'rgba(239,246,255,0.25)', marginTop: '0.2rem' }}>{hMsg.length}/300</div>
-        </div>
-
-        <div style={{ marginBottom: '0.85rem' }}>
-          <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('emotion', lang)}</label>
-          <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
-            {H_EMOJIS.map(e => (
-              <button key={e} className={`emo-btn sel-${e === hEmo ? e : ''}`} onClick={() => setHEmo(e)}>
-                {t(`e${e.charAt(0).toUpperCase() + e.slice(1)}`, lang)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {hMod && (
-          <div style={{ background: 'rgba(255,45,85,0.07)', border: '1px solid rgba(255,45,85,0.28)', color: '#FF2D55', fontSize: '0.7rem', padding: '0.85rem', borderRadius: 8, marginTop: '0.65rem', lineHeight: 1.65, textAlign: 'center' }}>
-            {hMod}
-          </div>
-        )}
-
-        <button className="btn-primary" onClick={submitHumanity}>{t('sealVoice', lang)}</button>
-        <div style={{ fontSize: '0.57rem', color: 'rgba(239,246,255,0.15)', textAlign: 'center', marginTop: '0.5rem' }}>{t('aiReview', lang)}</div>
-      </div>
+      <section className="glass-card">
+        <div style={{ color: '#00FFD1', fontSize: '.7rem', letterSpacing: '.15em', marginBottom: '.8rem' }}>{t('leaveVoice', lang)}</div>
+        <input className="form-input" value={hCountry} onChange={event => setHCountry(event.target.value)} placeholder={t('country', lang)} style={{ marginBottom: '.55rem' }} />
+        <input className="form-input" value={hName} onChange={event => setHName(event.target.value)} placeholder={`${t('yourName', lang)} (${t('optional', lang)})`} style={{ marginBottom: '.55rem' }} />
+        <select className="form-select" value={hAudience} onChange={event => setHAudience(event.target.value)} style={{ marginBottom: '.55rem' }}>{AUDIENCES.map(item => <option key={item} value={item}>{t(AUDIENCE_KEYS[item], lang)}</option>)}</select>
+        <textarea className="form-textarea" value={hMsg} onChange={event => setHMsg(event.target.value)} maxLength={500} placeholder={t('yourMsg', lang)} />
+        <div style={{ textAlign: 'right', color: 'rgba(239,246,255,.25)', fontSize: '.52rem' }}>{hMsg.length}/500</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.3rem', margin: '.55rem 0' }}>{EMOTIONS.map(item => <button key={item} className={`emo-btn sel-${item === hEmo ? item : ''}`} onClick={() => setHEmo(item)}>{t(`e${item[0].toUpperCase()}${item.slice(1)}`, lang)}</button>)}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.4rem', marginBottom: '.55rem' }}><button className="btn-sec" onClick={() => setVisibility('public')} style={{ borderColor: visibility === 'public' ? '#00FFD1' : undefined, color: visibility === 'public' ? '#00FFD1' : undefined }}>{t('publicVoice', lang)}</button><button className="btn-sec" onClick={() => setVisibility('family')} style={{ borderColor: visibility === 'family' ? '#C084FC' : undefined, color: visibility === 'family' ? '#C084FC' : undefined }}>{t('familyVoice', lang)}</button></div>
+        {session && <label style={{ display: 'flex', alignItems: 'center', gap: '.45rem', color: 'rgba(239,246,255,.45)', fontSize: '.58rem', marginBottom: '.6rem' }}><input type="checkbox" checked={showProfile} onChange={event => setShowProfile(event.target.checked)} /> {t('showPublicProfile', lang)} ({user?.first})</label>}
+        {formError && <div style={{ color: '#FF6B6B', fontSize: '.58rem', marginBottom: '.5rem' }}>{formError}</div>}
+        <button className="btn-primary" onClick={() => void submit()} disabled={sampleMode}>{sampleMode ? t('databaseSetupRequired', lang) : t('sealVoice', lang)}</button>
+        <div style={{ color: 'rgba(239,246,255,.2)', textAlign: 'center', fontSize: '.5rem', marginTop: '.45rem' }}>{t('aiReview', lang)} <ExternalLink size={9} style={{ display: 'inline' }} /></div>
+      </section>
     </div>
   );
 }
