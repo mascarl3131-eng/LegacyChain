@@ -1,4 +1,5 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
+import { Download, Redo2, RotateCcw, Save, Trash2, Undo2 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 
@@ -13,6 +14,21 @@ export default function MuralTab() {
   const [color, setColor] = useState('#00FFD1');
   const isDrawing = useRef(false);
   const lastPos = useRef({ x: 0, y: 0 });
+  const historyRef = useRef<string[]>([]);
+  const historyIndexRef = useRef(-1);
+  const [historyState, setHistoryState] = useState({ index: -1, count: 0 });
+
+  const saveSnapshot = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const snapshot = canvas.toDataURL();
+    historyRef.current = historyRef.current.slice(0, historyIndexRef.current + 1);
+    historyRef.current.push(snapshot);
+    if (historyRef.current.length > 20) historyRef.current.shift();
+    historyIndexRef.current = historyRef.current.length - 1;
+    localStorage.setItem(`legacychain-mural-${familyName}`, snapshot);
+    setHistoryState({ index: historyIndexRef.current, count: historyRef.current.length });
+  }, [familyName]);
 
   useEffect(() => {
     if (!premium) return;
@@ -36,6 +52,14 @@ export default function MuralTab() {
           ctx.fill();
         }
         canvas.dataset.init = '1';
+        const stored = localStorage.getItem(`legacychain-mural-${familyName}`);
+        if (stored) {
+          const image = new Image();
+          image.onload = () => { ctx.drawImage(image, 0, 0, canvas.width, canvas.height); saveSnapshot(); };
+          image.src = stored;
+        } else {
+          saveSnapshot();
+        }
       }
     };
     resize();
@@ -73,7 +97,10 @@ export default function MuralTab() {
       }
       lastPos.current = p;
     };
-    const end = () => { isDrawing.current = false; };
+    const end = () => {
+      if (isDrawing.current) saveSnapshot();
+      isDrawing.current = false;
+    };
 
     canvas.addEventListener('mousedown', start);
     canvas.addEventListener('mousemove', move);
@@ -92,7 +119,23 @@ export default function MuralTab() {
       canvas.removeEventListener('touchmove', move);
       canvas.removeEventListener('touchend', end);
     };
-  }, [premium, tool, color]);
+  }, [premium, tool, color, familyName, saveSnapshot]);
+
+  const restoreSnapshot = (index: number) => {
+    const canvas = canvasRef.current;
+    const snapshot = historyRef.current[index];
+    if (!canvas || !snapshot) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const image = new Image();
+    image.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+      historyIndexRef.current = index;
+      setHistoryState({ index, count: historyRef.current.length });
+    };
+    image.src = snapshot;
+  };
 
   const addText = () => {
     if (!premium) return;
@@ -106,6 +149,7 @@ export default function MuralTab() {
     ctx.fillStyle = color;
     ctx.textAlign = 'center';
     ctx.fillText(txt, canvas.width / 2, canvas.height / 2);
+    saveSnapshot();
   };
 
   const addYear = () => {
@@ -116,6 +160,7 @@ export default function MuralTab() {
     ctx.font = "bold 13px 'DM Mono',monospace";
     ctx.fillStyle = 'rgba(0,255,209,0.35)';
     ctx.fillText(new Date().getFullYear().toString(), Math.random() * (canvas.width - 60) + 30, Math.random() * (canvas.height - 30) + 20);
+    saveSnapshot();
   };
 
   const exportPng = () => {
@@ -134,6 +179,7 @@ export default function MuralTab() {
     if (!ctx) return;
     ctx.fillStyle = '#04030A';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    saveSnapshot();
   };
 
   if (!premium) {
@@ -155,6 +201,8 @@ export default function MuralTab() {
       <div style={{ fontSize: '0.68rem', color: 'rgba(239,246,255,0.35)', letterSpacing: '0.1em', marginBottom: '1.5rem' }}>{t('muralSub', lang)}</div>
 
       <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.75rem', alignItems: 'center' }}>
+        <button className="btn-sec" disabled={historyState.index <= 0} onClick={() => restoreSnapshot(historyIndexRef.current - 1)} aria-label="Undo"><Undo2 size={14} /></button>
+        <button className="btn-sec" disabled={historyState.index >= historyState.count - 1} onClick={() => restoreSnapshot(historyIndexRef.current + 1)} aria-label="Redo"><Redo2 size={14} /></button>
         {(['brush', 'glow', 'eraser'] as Tool[]).map(tl => (
           <button key={tl} className="btn-sec" style={{ fontSize: '0.62rem', borderColor: tool === tl ? '#00FFD1' : undefined, color: tool === tl ? '#00FFD1' : undefined }} onClick={() => setTool(tl)}>
             {tl === 'brush' ? `✏️ ${t('brush', lang)}` : tl === 'glow' ? `✨ ${t('glow', lang)}` : `⬜ ${t('erase', lang)}`}
@@ -174,11 +222,12 @@ export default function MuralTab() {
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.7rem' }}>
-        <button className="btn-sec" style={{ flex: 1, fontSize: '0.62rem' }} onClick={exportPng}>⬇ {t('exportPng', lang)}</button>
-        <button className="btn-sec" style={{ flex: 1, fontSize: '0.62rem' }} onClick={clearCanvas}>🗑 {t('clear', lang)}</button>
+        <button className="btn-sec" style={{ flex: 1, fontSize: '0.62rem', display: 'inline-flex', justifyContent: 'center', alignItems: 'center', gap: '.3rem' }} onClick={saveSnapshot}><Save size={13} /> {t('saveMural', lang)}</button>
+        <button className="btn-sec" style={{ flex: 1, fontSize: '0.62rem', display: 'inline-flex', justifyContent: 'center', alignItems: 'center', gap: '.3rem' }} onClick={exportPng}><Download size={13} /> {t('exportPng', lang)}</button>
+        <button className="btn-sec" style={{ fontSize: '0.62rem' }} onClick={clearCanvas} aria-label={t('clear', lang)}><Trash2 size={13} /></button>
       </div>
       <div style={{ fontSize: '0.58rem', color: 'rgba(239,246,255,0.18)', textAlign: 'center', marginTop: '0.5rem' }}>
-        {t('signed', lang)} : {user?.first} · {new Date().getFullYear()}
+        <RotateCcw size={10} style={{ display: 'inline', marginRight: 4 }} /> {t('muralAutosave', lang)} · {t('signed', lang)} : {user?.first} · {new Date().getFullYear()}
       </div>
     </div>
   );

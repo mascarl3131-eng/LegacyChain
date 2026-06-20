@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { CheckCircle2, Clock3, Save } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { getBookChs } from '@/lib/data';
@@ -6,7 +7,19 @@ import { getBookChs } from '@/lib/data';
 export default function BookTab() {
   const { lang, premium, user, bookData, setBookData, chapter, setChapter, setUpgradeOpen } = useStore();
   const [showPreview, setShowPreview] = useState(false);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
   const chs = getBookChs(lang);
+  const totalFields = chs.reduce((sum, item) => sum + item.fields.length, 0);
+  const completedFields = useMemo(() => Object.values(bookData).filter(value => value.trim().length >= 10).length, [bookData]);
+  const completion = Math.round((completedFields / totalFields) * 100);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      localStorage.setItem('legacychain-book', JSON.stringify(bookData));
+      setSavedAt(new Date());
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [bookData]);
 
   const updateField = (ci: number, fi: number, val: string) => {
     setBookData({ ...bookData, [`${ci}-${fi}`]: val });
@@ -45,6 +58,25 @@ export default function BookTab() {
       <div className="font-display" style={{ fontSize: '0.95rem', color: '#00FFD1', letterSpacing: '0.15em', marginBottom: '0.3rem' }}>{t('bookTitle', lang)}</div>
       <div style={{ fontSize: '0.68rem', color: 'rgba(239,246,255,0.35)', letterSpacing: '0.1em', marginBottom: '1.5rem' }}>{t('bookSub', lang)}</div>
 
+      <div className="glass-card" style={{ marginBottom: '1rem', display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.9rem', alignItems: 'center' }}>
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.5rem', fontSize: '0.6rem' }}>
+            <span style={{ color: '#00FFD1', letterSpacing: '0.1em' }}>{t('bookProgress', lang)}</span>
+            <strong style={{ color: '#EFF6FF' }}>{completion}%</strong>
+          </div>
+          <div style={{ height: 6, borderRadius: 4, background: 'rgba(239,246,255,0.08)', overflow: 'hidden' }}>
+            <div style={{ width: `${completion}%`, height: '100%', background: 'linear-gradient(90deg,#00FFD1,#C084FC)', transition: 'width .3s ease' }} />
+          </div>
+          <div style={{ marginTop: '0.48rem', color: 'rgba(239,246,255,0.34)', fontSize: '0.54rem' }}>
+            {completedFields}/{totalFields} {t('promptsCompleted', lang)}
+          </div>
+        </div>
+        <div style={{ textAlign: 'center', color: savedAt ? '#00FFD1' : 'rgba(239,246,255,.3)', minWidth: 64 }}>
+          {savedAt ? <CheckCircle2 size={19} style={{ margin: '0 auto 0.25rem' }} /> : <Save size={19} style={{ margin: '0 auto 0.25rem' }} />}
+          <div style={{ fontSize: '0.48rem', lineHeight: 1.4 }}>{savedAt ? t('savedLocally', lang) : t('saving', lang)}</div>
+        </div>
+      </div>
+
       {/* Stepper */}
       <div style={{ display: 'flex', gap: '0.35rem', marginBottom: '1.3rem', flexWrap: 'wrap' }}>
         {chs.map((_, i) => (
@@ -75,7 +107,12 @@ export default function BookTab() {
           <div className="font-display" style={{ fontSize: '0.9rem', color: '#00FFD1', marginBottom: '0.35rem', letterSpacing: '0.1em' }}>
             {t('chapterAbbr', lang)}{ci + 1} — {ch.t}
           </div>
-          <div style={{ fontSize: '0.7rem', color: 'rgba(239,246,255,0.35)', marginBottom: '1.3rem', lineHeight: 1.7 }}>{ch.s}</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'flex-start', marginBottom: '1.3rem' }}>
+            <div style={{ fontSize: '0.7rem', color: 'rgba(239,246,255,0.35)', lineHeight: 1.7 }}>{ch.s}</div>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', whiteSpace: 'nowrap', color: 'rgba(255,179,71,.6)', fontSize: '0.52rem' }}>
+              <Clock3 size={12} /> {Math.max(3, ch.fields.length * 2)} min
+            </span>
+          </div>
 
           {ch.fields.map((f, fi) => (
             <div key={fi} style={{ marginBottom: '0.85rem' }}>

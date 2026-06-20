@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Heart, Search } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { FLAGS, BANNED_WORDS } from '@/lib/data';
@@ -15,6 +16,14 @@ export default function HumanityTab() {
   const [hTo, setHTo] = useState('To future generations');
   const [hMsg, setHMsg] = useState('');
   const [hMod, setHMod] = useState('');
+  const [query, setQuery] = useState('');
+  const [emotionFilter, setEmotionFilter] = useState('all');
+  const [liked, setLiked] = useState<Set<string>>(new Set());
+  const visibleMessages = hMsgs.filter(message => {
+    const matchesEmotion = emotionFilter === 'all' || message.e === emotionFilter;
+    const haystack = `${message.a} ${message.c} ${message.text}`.toLocaleLowerCase();
+    return matchesEmotion && haystack.includes(query.toLocaleLowerCase());
+  });
 
   const isBanned = (txt: string) => BANNED_WORDS.some(w => txt.toLowerCase().includes(w));
 
@@ -73,9 +82,20 @@ export default function HumanityTab() {
         </div>
       </div>
 
+      <div style={{ display: 'flex', gap: '0.45rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative', flex: '1 1 180px' }}>
+          <Search size={14} style={{ position: 'absolute', top: 11, left: 10, color: 'rgba(239,246,255,.3)' }} />
+          <input className="form-input" value={query} onChange={event => setQuery(event.target.value)} placeholder={t('searchVoices', lang)} style={{ paddingLeft: 32 }} />
+        </div>
+        <select className="form-select" value={emotionFilter} onChange={event => setEmotionFilter(event.target.value)} style={{ width: 'auto', minWidth: 130 }}>
+          <option value="all">{t('allEmotions', lang)}</option>
+          {H_EMOJIS.map(emotion => <option key={emotion} value={emotion}>{t(`e${emotion.charAt(0).toUpperCase()}${emotion.slice(1)}`, lang)}</option>)}
+        </select>
+      </div>
+
       {/* Masonry */}
       <div style={{ columns: 1, gap: '0.75rem' }}>
-        {hMsgs.map((m) => (
+        {visibleMessages.map((m) => (
           <div
             key={m.id}
             className="glass-card"
@@ -87,8 +107,16 @@ export default function HumanityTab() {
             <div style={{ fontSize: '0.78rem', lineHeight: 1.7, color: 'rgba(239,246,255,0.78)' }}>{m.text}</div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.6rem' }}>
               <span style={{ fontSize: '0.55rem', letterSpacing: '0.1em', color: 'rgba(239,246,255,0.25)', border: '1px solid rgba(0,255,209,0.13)', padding: '0.1rem 0.4rem', borderRadius: 2, textTransform: 'uppercase' }}>{t(`e${m.e.charAt(0).toUpperCase() + m.e.slice(1)}`, lang)}</span>
-              <button style={{ background: 'transparent', border: 'none', color: 'rgba(239,246,255,0.25)', fontFamily: "'DM Mono',monospace", fontSize: '0.62rem', cursor: 'pointer' }}>
-                ♥ {m.likes}
+              <button
+                type="button"
+                onClick={() => setLiked(current => {
+                  const next = new Set(current);
+                  if (next.has(m.id)) next.delete(m.id); else next.add(m.id);
+                  return next;
+                })}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.28rem', background: 'transparent', border: 'none', color: liked.has(m.id) ? '#FF6B9D' : 'rgba(239,246,255,0.25)', fontFamily: "'DM Mono',monospace", fontSize: '0.62rem', cursor: 'pointer' }}
+              >
+                <Heart size={12} fill={liked.has(m.id) ? 'currentColor' : 'none'} /> {m.likes + (liked.has(m.id) ? 1 : 0)}
               </button>
             </div>
           </div>
