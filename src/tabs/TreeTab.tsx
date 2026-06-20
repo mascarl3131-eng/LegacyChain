@@ -11,6 +11,8 @@ const GEN_Y = [70, 190, 310];
 export default function TreeTab() {
   const { lang, msgs, treeNodes, setTreeNodes } = useStore();
   const viewportRef = useRef<HTMLDivElement>(null);
+  const canvasScrollerRef = useRef<HTMLDivElement>(null);
+  const panRef = useRef({ active: false, pointerId: -1, x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
   const [links, setLinks] = useState<[number, number][]>(TREE_LINKS);
   const [showAdd, setShowAdd] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -18,6 +20,7 @@ export default function TreeTab() {
   const [generation, setGeneration] = useState<'all' | number>('all');
   const [query, setQuery] = useState('');
   const [zoom, setZoom] = useState(1);
+  const [isPanning, setIsPanning] = useState(false);
   const [fn, setFn] = useState('');
   const [ln, setLn] = useState('');
   const [by, setBy] = useState('');
@@ -69,6 +72,46 @@ export default function TreeTab() {
     setZoom(1);
     setGeneration('all');
     setQuery('');
+    if (canvasScrollerRef.current) {
+      canvasScrollerRef.current.scrollTo({ left: 0, top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const startPan = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== 'mouse' || event.button !== 0) return;
+    if ((event.target as HTMLElement).closest('button, input, select, textarea, a')) return;
+    const scroller = canvasScrollerRef.current;
+    if (!scroller) return;
+    panRef.current = {
+      active: true,
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      scrollLeft: scroller.scrollLeft,
+      scrollTop: scroller.scrollTop,
+    };
+    scroller.setPointerCapture(event.pointerId);
+    setIsPanning(true);
+    event.preventDefault();
+  };
+
+  const movePan = (event: React.PointerEvent<HTMLDivElement>) => {
+    const pan = panRef.current;
+    const scroller = canvasScrollerRef.current;
+    if (!pan.active || pan.pointerId !== event.pointerId || !scroller) return;
+    scroller.scrollLeft = pan.scrollLeft - (event.clientX - pan.x);
+    scroller.scrollTop = pan.scrollTop - (event.clientY - pan.y);
+    event.preventDefault();
+  };
+
+  const stopPan = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (panRef.current.pointerId !== event.pointerId) return;
+    panRef.current.active = false;
+    panRef.current.pointerId = -1;
+    setIsPanning(false);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
   };
 
   return (
@@ -114,7 +157,21 @@ export default function TreeTab() {
             <button className="btn-sec" onClick={() => void viewportRef.current?.requestFullscreen()} style={{ width: 32, height: 32, padding: 0 }} aria-label="Fullscreen"><Maximize2 size={14} /></button>
           </div>
 
-          <div style={{ overflow: 'auto', minHeight: 390 }}>
+          <div
+            ref={canvasScrollerRef}
+            data-testid="tree-pan-canvas"
+            onPointerDown={startPan}
+            onPointerMove={movePan}
+            onPointerUp={stopPan}
+            onPointerCancel={stopPan}
+            style={{
+              overflow: 'auto',
+              minHeight: 390,
+              cursor: isPanning ? 'grabbing' : 'grab',
+              userSelect: isPanning ? 'none' : undefined,
+              touchAction: 'pan-x pan-y',
+            }}
+          >
             <div style={{ width: 700, height: 390, transform: `scale(${zoom})`, transformOrigin: 'center center', transition: 'transform .2s ease' }}>
               <svg viewBox="0 0 700 390" width="700" height="390" style={{ display: 'block' }}>
                 {links.map(([from, to], index) => {
