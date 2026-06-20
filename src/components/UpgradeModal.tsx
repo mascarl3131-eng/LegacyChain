@@ -14,7 +14,6 @@ export default function UpgradeModal() {
     premiumCheckoutError,
     session,
     loginWithGoogle,
-    loginWithFacebook,
   } = useStore();
 
   if (!upgradeOpen) return null;
@@ -88,12 +87,9 @@ export default function UpgradeModal() {
             <div style={{ padding: '0.7rem 0.8rem', borderRadius: 8, background: 'rgba(255,179,71,0.06)', border: '1px solid rgba(255,179,71,0.22)', color: 'rgba(239,246,255,0.58)', fontSize: '0.62rem', lineHeight: 1.55, marginBottom: '0.55rem' }}>
               {t('premiumNeedsAccount', lang)}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-              <button type="button" onClick={() => void loginWithGoogle()} style={{ padding: '0.75rem 0.5rem', borderRadius: 9, border: '1px solid #fff', background: '#fff', color: '#252525', fontFamily: "'DM Mono',monospace", fontSize: '0.64rem', cursor: 'pointer' }}>
+            <div>
+              <button type="button" onClick={() => void loginWithGoogle()} style={{ width: '100%', padding: '0.75rem 0.5rem', borderRadius: 9, border: '1px solid #fff', background: '#fff', color: '#252525', fontFamily: "'DM Mono',monospace", fontSize: '0.64rem', cursor: 'pointer' }}>
                 G&nbsp; Google
-              </button>
-              <button type="button" onClick={() => void loginWithFacebook()} style={{ padding: '0.75rem 0.5rem', borderRadius: 9, border: '1px solid #2d88ff', background: '#1877F2', color: '#fff', fontFamily: "'DM Mono',monospace", fontSize: '0.64rem', cursor: 'pointer' }}>
-                f&nbsp; Facebook
               </button>
             </div>
           </div>

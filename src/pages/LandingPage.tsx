@@ -14,7 +14,7 @@ const FEATURES = [
 ];
 
 export default function LandingPage() {
-  const { page, login, loginWithGoogle, loginWithFacebook, lang, loading } = useStore();
+  const { page, login, loginWithGoogle, lang, loading } = useStore();
   const [twI, setTwI] = useState(0);
   const [twC, setTwC] = useState(0);
   const [twDel, setTwDel] = useState(false);
@@ -199,33 +199,6 @@ export default function LandingPage() {
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
             <span>{t('googleLogin', lang)}</span>
-          </button>
-
-          {/* Facebook Login Button */}
-          <button
-            onClick={loginWithFacebook}
-            disabled={loading}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.65rem',
-              padding: '0.82rem 1rem',
-              background: '#1877F2',
-              border: '1px solid #2d88ff',
-              borderRadius: 10,
-              color: '#fff',
-              fontFamily: "'DM Mono',monospace",
-              fontSize: '0.75rem',
-              cursor: loading ? 'wait' : 'pointer',
-              opacity: loading ? 0.7 : 1,
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style={{ flexShrink: 0 }}>
-              <path fill="#fff" d="M13.7 22v-9h3l.45-3.5H13.7V7.26c0-1.01.28-1.7 1.73-1.7h1.85V2.43c-.32-.04-1.42-.13-2.7-.13-2.67 0-4.5 1.63-4.5 4.63V9.5H7.05V13h3.03v9h3.62Z"/>
-            </svg>
-            <span>{t('fbLogin', lang)}</span>
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'rgba(239,246,255,0.24)', fontSize: '0.52rem' }}>

@@ -34,7 +34,7 @@ export default function SideMenu() {
   const {
     sideMenuOpen, setSideMenuOpen, tab, setTab, lang, setLang, premium,
     setUpgradeOpen, setInviteOpen, user, session, loginWithGoogle,
-    loginWithFacebook, logout,
+    logout,
   } = useStore();
 
   const handleTab = (id: TabName) => {
@@ -121,9 +121,6 @@ export default function SideMenu() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.42rem' }}>
                 <button type="button" onClick={() => void loginWithGoogle()} style={{ width: '100%', padding: '0.58rem', borderRadius: 7, border: '1px solid rgba(255,255,255,0.9)', background: '#fff', color: '#252525', fontFamily: "'DM Mono',monospace", fontSize: '0.62rem', cursor: 'pointer' }}>
                   G&nbsp;&nbsp;{t('googleLogin', lang)}
-                </button>
-                <button type="button" onClick={() => void loginWithFacebook()} style={{ width: '100%', padding: '0.58rem', borderRadius: 7, border: '1px solid #2d88ff', background: '#1877F2', color: '#fff', fontFamily: "'DM Mono',monospace", fontSize: '0.62rem', cursor: 'pointer' }}>
-                  f&nbsp;&nbsp;{t('fbLogin', lang)}
                 </button>
               </div>
             </>
