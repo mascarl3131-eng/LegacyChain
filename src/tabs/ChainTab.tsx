@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { Mic, RotateCcw, Trash2 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { BANNED_WORDS } from '@/lib/data';
@@ -22,6 +23,7 @@ export default function ChainTab() {
   const [modWarn, setModWarn] = useState('');
   const [photoData, setPhotoData] = useState<string | null>(null);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioPreviewUrl, setAudioPreviewUrl] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [recSeconds, setRecSeconds] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -30,6 +32,16 @@ export default function ChainTab() {
   const waveCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const charMax = premium ? 500 : 300;
+
+  useEffect(() => () => {
+    if (recIntervalRef.current) clearInterval(recIntervalRef.current);
+    if (audioPreviewUrl) URL.revokeObjectURL(audioPreviewUrl);
+    const recorder = mediaRecorderRef.current;
+    if (recorder?.state === 'recording') {
+      recorder.stream.getTracks().forEach(track => track.stop());
+      recorder.stop();
+    }
+  }, [audioPreviewUrl]);
 
   const isBanned = (txt: string) => BANNED_WORDS.some((w: string) => txt.toLowerCase().includes(w));
 
@@ -73,6 +85,8 @@ export default function ChainTab() {
       setUnlockYr('');
       setPhotoData(null);
       setAudioBlob(null);
+      if (audioPreviewUrl) URL.revokeObjectURL(audioPreviewUrl);
+      setAudioPreviewUrl('');
       setModWarn('');
       showNotif(t('messageSealed', lang), '#00FFD1');
     }, 1500);
@@ -82,6 +96,7 @@ export default function ChainTab() {
     if (!premium) { setUpgradeOpen(true); return; }
     if (!isRecording) {
       try {
+        setAudioBlob(null);
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         const recorder = new MediaRecorder(stream);
         const chunks: Blob[] = [];
@@ -89,6 +104,7 @@ export default function ChainTab() {
         recorder.onstop = () => {
           const blob = new Blob(chunks, { type: 'audio/webm' });
           setAudioBlob(blob);
+          setAudioPreviewUrl(URL.createObjectURL(blob));
           stream.getTracks().forEach(t => t.stop());
         };
         recorder.start();
@@ -107,6 +123,13 @@ export default function ChainTab() {
       setIsRecording(false);
       if (recIntervalRef.current) clearInterval(recIntervalRef.current);
     }
+  };
+
+  const deleteRecording = () => {
+    if (audioPreviewUrl) URL.revokeObjectURL(audioPreviewUrl);
+    setAudioPreviewUrl('');
+    setAudioBlob(null);
+    setRecSeconds(0);
   };
 
   const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -269,9 +292,24 @@ export default function ChainTab() {
                 {Math.floor(recSeconds / 60)}:{(recSeconds % 60).toString().padStart(2, '0')}
               </span>
             </div>
-            <div style={{ fontSize: '0.6rem', color: 'rgba(239,246,255,0.28)', textAlign: 'center' }}>
-              {audioBlob ? t('audioRecorded', lang) : isRecording ? t('recording', lang) : t('tapRecord', lang)}
-            </div>
+            {audioBlob && audioPreviewUrl ? (
+              <div style={{ display: 'grid', gap: '.55rem' }}>
+                <audio controls preload="metadata" src={audioPreviewUrl} style={{ width: '100%', height: 36 }} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.45rem' }}>
+                  <button type="button" className="btn-sec" onClick={() => void toggleRecording()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.35rem' }}>
+                    <RotateCcw size={13} /> {t('recordAgain', lang)}
+                  </button>
+                  <button type="button" className="btn-sec" onClick={deleteRecording} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.35rem', color: '#FF6B6B', borderColor: 'rgba(255,107,107,.25)' }}>
+                    <Trash2 size={13} /> {t('deleteRecording', lang)}
+                  </button>
+                </div>
+                <div style={{ fontSize: '0.58rem', color: '#00FFD1', textAlign: 'center' }}>{t('audioReadyReview', lang)}</div>
+              </div>
+            ) : (
+              <div style={{ fontSize: '0.6rem', color: 'rgba(239,246,255,0.28)', textAlign: 'center' }}>
+                {isRecording ? t('recording', lang) : <><Mic size={12} style={{ display: 'inline', marginRight: 5 }} />{t('tapRecord', lang)}</>}
+              </div>
+            )}
           </div>
         </div>
 
