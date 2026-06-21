@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { BANNED_WORDS } from '@/lib/data';
 import UnlockYearPicker from '@/components/UnlockYearPicker';
 import MessageMedia from '@/components/MessageMedia';
+import AudioPlayer from '@/components/AudioPlayer';
 
 const EMOJIS = ['hope', 'love', 'wisdom', 'memory', 'warning'];
 const EMO_COLORS: Record<string, string> = {
@@ -391,7 +392,7 @@ export default function ChainTab() {
             </div>
             {audioBlob && audioPreviewUrl ? (
               <div style={{ display: 'grid', gap: '.55rem' }}>
-                <audio controls preload="metadata" src={audioPreviewUrl} style={{ width: '100%', height: 36 }} />
+                <AudioPlayer src={audioPreviewUrl} />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.45rem' }}>
                   <button type="button" className="btn-sec" onClick={() => void toggleRecording()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.35rem' }}>
                     <RotateCcw size={13} /> {t('recordAgain', lang)}

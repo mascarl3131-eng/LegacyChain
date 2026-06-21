@@ -3,6 +3,7 @@ import { Image, Mic2, X } from 'lucide-react';
 import type { Message } from '@/lib/data';
 import type { LangCode } from '@/lib/i18n';
 import { t } from '@/lib/i18n';
+import AudioPlayer from '@/components/AudioPlayer';
 
 export default function MessageMedia({
   message,
@@ -37,7 +38,7 @@ export default function MessageMedia({
         {message.audioUrl && (
           <div style={{ padding: compact ? '.55rem' : '.7rem', borderRadius: 10, border: '1px solid rgba(192,132,252,.22)', background: 'rgba(192,132,252,.045)', maxWidth: 360 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem', color: '#C084FC', fontSize: '.55rem', marginBottom: '.4rem' }}><Mic2 size={13} /> {t('familyVoiceRecording', lang)}</div>
-            <audio controls preload="metadata" src={message.audioUrl} style={{ width: '100%', height: 34 }} />
+            <AudioPlayer src={message.audioUrl} />
             {!compact && <p style={{ margin: '.45rem 0 0', color: 'rgba(239,246,255,.38)', fontSize: '.51rem', lineHeight: 1.55 }}>{t('voiceLegacyPhrase', lang)}</p>}
           </div>
         )}
