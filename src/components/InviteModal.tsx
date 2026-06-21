@@ -9,7 +9,7 @@ type FamilyMembership = {
 };
 
 export default function InviteModal() {
-  const { inviteOpen, setInviteOpen, familyName, lang, session } = useStore();
+  const { inviteOpen, setInviteOpen, familyName, lang, session, activeFamilyId, setActiveFamilyId } = useStore();
   const [families, setFamilies] = useState<FamilyMembership[]>([]);
   const [selectedFamilyId, setSelectedFamilyId] = useState('');
   const [newFamilyName, setNewFamilyName] = useState(familyName);
@@ -30,12 +30,13 @@ export default function InviteModal() {
         if (!response.ok) throw new Error(data.error || t('familyActionError', lang));
         if (!active) return;
         setFamilies(data.families || []);
-        setSelectedFamilyId(data.families?.[0]?.family?.id || '');
+        const preferred = activeFamilyId || data.families?.[0]?.family?.id || '';
+        setSelectedFamilyId(preferred);
       })
       .catch(reason => setError(reason.message))
       .finally(() => setLoading(false));
     return () => { active = false; };
-  }, [inviteOpen, lang, session]);
+  }, [activeFamilyId, inviteOpen, lang, session]);
 
   if (!inviteOpen) return null;
 
@@ -57,6 +58,7 @@ export default function InviteModal() {
       const data = await request({ action: 'create', name: newFamilyName.trim() });
       setFamilies(items => [...items, { role: data.role, family: data.family }]);
       setSelectedFamilyId(data.family.id);
+      setActiveFamilyId(data.family.id);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : t('familyActionError', lang));
     } finally { setLoading(false); }
@@ -94,7 +96,7 @@ export default function InviteModal() {
             {families.length > 0 && (
               <>
                 <label style={{ display: 'block', color: 'rgba(239,246,255,.4)', fontSize: '.55rem', marginBottom: '.6rem' }}>{t('selectFamily', lang)}
-                  <select className="form-select" value={selectedFamilyId} onChange={event => { setSelectedFamilyId(event.target.value); setLink(''); }} style={{ marginTop: '.3rem' }}>
+                  <select className="form-select" value={selectedFamilyId} onChange={event => { setSelectedFamilyId(event.target.value); setActiveFamilyId(event.target.value); setLink(''); }} style={{ marginTop: '.3rem' }}>
                     {families.map(item => <option key={item.family.id} value={item.family.id}>{item.family.name} · {item.role}</option>)}
                   </select>
                 </label>

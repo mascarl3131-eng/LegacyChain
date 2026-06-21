@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Mic, RotateCcw, Trash2 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
+import { supabase } from '@/lib/supabase';
 import { BANNED_WORDS } from '@/lib/data';
 import UnlockYearPicker from '@/components/UnlockYearPicker';
 import MessageMedia from '@/components/MessageMedia';
@@ -12,7 +13,7 @@ const EMO_COLORS: Record<string, string> = {
 };
 
 export default function ChainTab() {
-  const { lang, user, premium, familyName, emo, setEmo, msgs, addMsg, setImmersiveMsg, setUpgradeOpen, setShowSubmitAnim, showNotif } = useStore();
+  const { lang, user, session, premium, familyName, activeFamilyId, emo, setEmo, msgs, addMsg, setMsgs, setImmersiveMsg, setUpgradeOpen, setShowSubmitAnim, showNotif } = useStore();
   const [msgType, setMsgType] = useState('standard');
   const [msgText, setMsgText] = useState('');
   const [babyName, setBabyName] = useState('');
@@ -22,10 +23,12 @@ export default function ChainTab() {
   const [unlockYr, setUnlockYr] = useState('');
   const [modWarn, setModWarn] = useState('');
   const [photoData, setPhotoData] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioPreviewUrl, setAudioPreviewUrl] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [recSeconds, setRecSeconds] = useState(0);
+  const [saving, setSaving] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -45,9 +48,9 @@ export default function ChainTab() {
 
   const isBanned = (txt: string) => BANNED_WORDS.some((w: string) => txt.toLowerCase().includes(w));
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const txt = msgText.trim();
-    if (!txt) return;
+    if (!txt || saving) return;
 
     if (isBanned(txt)) {
       setModWarn(t('modBanned', lang));
@@ -74,9 +77,66 @@ export default function ChainTab() {
       photo: photoData,
     };
 
+    if (session && activeFamilyId) {
+      setSaving(true);
+      const uploadedPaths: string[] = [];
+      try {
+        const basePath = `${activeFamilyId}/${session.user.id}`;
+        let photoPath: string | null = null;
+        let audioPath: string | null = null;
+
+        if (photoFile) {
+          const extension = photoFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+          photoPath = `${basePath}/${crypto.randomUUID()}.${extension}`;
+          const { error } = await supabase.storage.from('family-media').upload(photoPath, photoFile, { contentType: photoFile.type, upsert: false });
+          if (error) throw error;
+          uploadedPaths.push(photoPath);
+        }
+        if (audioBlob) {
+          const extension = audioBlob.type.includes('mp4') ? 'm4a' : audioBlob.type.includes('ogg') ? 'ogg' : 'webm';
+          audioPath = `${basePath}/${crypto.randomUUID()}.${extension}`;
+          const { error } = await supabase.storage.from('family-media').upload(audioPath, audioBlob, { contentType: audioBlob.type || 'audio/webm', upsert: false });
+          if (error) throw error;
+          uploadedPaths.push(audioPath);
+        }
+
+        const response = await fetch('/api/family-messages', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            familyId: activeFamilyId,
+            authorName: newMsg.a,
+            message: newMsg.text,
+            emotion: newMsg.e,
+            messageType: newMsg.type,
+            unlockYear: newMsg.lock,
+            babyName: newMsg.baby,
+            adulthoodYear: newMsg.dy,
+            photoPath,
+            audioPath,
+          }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || t('familyCloudError', lang));
+
+        const refresh = await fetch(`/api/family-messages?familyId=${encodeURIComponent(activeFamilyId)}`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        const refreshed = await refresh.json().catch(() => ({}));
+        if (!refresh.ok) throw new Error(refreshed.error || t('familyCloudError', lang));
+        setMsgs(refreshed.messages || []);
+      } catch (error) {
+        if (uploadedPaths.length) await supabase.storage.from('family-media').remove(uploadedPaths);
+        console.error('Family message save:', error);
+        showNotif(t('familyCloudError', lang), '#FF6B6B');
+        setSaving(false);
+        return;
+      }
+    }
+
     setShowSubmitAnim(true);
     setTimeout(() => {
-      addMsg(newMsg);
+      if (!session || !activeFamilyId) addMsg(newMsg);
       setMsgText('');
       setBabyName('');
       setBabyDob('');
@@ -84,12 +144,14 @@ export default function ChainTab() {
       setCapDate('');
       setUnlockYr('');
       setPhotoData(null);
+      setPhotoFile(null);
       setAudioBlob(null);
       if (audioPreviewUrl) URL.revokeObjectURL(audioPreviewUrl);
       setAudioPreviewUrl('');
       setModWarn('');
+      setSaving(false);
       showNotif(t('messageSealed', lang), '#00FFD1');
-    }, 1500);
+    }, 700);
   };
 
   const toggleRecording = async () => {
@@ -135,6 +197,11 @@ export default function ChainTab() {
   const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 15 * 1024 * 1024) {
+      showNotif(t('mediaTooLarge', lang), '#FF6B6B');
+      return;
+    }
+    setPhotoFile(file);
     const reader = new FileReader();
     reader.onload = ev => setPhotoData(ev.target?.result as string);
     reader.readAsDataURL(file);
@@ -339,7 +406,7 @@ export default function ChainTab() {
           </div>
         )}
 
-        <button className="btn-primary" onClick={handleSubmit}>{t('sealBtn', lang)}</button>
+        <button className="btn-primary" onClick={() => void handleSubmit()} disabled={saving}>{saving ? t('savingCloud', lang) : t('sealBtn', lang)}</button>
       </div>
 
       {!premium && (

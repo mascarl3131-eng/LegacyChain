@@ -28,19 +28,56 @@ const TABS: Record<string, React.FC> = {
 };
 
 export default function AppPage() {
-  const { page, tab, user, lang, setMsgs, setHMsgs, showNotif } = useStore();
+  const { page, tab, user, session, lang, familyName, activeFamilyId, setActiveFamilyId, setMsgs, setHMsgs, showNotif } = useStore();
   const [bugReportOpen, setBugReportOpen] = useState(false);
 
   useEffect(() => {
     if (page === 'app' && user) {
-      setMsgs(getDemoMsgs(lang));
+      if (!session) setMsgs(getDemoMsgs(lang));
       setHMsgs(getDemoHumanity(lang));
       const timer = setTimeout(() => {
         showNotif(`${t('welcome', lang)}, ${user.first} ✦`, '#00FFD1');
       }, 800);
       return () => clearTimeout(timer);
     }
-  }, [lang, page, setHMsgs, setMsgs, showNotif, user]);
+  }, [lang, page, session, setHMsgs, setMsgs, showNotif, user]);
+
+  useEffect(() => {
+    if (page !== 'app' || !session) return;
+    let active = true;
+    const headers = { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' };
+
+    const loadCloudFamily = async () => {
+      const familiesResponse = await fetch('/api/families', { headers });
+      const familiesData = await familiesResponse.json().catch(() => ({}));
+      if (!familiesResponse.ok) throw new Error(familiesData.error || 'Family loading failed');
+
+      let familyId = activeFamilyId || familiesData.families?.[0]?.family?.id;
+      if (!familyId) {
+        const createResponse = await fetch('/api/families', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ action: 'create', name: familyName || user?.last || 'My family' }),
+        });
+        const created = await createResponse.json().catch(() => ({}));
+        if (!createResponse.ok) throw new Error(created.error || 'Family creation failed');
+        familyId = created.family.id;
+      }
+      if (!active) return;
+      setActiveFamilyId(familyId);
+
+      const messagesResponse = await fetch(`/api/family-messages?familyId=${encodeURIComponent(familyId)}`, { headers });
+      const messagesData = await messagesResponse.json().catch(() => ({}));
+      if (!messagesResponse.ok) throw new Error(messagesData.error || 'Message loading failed');
+      if (active) setMsgs(messagesData.messages || []);
+    };
+
+    loadCloudFamily().catch(error => {
+      console.error('Family cloud loading:', error);
+      if (active) showNotif(t('familyCloudError', lang), '#FF6B6B');
+    });
+    return () => { active = false; };
+  }, [activeFamilyId, familyName, lang, page, session, setActiveFamilyId, setMsgs, showNotif, user?.last]);
 
   if (page !== 'app') return null;
 

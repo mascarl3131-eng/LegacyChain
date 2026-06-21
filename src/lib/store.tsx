@@ -46,6 +46,7 @@ interface AppState {
   premiumCheckoutLoading: boolean;
   premiumCheckoutError: string | null;
   familyName: string;
+  activeFamilyId: string | null;
   emo: string;
   hEmo: string;
   msgs: Message[];
@@ -74,6 +75,7 @@ interface AppActions {
   refreshPremium: () => Promise<void>;
   setPremiumPreview: (enabled: boolean) => Promise<boolean>;
   setFamilyName: (f: string) => void;
+  setActiveFamilyId: (id: string | null) => void;
   setEmo: (e: string) => void;
   setHEmo: (e: string) => void;
   addMsg: (m: Message) => void;
@@ -113,6 +115,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [premiumCheckoutLoading, setPremiumCheckoutLoading] = useState(false);
   const [premiumCheckoutError, setPremiumCheckoutError] = useState<string | null>(null);
   const [familyName, setFamilyName] = useState('Doe');
+  const [activeFamilyId, setActiveFamilyId] = useState<string | null>(null);
   const [emo, setEmo] = useState('hope');
   const [hEmo, setHEmo] = useState('hope');
   const [msgs, setMsgs] = useState<Message[]>([]);
@@ -388,17 +391,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setPremiumPreviewState(false);
     setUser(null);
     setSession(null);
+    setActiveFamilyId(null);
     setPage('landing');
     showNotif('👋 Déconnecté', '#00FFD1');
   }, [showNotif]);
 
   const value: AppState & AppActions = {
     page, tab, lang, user, session, premium: premium || premiumPreview, premiumPreview, premiumLoading, premiumCheckoutLoading,
-    premiumCheckoutError, familyName, emo, hEmo,
+    premiumCheckoutError, familyName, activeFamilyId, emo, hEmo,
     msgs, hMsgs, challenges, bookData, chapter, pacte, originRows,
     treeNodes, sideMenuOpen, inviteOpen, upgradeOpen, immersiveMsg,
     showSubmitAnim, notif, loading,
-    setPage, setTab, setLang, setUser, purchasePremium, refreshPremium, setPremiumPreview, setFamilyName,
+    setPage, setTab, setLang, setUser, purchasePremium, refreshPremium, setPremiumPreview, setFamilyName, setActiveFamilyId,
     setEmo, setHEmo, addMsg: (m) => setMsgs(prev => [m, ...prev]),
     setMsgs, addHMsg: (m) => setHMsgs(prev => [m, ...prev]), setHMsgs,
     setChallenges, setBookData, setChapter, setPacte, setOriginRows,
