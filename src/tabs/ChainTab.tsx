@@ -30,6 +30,7 @@ export default function ChainTab() {
   const [recSeconds, setRecSeconds] = useState(0);
   const [saving, setSaving] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordingAudioContextRef = useRef<AudioContext | null>(null);
   const recIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const waveCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -44,6 +45,7 @@ export default function ChainTab() {
       recorder.stream.getTracks().forEach(track => track.stop());
       recorder.stop();
     }
+    void recordingAudioContextRef.current?.close();
   }, [audioPreviewUrl]);
 
   const isBanned = (txt: string) => BANNED_WORDS.some((w: string) => txt.toLowerCase().includes(w));
@@ -159,8 +161,24 @@ export default function ChainTab() {
     if (!isRecording) {
       try {
         setAudioBlob(null);
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const recorder = new MediaRecorder(stream);
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            autoGainControl: true,
+            echoCancellation: true,
+            noiseSuppression: true,
+            channelCount: 1,
+          },
+        });
+        const AudioContextClass = window.AudioContext;
+        const audioContext = new AudioContextClass();
+        const source = audioContext.createMediaStreamSource(stream);
+        const gain = audioContext.createGain();
+        const destination = audioContext.createMediaStreamDestination();
+        gain.gain.value = 1.65;
+        source.connect(gain);
+        gain.connect(destination);
+        recordingAudioContextRef.current = audioContext;
+        const recorder = new MediaRecorder(destination.stream);
         const chunks: Blob[] = [];
         recorder.ondataavailable = e => chunks.push(e.data);
         recorder.onstop = () => {
@@ -168,6 +186,9 @@ export default function ChainTab() {
           setAudioBlob(blob);
           setAudioPreviewUrl(URL.createObjectURL(blob));
           stream.getTracks().forEach(t => t.stop());
+          destination.stream.getTracks().forEach(t => t.stop());
+          void audioContext.close();
+          recordingAudioContextRef.current = null;
         };
         recorder.start();
         mediaRecorderRef.current = recorder;
