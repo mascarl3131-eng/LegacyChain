@@ -161,11 +161,15 @@ export default function ChainTab() {
     if (!isRecording) {
       try {
         setAudioBlob(null);
+        const isDesktop = window.matchMedia('(pointer: fine)').matches;
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: {
-            autoGainControl: true,
-            echoCancellation: true,
-            noiseSuppression: true,
+            // Desktop browser processing can need several seconds to settle,
+            // which cuts off the start of a recording. The Web Audio gain below
+            // already handles volume consistently on computers.
+            autoGainControl: !isDesktop,
+            echoCancellation: !isDesktop,
+            noiseSuppression: !isDesktop,
             channelCount: 1,
           },
         });
