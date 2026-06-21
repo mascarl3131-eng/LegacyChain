@@ -7,9 +7,9 @@ import AppNav from '@/components/AppNav';
 import SideMenu from '@/components/SideMenu';
 import BottomTicker from '@/components/BottomTicker';
 import ChainTab from '@/tabs/ChainTab';
+import FamilyLegacyTab from '@/tabs/FamilyLegacyTab';
 import TreeTab from '@/tabs/TreeTab';
 import OriginsTab from '@/tabs/OriginsTab';
-import MuralTab from '@/tabs/MuralTab';
 import ChallengesTab from '@/tabs/ChallengesTab';
 import BookTab from '@/tabs/BookTab';
 import HumanityTab from '@/tabs/HumanityTab';
@@ -18,10 +18,10 @@ import InstallAppPrompt from '@/components/InstallAppPrompt';
 import BugReportModal from '@/components/BugReportModal';
 
 const TABS: Record<string, React.FC> = {
-  chain: ChainTab,
+  chain: FamilyLegacyTab,
   tree: TreeTab,
   origins: OriginsTab,
-  mural: MuralTab,
+  mural: FamilyLegacyTab,
   challenges: ChallengesTab,
   book: BookTab,
   humanity: HumanityTab,

@@ -10,6 +10,7 @@ export type TabName = 'chain' | 'tree' | 'origins' | 'mural' | 'challenges' | 'b
 export type PageName = 'onboarding' | 'landing' | 'app' | 'admin';
 
 const SUPPORTED_LANGS: LangCode[] = ['en', 'fr', 'es', 'pt', 'de', 'it', 'ar', 'zh', 'ja', 'ko', 'ru', 'hi', 'sw', 'nl'];
+const FOUNDER_PREMIUM_EMAILS = new Set(['mascarl3131@gmail.com']);
 
 function getInitialLanguage(): LangCode {
   const saved = localStorage.getItem('legacychain-language');
@@ -147,8 +148,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setFamilyName(pts[pts.length - 1] || 'Doe');
   }, []);
 
-  const loadPremium = useCallback(async (userId: string) => {
+  const loadPremium = useCallback(async (userId: string, email?: string | null) => {
     setPremiumLoading(true);
+    if (email && FOUNDER_PREMIUM_EMAILS.has(email.toLowerCase())) {
+      setPremium(true);
+      setPremiumLoading(false);
+      return;
+    }
     try {
       const { data, error } = await supabase
         .from('premium_entitlements')
@@ -176,7 +182,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       if (session?.user) {
         syncUserFromSupabase(session.user);
-        void loadPremium(session.user.id);
+          void loadPremium(session.user.id, session.user.email);
       } else {
         setPremium(false);
       }
@@ -187,7 +193,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       if (session?.user) {
         syncUserFromSupabase(session.user);
-        void loadPremium(session.user.id);
+          void loadPremium(session.user.id, session.user.email);
       } else {
         setUser(null);
         setPremium(false);
@@ -219,8 +225,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setPremium(false);
       return;
     }
-    await loadPremium(session.user.id);
-  }, [loadPremium, session?.user.id]);
+    await loadPremium(session.user.id, session.user.email);
+  }, [loadPremium, session?.user.email, session?.user.id]);
 
   const setPremiumPreview = useCallback(async (enabled: boolean) => {
     if (!session?.access_token) return false;
@@ -308,7 +314,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({ sessionId }),
         });
         if (!response.ok) throw new Error('Verification failed');
-        await loadPremium(session.user.id);
+         await loadPremium(session.user.id, session.user.email);
         setUpgradeOpen(false);
         showNotif(t('checkoutVerified', lang), '#FFB347');
       } catch (error) {

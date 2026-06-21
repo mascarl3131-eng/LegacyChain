@@ -20,11 +20,10 @@ await page.getByRole('button', { name: 'Menu' }).waitFor();
 const destinations = [
   ['Family Tree', 'FAMILY TREE'],
   ['Origins & DNA', 'ORIGINS & DNA'],
-  ['Family Mural', 'Family Mural'],
   ['Challenges', 'INTERGENERATIONAL CHALLENGES'],
   ['Book of Life', 'BOOK OF LIFE'],
   ['Voices of Humanity', 'VOICES OF HUMANITY'],
-  ['Chain', 'FAMILY CHAIN'],
+  ['Family Legacy', 'FAMILY CHAIN'],
 ];
 
 for (const [menuLabel, heading] of destinations) {

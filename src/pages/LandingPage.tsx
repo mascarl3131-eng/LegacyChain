@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Check, Crown } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t, TYPEWRITER_PHRASES } from '@/lib/i18n';
 
@@ -169,6 +170,22 @@ export default function LandingPage() {
         <div style={{ fontSize: '0.55rem', color: 'rgba(255,179,71,0.5)', letterSpacing: '0.08em' }}>
           {t('premiumNote', lang)}
         </div>
+
+        <section style={{ width: 'min(320px,90vw)', padding: '.85rem', borderRadius: 12, textAlign: 'left', background: 'linear-gradient(135deg,rgba(255,179,71,.08),rgba(192,132,252,.055))', border: '1px solid rgba(255,179,71,.25)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '.7rem', marginBottom: '.55rem' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '.45rem', color: '#FFB347', fontSize: '.65rem', letterSpacing: '.11em' }}><Crown size={16} /> {t('premiumLandingTitle', lang)}</span>
+            <strong style={{ color: '#EFF6FF', fontSize: '.8rem' }}>$10</strong>
+          </div>
+          <p style={{ margin: '0 0 .65rem', color: 'rgba(239,246,255,.46)', fontSize: '.56rem', lineHeight: 1.6 }}>{t('premiumLandingDesc', lang)}</p>
+          <div style={{ display: 'grid', gap: '.35rem' }}>
+            {['f2', 'f3', 'f4', 'f6', 'f8'].map(key => (
+              <span key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: '.4rem', color: 'rgba(239,246,255,.64)', fontSize: '.55rem', lineHeight: 1.45 }}>
+                <Check size={12} color="#00FFD1" style={{ flexShrink: 0, marginTop: 1 }} /> {t(key, lang)}
+              </span>
+            ))}
+          </div>
+          <div style={{ marginTop: '.65rem', paddingTop: '.55rem', borderTop: '1px solid rgba(255,179,71,.14)', color: 'rgba(255,179,71,.65)', fontSize: '.51rem', lineHeight: 1.5 }}>{t('premiumLifetimeClarification', lang)}</div>
+        </section>
 
         <div style={{ width: 'min(260px,80vw)', display: 'flex', flexDirection: 'column', gap: '0.55rem', flexShrink: 0 }}>
           {/* Google Login Button */}

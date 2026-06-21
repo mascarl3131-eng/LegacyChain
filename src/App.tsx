@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useStore } from './lib/store';
 import { supabase } from './lib/supabase';
+import { t } from './lib/i18n';
 import OnboardingPage from './pages/OnboardingPage';
 import LandingPage from './pages/LandingPage';
 import AppPage from './pages/AppPage';
@@ -8,9 +9,11 @@ import AdminPage from './pages/AdminPage';
 import Notification from './components/Notification';
 import NebulaBackground from './components/NebulaBackground';
 import UpgradeModal from './components/UpgradeModal';
+import InviteModal from './components/InviteModal';
 
 function App() {
-  const { page, loading, session, user, setPage } = useStore();
+  const { page, loading, session, user, setPage, showNotif, lang } = useStore();
+  const acceptedFamilyInvite = useRef<string | null>(null);
 
   // Handle OAuth callback hash from Supabase
   useEffect(() => {
@@ -52,6 +55,27 @@ function App() {
     }
   }, [loading, session, user, setPage]);
 
+  useEffect(() => {
+    if (!session) return;
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('familyInvite');
+    if (!token || acceptedFamilyInvite.current === token) return;
+    acceptedFamilyInvite.current = token;
+    fetch('/api/families', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'accept', token }),
+    }).then(async response => {
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || t('familyActionError', lang));
+      showNotif(t('familyJoinedSuccess', lang), '#00FFD1');
+      window.history.replaceState({}, '', window.location.pathname);
+    }).catch(reason => {
+      acceptedFamilyInvite.current = null;
+      showNotif(reason.message, '#FF6B6B');
+    });
+  }, [lang, session, showNotif]);
+
   if (loading) {
     return (
       <div style={{
@@ -79,6 +103,7 @@ function App() {
       {page === 'app' && <AppPage />}
       {page === 'admin' && <AdminPage />}
       <UpgradeModal />
+      <InviteModal />
       <Notification />
     </div>
   );

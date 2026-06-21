@@ -3,7 +3,7 @@ import { t, LANGS } from '@/lib/i18n';
 import type { TabName } from '@/lib/store';
 
 const FAMILY_TABS: { id: TabName; icon: string; labelKey: string }[] = [
-  { id: 'chain', icon: '⬡', labelKey: 'navChain' },
+  { id: 'chain', icon: '⬡', labelKey: 'navFamilyLegacy' },
   { id: 'humanity', icon: '🌍', labelKey: 'navHumanity' },
   { id: 'tree', icon: '🌳', labelKey: 'navTree' },
   { id: 'origins', icon: '🧬', labelKey: 'navOrigins' },
@@ -12,7 +12,6 @@ const FAMILY_TABS: { id: TabName; icon: string; labelKey: string }[] = [
 const LEGACY_TABS: { id: TabName; icon: string; labelKey: string }[] = [
   { id: 'book', icon: '📖', labelKey: 'navBook' },
   { id: 'challenges', icon: '🏆', labelKey: 'navChal' },
-  { id: 'mural', icon: '🎨', labelKey: 'navMural' },
 ];
 
 function SectionTitle({ children }: { children: string }) {
