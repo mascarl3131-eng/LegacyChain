@@ -171,6 +171,7 @@ export default function ChainTab() {
         });
         const AudioContextClass = window.AudioContext;
         const audioContext = new AudioContextClass();
+        if (audioContext.state === 'suspended') await audioContext.resume();
         const source = audioContext.createMediaStreamSource(stream);
         const gain = audioContext.createGain();
         const destination = audioContext.createMediaStreamDestination();
@@ -178,6 +179,10 @@ export default function ChainTab() {
         source.connect(gain);
         gain.connect(destination);
         recordingAudioContextRef.current = audioContext;
+        // Mobile browsers can take several seconds to wake a Web Audio graph.
+        // Pull one frame through the graph before starting MediaRecorder so the
+        // beginning of the user's voice is not lost.
+        await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
         const recorder = new MediaRecorder(destination.stream);
         const chunks: Blob[] = [];
         recorder.ondataavailable = e => chunks.push(e.data);
@@ -190,7 +195,7 @@ export default function ChainTab() {
           void audioContext.close();
           recordingAudioContextRef.current = null;
         };
-        recorder.start();
+        recorder.start(250);
         mediaRecorderRef.current = recorder;
         setIsRecording(true);
         setRecSeconds(0);
