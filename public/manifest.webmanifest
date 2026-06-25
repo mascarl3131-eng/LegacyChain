@@ -1,13 +1,16 @@
 {
-  "name": "LegacyChain",
+  "name": "The LegacyChain",
   "short_name": "LegacyChain",
-  "description": "Préservez les histoires, les voix et l'héritage de votre famille.",
+  "description": "Preserve family memories, voice messages, photos, family trees, DNA origins and time capsules for future generations.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#04030A",
   "theme_color": "#04030A",
+  "categories": ["lifestyle", "family", "productivity"],
+  "lang": "en",
+  "dir": "ltr",
   "icons": [
     {
       "src": "/legacychain-icon.svg",
