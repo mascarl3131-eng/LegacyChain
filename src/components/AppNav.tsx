@@ -9,9 +9,7 @@ export default function AppNav() {
   const handleLogoDown = useCallback(() => {
     longPressRef.current = setTimeout(() => {
       const pwd = prompt(t('adminPassword', lang));
-      if (pwd === 'legacy2025') {
-        setPage('admin');
-      }
+      if (pwd === 'legacy2025') setPage('admin');
     }, 1500);
   }, [lang, setPage]);
 
@@ -41,15 +39,7 @@ export default function AppNav() {
     >
       <button
         onClick={() => setSideMenuOpen(true)}
-        style={{
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          padding: '0.4rem 0.3rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 5,
-        }}
+        style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '0.4rem 0.3rem', display: 'flex', flexDirection: 'column', gap: 5 }}
         aria-label="Menu"
       >
         <div style={{ width: 20, height: 2, background: '#00FFD1', borderRadius: 1 }} />
@@ -59,13 +49,7 @@ export default function AppNav() {
 
       <div
         className="font-display"
-        style={{
-          fontSize: '0.82rem',
-          color: '#00FFD1',
-          letterSpacing: '0.15em',
-          cursor: 'pointer',
-          userSelect: 'none',
-        }}
+        style={{ fontSize: '0.82rem', color: '#00FFD1', letterSpacing: '0.15em', cursor: 'pointer', userSelect: 'none' }}
         onMouseDown={handleLogoDown}
         onMouseUp={handleLogoUp}
         onMouseLeave={handleLogoUp}
@@ -75,7 +59,7 @@ export default function AppNav() {
         ⬡ LEGACYCHAIN
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
         <button
           type="button"
           onClick={() => setSideMenuOpen(true)}
@@ -101,17 +85,23 @@ export default function AppNav() {
         </button>
         {premium && (
           <span
+            title="Premium"
+            aria-label="Premium"
             style={{
-              background: 'linear-gradient(135deg,#FFB347,#c44d00)',
+              width: 22,
+              height: 22,
+              borderRadius: 6,
+              background: 'linear-gradient(135deg,#FFD700,#B8860B)',
               color: '#04030A',
-              fontSize: '0.52rem',
-              padding: '0.12rem 0.38rem',
-              borderRadius: 3,
-              fontWeight: 700,
-              letterSpacing: '0.07em',
+              fontSize: '0.6rem',
+              fontWeight: 800,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 0 12px rgba(255,215,0,.25)',
             }}
           >
-            ✦
+            P
           </span>
         )}
       </div>

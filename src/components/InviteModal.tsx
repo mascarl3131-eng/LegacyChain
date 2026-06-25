@@ -75,11 +75,38 @@ export default function InviteModal() {
   };
 
   return (
-    <div onClick={() => setInviteOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 1400, background: 'rgba(4,3,10,0.88)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      <div onClick={event => event.stopPropagation()} style={{ background: '#0c0a1c', border: '1px solid rgba(0,255,209,0.13)', borderRadius: '18px 18px 0 0', padding: '1.5rem 1.2rem', width: '100%', maxWidth: 480, position: 'relative', maxHeight: '88vh', overflowY: 'auto' }}>
+    <div
+      onClick={() => setInviteOpen(false)}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1400,
+        background: 'rgba(4,3,10,0.88)',
+        display: 'grid',
+        placeItems: 'center',
+        padding: 'calc(1rem + env(safe-area-inset-top)) 1rem calc(1rem + env(safe-area-inset-bottom))',
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="invite-family-title"
+        onClick={event => event.stopPropagation()}
+        style={{
+          background: '#0c0a1c',
+          border: '1px solid rgba(0,255,209,0.18)',
+          borderRadius: 18,
+          padding: '1.5rem 1.2rem',
+          width: 'min(100%, 480px)',
+          position: 'relative',
+          maxHeight: 'calc(100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom))',
+          overflowY: 'auto',
+          boxShadow: '0 22px 70px rgba(0,0,0,.55)',
+        }}
+      >
         <div style={{ width: 36, height: 3, background: 'rgba(239,246,255,0.15)', borderRadius: 2, margin: '0 auto 1rem' }} />
         <button onClick={() => setInviteOpen(false)} style={{ position: 'absolute', top: '0.9rem', right: '1rem', background: 'transparent', border: 'none', color: 'rgba(239,246,255,0.32)', cursor: 'pointer', fontSize: '1.1rem' }}>×</button>
-        <h3 className="font-display" style={{ color: '#00FFD1', fontSize: '0.9rem', marginBottom: '0.35rem', letterSpacing: '0.1em' }}>{t('inviteTitle', lang)}</h3>
+        <h3 id="invite-family-title" className="font-display" style={{ color: '#00FFD1', fontSize: '0.9rem', marginBottom: '0.35rem', letterSpacing: '0.1em' }}>{t('inviteTitle', lang)}</h3>
         <p style={{ fontSize: '0.65rem', color: 'rgba(239,246,255,0.42)', marginBottom: '1rem', lineHeight: 1.7 }}>{t('familyIdExplanation', lang)}</p>
 
         {!session ? <div style={{ color: '#FFB347', fontSize: '.62rem' }}>{t('familyLoginRequired', lang)}</div> : (

@@ -170,6 +170,19 @@ export default function SideMenu() {
             <a key={href} href={href} style={{ color: 'rgba(239,246,255,.48)', fontSize: '.62rem', textDecoration: 'none' }}>{label}</a>
           ))}
         </div>
+        <Divider />
+        <SectionTitle>Documents legaux</SectionTitle>
+        <div style={{ display: 'grid', gap: '.5rem', padding: '.45rem 1.2rem 0' }}>
+          {[
+            ['Politique de confidentialite', '/legal/privacy.html'],
+            ['Conditions generales', '/legal/terms.html'],
+            ['Politique cookies', '/legal/cookies.html'],
+            ['Suppression des donnees', '/legal/data-deletion.html'],
+            ['Politique de remboursement', '/legal/refund.html'],
+          ].map(([label, href]) => (
+            <a key={href} href={href} style={{ color: 'rgba(239,246,255,.72)', fontSize: '.64rem', textDecoration: 'none', lineHeight: 1.35 }}>{label}</a>
+          ))}
+        </div>
       </div>
     </>
   );
