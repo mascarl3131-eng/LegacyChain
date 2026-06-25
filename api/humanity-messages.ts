@@ -1,9 +1,9 @@
 import type { ApiRequest, ApiResponse } from './_lib/http.js';
 import { getAdminSupabase, getAuthenticatedUser } from './_lib/server.js';
+import { moderateText } from './_lib/moderation.js';
 
 const ALLOWED_EMOTIONS = new Set(['hope', 'love', 'wisdom', 'peace', 'warning', 'memory']);
 const ALLOWED_AUDIENCES = new Set(['future', 'descendants', 'humanity', 'whoever']);
-const BLOCKED_TERMS = ['hate', 'kill', 'murder', 'racist', 'terrorist'];
 
 function getParams(req: ApiRequest) {
   return new URL(req.url || '/', 'https://legacy-chain.vercel.app').searchParams;
@@ -68,9 +68,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     if (message.length < 3 || message.length > 500 || !country || !/^[A-Z]{2}$/.test(countryCode) || !ALLOWED_EMOTIONS.has(emotion) || !ALLOWED_AUDIENCES.has(audience)) {
       return res.status(400).json({ error: 'Invalid voice data' });
     }
-    if (BLOCKED_TERMS.some(term => message.toLowerCase().includes(term))) {
-      return res.status(422).json({ error: 'Message requires moderation' });
-    }
+    const moderation = moderateText(message);
+    if (!moderation.allowed) return res.status(422).json({ error: 'Message rejected by safety moderation', reason: moderation.reason });
     if (visibility === 'family' && !user) return res.status(401).json({ error: 'Authentication required for family-only voices' });
 
     const requestedName = String(body.displayName || '').trim().slice(0, 80);

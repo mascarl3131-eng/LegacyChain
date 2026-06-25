@@ -262,6 +262,12 @@ export default function LandingPage() {
         <div style={{ fontSize: '0.5rem', letterSpacing: '0.2em', color: 'rgba(0,255,209,0.2)', paddingBottom: '0.5rem' }}>
           {t('landingFooter', lang)}
         </div>
+        <div style={{ display: 'flex', gap: '.75rem', flexWrap: 'wrap', justifyContent: 'center', fontSize: '.5rem', paddingBottom: '.75rem' }}>
+          <a href="/legal/privacy.html" style={{ color: 'rgba(239,246,255,.38)' }}>Confidentialité</a>
+          <a href="/legal/terms.html" style={{ color: 'rgba(239,246,255,.38)' }}>Conditions</a>
+          <a href="/legal/cookies.html" style={{ color: 'rgba(239,246,255,.38)' }}>Cookies</a>
+          <a href="/legal/data-deletion.html" style={{ color: 'rgba(239,246,255,.38)' }}>Suppression</a>
+        </div>
       </div>
     </div>
   );

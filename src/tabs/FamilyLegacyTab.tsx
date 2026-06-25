@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { Check, Link2, Palette, Sparkles } from 'lucide-react';
+import { Check, Link2, MapPinned, Palette, Sparkles } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import ChainTab from '@/tabs/ChainTab';
+import LifeJourneyTab from '@/tabs/LifeJourneyTab';
 import MuralTab from '@/tabs/MuralTab';
 
 export default function FamilyLegacyTab() {
   const { tab, lang, premium, setUpgradeOpen } = useStore();
-  const [section, setSection] = useState<'messages' | 'mural'>(tab === 'mural' ? 'mural' : 'messages');
+  const [section, setSection] = useState<'messages' | 'journey' | 'mural'>(tab === 'mural' ? 'mural' : 'messages');
 
   return (
     <div>
@@ -23,15 +24,18 @@ export default function FamilyLegacyTab() {
           <button type="button" className="btn-amber" onClick={() => setUpgradeOpen(true)} style={{ marginTop: '.65rem', width: '100%' }}>{t('discoverPremium', lang)}</button>
         </section>
       )}
-      <div className="glass-card" style={{ padding: '.55rem', marginBottom: '.9rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.45rem', position: 'sticky', top: 0, zIndex: 5, backdropFilter: 'blur(12px)' }}>
+      <div className="glass-card" style={{ padding: '.55rem', marginBottom: '.9rem', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '.45rem', position: 'sticky', top: 0, zIndex: 5, backdropFilter: 'blur(12px)' }}>
         <button type="button" className="btn-sec" onClick={() => setSection('messages')} style={{ minHeight: 42, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '.4rem', borderColor: section === 'messages' ? '#00FFD1' : undefined, color: section === 'messages' ? '#00FFD1' : undefined, background: section === 'messages' ? 'rgba(0,255,209,.06)' : undefined }}>
           <Link2 size={15} /> {t('familyMessagesTab', lang)}
+        </button>
+        <button type="button" className="btn-sec" onClick={() => setSection('journey')} style={{ minHeight: 42, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '.4rem', borderColor: section === 'journey' ? '#00FFD1' : undefined, color: section === 'journey' ? '#00FFD1' : undefined, background: section === 'journey' ? 'rgba(0,255,209,.06)' : undefined }}>
+          <MapPinned size={15} /> {lang === 'fr' ? 'Parcours' : 'Journey'}
         </button>
         <button type="button" className="btn-sec" onClick={() => premium ? setSection('mural') : setUpgradeOpen(true)} style={{ minHeight: 42, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '.4rem', borderColor: section === 'mural' ? '#C084FC' : undefined, color: section === 'mural' ? '#C084FC' : undefined, background: section === 'mural' ? 'rgba(192,132,252,.07)' : undefined }}>
           <Palette size={15} /> {t('familyMuralTab', lang)} {!premium && <Sparkles size={11} color="#FFB347" />}
         </button>
       </div>
-      {section === 'messages' ? <ChainTab /> : <MuralTab />}
+      {section === 'messages' ? <ChainTab /> : section === 'journey' ? <LifeJourneyTab /> : <MuralTab />}
     </div>
   );
 }

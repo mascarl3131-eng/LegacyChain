@@ -4,9 +4,11 @@ import { CHART_COLORS, DNA_SERVICES } from '@/lib/data';
 import DnaImportPanel from '@/components/DnaImportPanel';
 import DnaWorldMap from '@/components/DnaWorldMap';
 import DnaQuickGuide from '@/components/DnaQuickGuide';
+import { getCountryOptions } from '@/lib/countries';
 
 export default function OriginsTab() {
   const { lang, user, originRows, setOriginRows, pacte, setPacte, showNotif } = useStore();
+  const countryOptions = getCountryOptions(lang);
 
   const total = originRows.reduce((s, r) => s + r.p, 0);
   const totalStatus = total === 100 ? 'ok' : total < 100 ? 'low' : 'over';
@@ -47,7 +49,12 @@ export default function OriginsTab() {
 
       {originRows.map((row, i) => (
         <div key={i} style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', marginBottom: '0.4rem' }}>
-          <input type="text" className="form-input" style={{ flex: 1 }} placeholder={t('countryPlaceholder', lang)} value={row.c} onChange={e => updateRow(i, 'c', e.target.value)} />
+          <select className="form-select" style={{ flex: 1 }} value={row.c} onChange={e => updateRow(i, 'c', e.target.value)}>
+            <option value="">{t('countryPlaceholder', lang)}</option>
+            {countryOptions.map(country => (
+              <option key={country.code} value={country.canonicalName}>{country.flag} {country.name}</option>
+            ))}
+          </select>
           <input type="number" className="form-input" style={{ width: 60 }} placeholder="%" value={row.p || ''} min={0} max={100} onChange={e => updateRow(i, 'p', e.target.value)} />
           <span style={{ color: '#00FFD1', fontSize: '0.78rem', flexShrink: 0 }}>%</span>
           <button onClick={() => removeRow(i)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,45,85,0.45)', cursor: 'pointer', fontSize: '1rem', flexShrink: 0 }}>×</button>

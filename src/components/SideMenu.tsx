@@ -157,6 +157,19 @@ export default function SideMenu() {
             <button className="btn-amber" style={{ width: '100%', marginTop: 0 }}>✦ {t('unlockBtn', lang)}</button>
           </div>
         )}
+        <Divider />
+        <SectionTitle>Legal</SectionTitle>
+        <div style={{ display: 'grid', gap: '.45rem', padding: '.3rem 1.2rem 0' }}>
+          {[
+            ['Confidentialité', '/legal/privacy.html'],
+            ['Conditions', '/legal/terms.html'],
+            ['Cookies', '/legal/cookies.html'],
+            ['Suppression données', '/legal/data-deletion.html'],
+            ['Remboursement', '/legal/refund.html'],
+          ].map(([label, href]) => (
+            <a key={href} href={href} style={{ color: 'rgba(239,246,255,.48)', fontSize: '.62rem', textDecoration: 'none' }}>{label}</a>
+          ))}
+        </div>
       </div>
     </>
   );

@@ -8,6 +8,7 @@ import MessageMedia from '@/components/MessageMedia';
 
 const GEN_COLORS = ['#C084FC', '#00FFD1', '#FFB347'];
 const GEN_Y = [70, 190, 310];
+const DEMO_TREE_NAMES = ['Robert Doe', 'Irène Doe', 'Jean Doe', 'Marie Doe', 'Sophie Doe', 'Lucas Doe'];
 
 export default function TreeTab() {
   const { lang, msgs, treeNodes, setTreeNodes } = useStore();
@@ -27,6 +28,7 @@ export default function TreeTab() {
   const [by, setBy] = useState('');
   const [rel, setRel] = useState('child');
   const [relativeTo, setRelativeTo] = useState(treeNodes[3]?.id || treeNodes[0]?.id || 0);
+  const isDemoTree = treeNodes.length === DEMO_TREE_NAMES.length && treeNodes.every(node => DEMO_TREE_NAMES.includes(node.n));
 
   const selectedMem = treeNodes.find(node => node.id === selectedId) || null;
   const visibleNodes = useMemo(() => treeNodes.filter(node => {
@@ -41,6 +43,26 @@ export default function TreeTab() {
 
   const addMember = () => {
     if (!fn.trim()) return;
+    if (isDemoTree) {
+      const newNode: TreeNode = {
+        id: 1,
+        n: `${fn.trim()} ${ln.trim() || ''}`.trim(),
+        b: parseInt(by) || new Date().getFullYear(),
+        x: 295,
+        y: GEN_Y[1],
+        gen: 1,
+      };
+      setTreeNodes([newNode]);
+      setLinks([]);
+      setFn('');
+      setLn('');
+      setBy('');
+      setShowAdd(false);
+      setSelectedId(newNode.id);
+      setRelativeTo(newNode.id);
+      return;
+    }
+
     const reference = treeNodes.find(node => node.id === relativeTo) || treeNodes[0];
     let gen = reference?.gen ?? 1;
     if (rel === 'parent') gen = Math.max(0, gen - 1);
@@ -67,6 +89,7 @@ export default function TreeTab() {
     setBy('');
     setShowAdd(false);
     setSelectedId(id);
+    setRelativeTo(id);
   };
 
   const resetView = () => {
@@ -248,7 +271,7 @@ export default function TreeTab() {
           </div>
           <label style={{ display: 'block', fontSize: '0.57rem', color: 'rgba(239,246,255,.35)', margin: '0.7rem 0 0.3rem' }}>{t('relativeTo', lang)}</label>
           <select className="form-select" value={relativeTo} onChange={event => setRelativeTo(Number(event.target.value))}>
-            {treeNodes.map(node => <option key={node.id} value={node.id}>{node.n}</option>)}
+            {isDemoTree ? <option value={relativeTo}>{lang === 'fr' ? 'Premier membre réel' : 'First real member'}</option> : treeNodes.map(node => <option key={node.id} value={node.id}>{node.n}</option>)}
           </select>
           <button className="btn-primary" onClick={addMember}>{t('addToTree', lang)}</button>
         </div>

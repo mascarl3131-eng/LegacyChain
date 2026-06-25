@@ -1,5 +1,6 @@
 import type { ApiRequest, ApiResponse } from './_lib/http.js';
 import { getAdminSupabase, getAuthenticatedUser } from './_lib/server.js';
+import { moderateText } from './_lib/moderation.js';
 
 const EMOTIONS = new Set(['hope', 'love', 'wisdom', 'memory', 'warning']);
 const TYPES = new Set(['standard', 'birth', 'capsule']);
@@ -72,6 +73,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     if (!message || message.length > 500 || !EMOTIONS.has(emotion) || !TYPES.has(messageType)) {
       return res.status(400).json({ error: 'Invalid family message' });
     }
+    const moderation = moderateText(message);
+    if (!moderation.allowed) return res.status(422).json({ error: 'Message rejected by safety moderation', reason: moderation.reason });
     if ((photoPath && !photoPath.startsWith(expectedPrefix)) || (audioPath && !audioPath.startsWith(expectedPrefix))) {
       return res.status(400).json({ error: 'Invalid media path' });
     }
