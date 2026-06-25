@@ -263,10 +263,10 @@ export default function LandingPage() {
           {t('landingFooter', lang)}
         </div>
         <div style={{ display: 'flex', gap: '.75rem', flexWrap: 'wrap', justifyContent: 'center', fontSize: '.5rem', paddingBottom: '.75rem' }}>
-          <a href="/legal/privacy.html" style={{ color: 'rgba(239,246,255,.38)' }}>Confidentialité</a>
-          <a href="/legal/terms.html" style={{ color: 'rgba(239,246,255,.38)' }}>Conditions</a>
-          <a href="/legal/cookies.html" style={{ color: 'rgba(239,246,255,.38)' }}>Cookies</a>
-          <a href="/legal/data-deletion.html" style={{ color: 'rgba(239,246,255,.38)' }}>Suppression</a>
+          <a href="/legal/privacy.html" style={{ color: 'rgba(239,246,255,.38)' }}>{t('privacyPolicy', lang)}</a>
+          <a href="/legal/terms.html" style={{ color: 'rgba(239,246,255,.38)' }}>{t('termsPolicy', lang)}</a>
+          <a href="/legal/cookies.html" style={{ color: 'rgba(239,246,255,.38)' }}>{t('cookiesPolicy', lang)}</a>
+          <a href="/legal/data-deletion.html" style={{ color: 'rgba(239,246,255,.38)' }}>{t('dataDeletionPolicy', lang)}</a>
         </div>
       </div>
     </div>

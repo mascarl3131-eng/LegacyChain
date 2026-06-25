@@ -14,12 +14,16 @@ const LEGACY_TABS: { id: TabName; icon: string; labelKey: string }[] = [
   { id: 'challenges', icon: '🏆', labelKey: 'navChal' },
 ];
 
+const LEGAL_LINKS = [
+  ['privacyPolicy', '/legal/privacy.html'],
+  ['termsPolicy', '/legal/terms.html'],
+  ['cookiesPolicy', '/legal/cookies.html'],
+  ['dataDeletionPolicy', '/legal/data-deletion.html'],
+  ['refundPolicy', '/legal/refund.html'],
+] as const;
+
 function SectionTitle({ children }: { children: string }) {
-  return (
-    <div style={{ fontSize: '0.55rem', letterSpacing: '0.25em', color: 'rgba(239,246,255,0.25)', padding: '0.4rem 1.2rem', textTransform: 'uppercase' }}>
-      {children}
-    </div>
-  );
+  return <div style={{ fontSize: '0.55rem', letterSpacing: '0.25em', color: 'rgba(239,246,255,0.25)', padding: '0.4rem 1.2rem', textTransform: 'uppercase' }}>{children}</div>;
 }
 
 function Divider() {
@@ -29,8 +33,7 @@ function Divider() {
 export default function SideMenu() {
   const {
     sideMenuOpen, setSideMenuOpen, tab, setTab, lang, setLang, premium,
-    setUpgradeOpen, setInviteOpen, user, session, loginWithGoogle,
-    logout,
+    setUpgradeOpen, setInviteOpen, user, session, loginWithGoogle, logout,
   } = useStore();
 
   const handleTab = (id: TabName) => {
@@ -46,32 +49,13 @@ export default function SideMenu() {
 
   return (
     <>
-      {sideMenuOpen && (
-        <div
-          onClick={() => setSideMenuOpen(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 1099,
-            background: 'rgba(4,3,10,0.6)',
-          }}
-        />
-      )}
+      {sideMenuOpen && <div onClick={() => setSideMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 1099, background: 'rgba(4,3,10,0.6)' }} />}
       <div
         aria-hidden={!sideMenuOpen}
         style={{
-          position: 'fixed',
-          top: 0,
-          left: sideMenuOpen ? 0 : -280,
-          width: 260,
-          height: '100%',
-          zIndex: 1100,
-          background: '#090716',
-          borderRight: '1px solid rgba(0,255,209,0.13)',
-          transition: 'left 0.3s',
-          overflowY: 'auto',
-          padding: '1.5rem 0 2rem',
-          pointerEvents: sideMenuOpen ? 'auto' : 'none',
+          position: 'fixed', top: 0, left: sideMenuOpen ? 0 : -280, width: 260, height: '100%', zIndex: 1100,
+          background: '#090716', borderRight: '1px solid rgba(0,255,209,0.13)', transition: 'left 0.3s',
+          overflowY: 'auto', padding: '1.5rem 0 2rem', pointerEvents: sideMenuOpen ? 'auto' : 'none',
           visibility: sideMenuOpen ? 'visible' : 'hidden',
         }}
       >
@@ -95,59 +79,28 @@ export default function SideMenu() {
               {user?.first?.[0]?.toUpperCase() || '?'}
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: '0.62rem', color: session ? '#00FFD1' : '#FFB347', letterSpacing: '0.08em', marginBottom: '0.18rem' }}>
-                {session ? t('connectedAs', lang) : t('guestMode', lang)}
-              </div>
-              <div style={{ fontSize: '0.66rem', color: 'rgba(239,246,255,0.68)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {session?.user.email || user?.name || t('guestMode', lang)}
-              </div>
+              <div style={{ fontSize: '0.62rem', color: session ? '#00FFD1' : '#FFB347', letterSpacing: '0.08em', marginBottom: '0.18rem' }}>{session ? t('connectedAs', lang) : t('guestMode', lang)}</div>
+              <div style={{ fontSize: '0.66rem', color: 'rgba(239,246,255,0.68)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session?.user.email || user?.name || t('guestMode', lang)}</div>
             </div>
           </div>
 
           {session ? (
-            <button type="button" onClick={() => void logout()} style={{ width: '100%', padding: '0.55rem', borderRadius: 7, border: '1px solid rgba(239,246,255,0.15)', background: 'rgba(239,246,255,0.03)', color: 'rgba(239,246,255,0.62)', fontFamily: "'DM Mono',monospace", fontSize: '0.62rem', cursor: 'pointer' }}>
-              {t('logoutBtn', lang)}
-            </button>
+            <button type="button" onClick={() => void logout()} style={{ width: '100%', padding: '0.55rem', borderRadius: 7, border: '1px solid rgba(239,246,255,0.15)', background: 'rgba(239,246,255,0.03)', color: 'rgba(239,246,255,0.62)', fontFamily: "'DM Mono',monospace", fontSize: '0.62rem', cursor: 'pointer' }}>{t('logoutBtn', lang)}</button>
           ) : (
             <>
-              <p style={{ fontSize: '0.57rem', color: 'rgba(239,246,255,0.38)', lineHeight: 1.55, margin: '0 0 0.65rem' }}>
-                {t('guestModeDesc', lang)}
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.42rem' }}>
-                <button type="button" onClick={() => void loginWithGoogle()} style={{ width: '100%', padding: '0.58rem', borderRadius: 7, border: '1px solid rgba(255,255,255,0.9)', background: '#fff', color: '#252525', fontFamily: "'DM Mono',monospace", fontSize: '0.62rem', cursor: 'pointer' }}>
-                  G&nbsp;&nbsp;{t('googleLogin', lang)}
-                </button>
-              </div>
+              <p style={{ fontSize: '0.57rem', color: 'rgba(239,246,255,0.38)', lineHeight: 1.55, margin: '0 0 0.65rem' }}>{t('guestModeDesc', lang)}</p>
+              <button type="button" onClick={() => void loginWithGoogle()} style={{ width: '100%', padding: '0.58rem', borderRadius: 7, border: '1px solid rgba(255,255,255,0.9)', background: '#fff', color: '#252525', fontFamily: "'DM Mono',monospace", fontSize: '0.62rem', cursor: 'pointer' }}>G&nbsp;&nbsp;{t('googleLogin', lang)}</button>
             </>
           )}
         </div>
 
         <Divider />
         <SectionTitle>{t('settings', lang)}</SectionTitle>
-        <div onClick={() => { setInviteOpen(true); setSideMenuOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.75rem 1.2rem', fontSize: '0.78rem', color: 'rgba(239,246,255,0.6)', cursor: 'pointer', letterSpacing: '0.06em' }}>
-          + {t('inviteBtn', lang)}
-        </div>
+        <div onClick={() => { setInviteOpen(true); setSideMenuOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.75rem 1.2rem', fontSize: '0.78rem', color: 'rgba(239,246,255,0.6)', cursor: 'pointer', letterSpacing: '0.06em' }}>+ {t('inviteBtn', lang)}</div>
 
         <div style={{ padding: '0.6rem 1.2rem' }}>
-          <select
-            value={lang}
-            onChange={(e) => setLang(e.target.value as typeof lang)}
-            style={{
-              width: '100%',
-              background: 'rgba(4,3,10,0.8)',
-              border: '1px solid rgba(0,255,209,0.13)',
-              color: '#EFF6FF',
-              fontFamily: "'DM Mono',monospace",
-              fontSize: '0.72rem',
-              padding: '0.45rem 0.7rem',
-              borderRadius: 6,
-              outline: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            {Object.values(LANGS).map(l => (
-              <option key={l.code} value={l.code}>{l.flag} {l.label}</option>
-            ))}
+          <select value={lang} onChange={(e) => setLang(e.target.value as typeof lang)} style={{ width: '100%', background: 'rgba(4,3,10,0.8)', border: '1px solid rgba(0,255,209,0.13)', color: '#EFF6FF', fontFamily: "'DM Mono',monospace", fontSize: '0.72rem', padding: '0.45rem 0.7rem', borderRadius: 6, outline: 'none', cursor: 'pointer' }}>
+            {Object.values(LANGS).map(l => <option key={l.code} value={l.code}>{l.flag} {l.label}</option>)}
           </select>
         </div>
 
@@ -157,31 +110,11 @@ export default function SideMenu() {
             <button className="btn-amber" style={{ width: '100%', marginTop: 0 }}>✦ {t('unlockBtn', lang)}</button>
           </div>
         )}
+
         <Divider />
-        <SectionTitle>Legal</SectionTitle>
-        <div style={{ display: 'grid', gap: '.45rem', padding: '.3rem 1.2rem 0' }}>
-          {[
-            ['Confidentialité', '/legal/privacy.html'],
-            ['Conditions', '/legal/terms.html'],
-            ['Cookies', '/legal/cookies.html'],
-            ['Suppression données', '/legal/data-deletion.html'],
-            ['Remboursement', '/legal/refund.html'],
-          ].map(([label, href]) => (
-            <a key={href} href={href} style={{ color: 'rgba(239,246,255,.48)', fontSize: '.62rem', textDecoration: 'none' }}>{label}</a>
-          ))}
-        </div>
-        <Divider />
-        <SectionTitle>Documents legaux</SectionTitle>
+        <SectionTitle>{t('legalDocuments', lang)}</SectionTitle>
         <div style={{ display: 'grid', gap: '.5rem', padding: '.45rem 1.2rem 0' }}>
-          {[
-            ['Politique de confidentialite', '/legal/privacy.html'],
-            ['Conditions generales', '/legal/terms.html'],
-            ['Politique cookies', '/legal/cookies.html'],
-            ['Suppression des donnees', '/legal/data-deletion.html'],
-            ['Politique de remboursement', '/legal/refund.html'],
-          ].map(([label, href]) => (
-            <a key={href} href={href} style={{ color: 'rgba(239,246,255,.72)', fontSize: '.64rem', textDecoration: 'none', lineHeight: 1.35 }}>{label}</a>
-          ))}
+          {LEGAL_LINKS.map(([labelKey, href]) => <a key={href} href={href} style={{ color: 'rgba(239,246,255,.72)', fontSize: '.64rem', textDecoration: 'none', lineHeight: 1.35 }}>{t(labelKey, lang)}</a>)}
         </div>
       </div>
     </>

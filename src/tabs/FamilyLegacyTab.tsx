@@ -29,7 +29,7 @@ export default function FamilyLegacyTab() {
           <Link2 size={15} /> {t('familyMessagesTab', lang)}
         </button>
         <button type="button" className="btn-sec" onClick={() => setSection('journey')} style={{ minHeight: 42, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '.4rem', borderColor: section === 'journey' ? '#00FFD1' : undefined, color: section === 'journey' ? '#00FFD1' : undefined, background: section === 'journey' ? 'rgba(0,255,209,.06)' : undefined }}>
-          <MapPinned size={15} /> {lang === 'fr' ? 'Parcours' : 'Journey'}
+          <MapPinned size={15} /> {t('lifeJourneyTab', lang)}
         </button>
         <button type="button" className="btn-sec" onClick={() => premium ? setSection('mural') : setUpgradeOpen(true)} style={{ minHeight: 42, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '.4rem', borderColor: section === 'mural' ? '#C084FC' : undefined, color: section === 'mural' ? '#C084FC' : undefined, background: section === 'mural' ? 'rgba(192,132,252,.07)' : undefined }}>
           <Palette size={15} /> {t('familyMuralTab', lang)} {!premium && <Sparkles size={11} color="#FFB347" />}
