@@ -6,7 +6,7 @@ const EMOTIONS = new Set(['hope', 'love', 'wisdom', 'memory', 'warning']);
 const TYPES = new Set(['standard', 'birth', 'capsule']);
 
 function params(req: ApiRequest) {
-  return new URL(req.url || '/', 'https://legacy-chain.vercel.app').searchParams;
+  return new URL(req.url || '/', 'https://thechainlegacy.com').searchParams;
 }
 
 async function membership(admin: ReturnType<typeof getAdminSupabase>, familyId: string, userId: string) {

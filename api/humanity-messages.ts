@@ -6,7 +6,7 @@ const ALLOWED_EMOTIONS = new Set(['hope', 'love', 'wisdom', 'peace', 'warning', 
 const ALLOWED_AUDIENCES = new Set(['future', 'descendants', 'humanity', 'whoever']);
 
 function getParams(req: ApiRequest) {
-  return new URL(req.url || '/', 'https://legacy-chain.vercel.app').searchParams;
+  return new URL(req.url || '/', 'https://thechainlegacy.com').searchParams;
 }
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {

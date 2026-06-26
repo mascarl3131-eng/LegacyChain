@@ -1,14 +1,14 @@
-# The LegacyChain SEO notes
+# The Chain Legacy SEO notes
 
-Current indexed URL:
+Primary public URL:
 
-- https://legacy-chain.vercel.app/
+- https://thechainlegacy.com/
 
-When a final domain is purchased:
+Domain setup:
 
 1. Add the domain in Vercel.
 2. Set it as the primary production domain.
-3. Update these files from `https://legacy-chain.vercel.app` to the final domain:
+3. Keep these files aligned with `https://thechainlegacy.com`:
    - `index.html`
    - `public/robots.txt`
    - `public/sitemap.xml`
@@ -17,7 +17,7 @@ When a final domain is purchased:
 
 Target positioning:
 
-- International brand: The LegacyChain
+- International brand: The Chain Legacy
 - Publisher country: Australia
 - Public contact: mascarl3131@gmail.com
 
