@@ -1,6 +1,7 @@
 import { useStore } from '@/lib/store';
 import { t, LANGS } from '@/lib/i18n';
 import type { TabName } from '@/lib/store';
+import GetAppButton from '@/components/GetAppButton';
 
 const FAMILY_TABS: { id: TabName; icon: string; labelKey: string }[] = [
   { id: 'chain', icon: '⬡', labelKey: 'navFamilyLegacy' },
@@ -96,6 +97,9 @@ export default function SideMenu() {
 
         <Divider />
         <SectionTitle>{t('settings', lang)}</SectionTitle>
+        <div style={{ padding: '0.55rem 1.2rem' }}>
+          <GetAppButton variant="menu" />
+        </div>
         <div onClick={() => { setInviteOpen(true); setSideMenuOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.75rem 1.2rem', fontSize: '0.78rem', color: 'rgba(239,246,255,0.6)', cursor: 'pointer', letterSpacing: '0.06em' }}>+ {t('inviteBtn', lang)}</div>
 
         <div style={{ padding: '0.6rem 1.2rem' }}>

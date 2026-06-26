@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, Crown } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t, TYPEWRITER_PHRASES } from '@/lib/i18n';
+import GetAppButton from '@/components/GetAppButton';
 
 const FEATURES = [
   { icon: '⬡', titleKey: 'chainTitle', descKey: 'featureChainDesc', color: '#00FFD1' },
@@ -188,6 +189,8 @@ export default function LandingPage() {
         </section>
 
         <div style={{ width: 'min(260px,80vw)', display: 'flex', flexDirection: 'column', gap: '0.55rem', flexShrink: 0 }}>
+          <GetAppButton />
+
           {/* Google Login Button */}
           <button
             onClick={loginWithGoogle}
