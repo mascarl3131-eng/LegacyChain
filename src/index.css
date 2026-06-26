@@ -392,3 +392,151 @@
     place-items: center;
   }
 }
+
+@layer utilities {
+  :root {
+    --base-font-size: 18px;
+    --readable-muted: rgba(239,246,255,0.72);
+  }
+
+  :root[data-text-scale='normal'] {
+    --base-font-size: 16px;
+  }
+
+  :root[data-text-scale='large'] {
+    --base-font-size: 18px;
+  }
+
+  :root[data-text-scale='xlarge'] {
+    --base-font-size: 20px;
+  }
+
+  html {
+    font-size: var(--base-font-size);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-size-adjust: 100%;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+
+  .btn-primary,
+  .btn-amber,
+  .btn-sec,
+  .form-input,
+  .form-select,
+  .form-textarea,
+  .emo-btn {
+    font-weight: 700;
+  }
+
+  .btn-primary,
+  .btn-amber {
+    padding: 0.95rem 1rem;
+  }
+
+  .btn-sec {
+    color: var(--readable-muted);
+    border-color: rgba(0,255,209,0.22);
+  }
+
+  .form-input,
+  .form-textarea,
+  .form-select {
+    background: rgba(4,3,10,0.86);
+    border-color: rgba(0,255,209,0.28);
+    color: #f8fbff;
+  }
+
+  .form-input::placeholder,
+  .form-textarea::placeholder {
+    color: rgba(239,246,255,0.66);
+    opacity: 1;
+  }
+
+  .glass-card {
+    border-color: rgba(0,255,209,0.2);
+    background: rgba(0,255,209,0.065);
+  }
+
+  p,
+  label,
+  small,
+  input,
+  textarea,
+  select,
+  li,
+  td,
+  th,
+  [style*='rgba(239,246,255'],
+  [style*='rgba(255,179,71'],
+  [style*='rgba(0,255,209'] {
+    color: rgba(239,246,255,0.82) !important;
+  }
+
+  [style*='color: #00FFD1'],
+  [style*='color:#00FFD1'],
+  [style*='color: #FFB347'],
+  [style*='color:#FFB347'],
+  [style*='color: #C084FC'],
+  [style*='color:#C084FC'],
+  [style*='color: #FF6B9D'],
+  [style*='color:#FF6B9D'] {
+    color: inherit;
+  }
+
+  a,
+  strong,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: #eff6ff;
+  }
+
+  .emo-btn,
+  .btn-primary,
+  .btn-amber,
+  .btn-sec,
+  .install-action {
+    color: inherit !important;
+  }
+
+  .emo-btn.sel-hope,
+  .emo-btn.sel-love,
+  .emo-btn.sel-wisdom,
+  .emo-btn.sel-memory,
+  .emo-btn.sel-warning,
+  .emo-btn.sel-peace,
+  .btn-primary,
+  .btn-amber,
+  .install-action {
+    color: unset !important;
+  }
+
+  .text-size-control button {
+    min-height: 30px;
+  }
+
+  @media (max-width: 560px) {
+    :root[data-text-scale='large'] {
+      --base-font-size: 17px;
+    }
+
+    :root[data-text-scale='xlarge'] {
+      --base-font-size: 18px;
+    }
+
+    .app-nav .text-size-control {
+      transform: scale(0.92);
+      transform-origin: right center;
+    }
+  }
+}

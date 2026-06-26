@@ -3,6 +3,7 @@ import { Check, Crown } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t, TYPEWRITER_PHRASES } from '@/lib/i18n';
 import GetAppButton from '@/components/GetAppButton';
+import TextSizeControl from '@/components/TextSizeControl';
 
 const FEATURES = [
   { icon: '⬡', titleKey: 'chainTitle', descKey: 'featureChainDesc', color: '#00FFD1' },
@@ -100,6 +101,9 @@ export default function LandingPage() {
         padding: '1.5rem',
       }}
     >
+      <div style={{ position: 'fixed', top: 14, right: 14, zIndex: 7 }}>
+        <TextSizeControl compact />
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', maxWidth: 320, textAlign: 'center' }}>
         {/* Tagline */}
         <div style={{ fontSize: '0.56rem', letterSpacing: '0.3em', color: 'rgba(0,255,209,0.6)' }}>

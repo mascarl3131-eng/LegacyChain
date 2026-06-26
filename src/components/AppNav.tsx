@@ -1,6 +1,7 @@
 import { useRef, useCallback } from 'react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
+import TextSizeControl from '@/components/TextSizeControl';
 
 export default function AppNav() {
   const { user, session, premium, setSideMenuOpen, setPage, lang } = useStore();
@@ -60,6 +61,7 @@ export default function AppNav() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+        <TextSizeControl compact />
         <button
           type="button"
           onClick={() => setSideMenuOpen(true)}
