@@ -6,7 +6,6 @@ import { getDemoMsgs, getDemoHumanity } from '@/lib/data';
 import AppNav from '@/components/AppNav';
 import SideMenu from '@/components/SideMenu';
 import BottomTicker from '@/components/BottomTicker';
-import ChainTab from '@/tabs/ChainTab';
 import FamilyLegacyTab from '@/tabs/FamilyLegacyTab';
 import TreeTab from '@/tabs/TreeTab';
 import OriginsTab from '@/tabs/OriginsTab';
@@ -81,7 +80,7 @@ export default function AppPage() {
 
   if (page !== 'app') return null;
 
-  const TabComponent = TABS[tab] || ChainTab;
+  const TabComponent = TABS[tab] || HumanityTab;
 
   return (
     <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>

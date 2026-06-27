@@ -5,14 +5,14 @@ import GetAppButton from '@/components/GetAppButton';
 
 const FAMILY_TABS: { id: TabName; icon: string; labelKey: string }[] = [
   { id: 'chain', icon: '⬡', labelKey: 'navFamilyLegacy' },
-  { id: 'humanity', icon: '🌍', labelKey: 'navHumanity' },
   { id: 'tree', icon: '🌳', labelKey: 'navTree' },
   { id: 'origins', icon: '🧬', labelKey: 'navOrigins' },
+  { id: 'book', icon: '📖', labelKey: 'navBook' },
+  { id: 'challenges', icon: '🏆', labelKey: 'navChal' },
 ];
 
 const LEGACY_TABS: { id: TabName; icon: string; labelKey: string }[] = [
-  { id: 'book', icon: '📖', labelKey: 'navBook' },
-  { id: 'challenges', icon: '🏆', labelKey: 'navChal' },
+  { id: 'humanity', icon: '🌍', labelKey: 'navHumanity' },
 ];
 
 const LEGAL_LINKS = [
@@ -24,7 +24,7 @@ const LEGAL_LINKS = [
 ] as const;
 
 function SectionTitle({ children }: { children: string }) {
-  return <div style={{ fontSize: '0.55rem', letterSpacing: '0.25em', color: 'rgba(239,246,255,0.25)', padding: '0.4rem 1.2rem', textTransform: 'uppercase' }}>{children}</div>;
+  return <div style={{ fontSize: '0.55rem', letterSpacing: '0.25em', color: 'rgba(224,235,255,0.72)', padding: '0.4rem 1.2rem', textTransform: 'uppercase' }}>{children}</div>;
 }
 
 function Divider() {
@@ -43,7 +43,7 @@ export default function SideMenu() {
   };
 
   const renderMenuItem = ({ id, icon, labelKey }: { id: TabName; icon: string; labelKey: string }) => (
-    <button type="button" key={id} onClick={() => handleTab(id)} style={{ width: '100%', border: 'none', display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.75rem 1.2rem', fontFamily: "'DM Mono',monospace", fontSize: '0.78rem', color: tab === id ? '#00FFD1' : 'rgba(239,246,255,0.6)', cursor: 'pointer', textAlign: 'left', letterSpacing: '0.06em', transition: 'all 0.2s', borderLeft: tab === id ? '2px solid #00FFD1' : '2px solid transparent', background: tab === id ? 'rgba(0,255,209,0.04)' : 'transparent' }}>
+    <button type="button" key={id} onClick={() => handleTab(id)} style={{ width: '100%', border: 'none', display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.75rem 1.2rem', fontFamily: 'var(--body-font)', fontSize: '0.78rem', color: tab === id ? '#00FFD1' : 'rgba(224,235,255,0.86)', cursor: 'pointer', textAlign: 'left', letterSpacing: '0.06em', transition: 'all 0.2s', borderLeft: tab === id ? '2px solid #00FFD1' : '2px solid transparent', background: tab === id ? 'rgba(0,255,209,0.04)' : 'transparent' }}>
       {icon} {t(labelKey, lang)}
     </button>
   );
@@ -81,16 +81,16 @@ export default function SideMenu() {
             </div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: '0.62rem', color: session ? '#00FFD1' : '#FFB347', letterSpacing: '0.08em', marginBottom: '0.18rem' }}>{session ? t('connectedAs', lang) : t('guestMode', lang)}</div>
-              <div style={{ fontSize: '0.66rem', color: 'rgba(239,246,255,0.68)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session?.user.email || user?.name || t('guestMode', lang)}</div>
+              <div style={{ fontSize: '0.66rem', color: 'rgba(224,235,255,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session?.user.email || user?.name || t('guestMode', lang)}</div>
             </div>
           </div>
 
           {session ? (
-            <button type="button" onClick={() => void logout()} style={{ width: '100%', padding: '0.55rem', borderRadius: 7, border: '1px solid rgba(239,246,255,0.15)', background: 'rgba(239,246,255,0.03)', color: 'rgba(239,246,255,0.62)', fontFamily: "'DM Mono',monospace", fontSize: '0.62rem', cursor: 'pointer' }}>{t('logoutBtn', lang)}</button>
+            <button type="button" onClick={() => void logout()} style={{ width: '100%', padding: '0.55rem', borderRadius: 7, border: '1px solid rgba(239,246,255,0.15)', background: 'rgba(239,246,255,0.03)', color: 'rgba(224,235,255,0.86)', fontFamily: 'var(--body-font)', fontSize: '0.62rem', cursor: 'pointer' }}>{t('logoutBtn', lang)}</button>
           ) : (
             <>
-              <p style={{ fontSize: '0.57rem', color: 'rgba(239,246,255,0.38)', lineHeight: 1.55, margin: '0 0 0.65rem' }}>{t('guestModeDesc', lang)}</p>
-              <button type="button" onClick={() => void loginWithGoogle()} style={{ width: '100%', padding: '0.58rem', borderRadius: 7, border: '1px solid rgba(255,255,255,0.9)', background: '#fff', color: '#252525', fontFamily: "'DM Mono',monospace", fontSize: '0.62rem', cursor: 'pointer' }}>G&nbsp;&nbsp;{t('googleLogin', lang)}</button>
+              <p style={{ fontSize: '0.57rem', color: 'rgba(224,235,255,0.78)', lineHeight: 1.55, margin: '0 0 0.65rem' }}>{t('guestModeDesc', lang)}</p>
+              <button type="button" onClick={() => void loginWithGoogle()} style={{ width: '100%', padding: '0.58rem', borderRadius: 7, border: '1px solid rgba(255,255,255,0.9)', background: '#fff', color: '#252525', fontFamily: 'var(--body-font)', fontSize: '0.62rem', cursor: 'pointer' }}>G&nbsp;&nbsp;{t('googleLogin', lang)}</button>
             </>
           )}
         </div>
@@ -100,17 +100,17 @@ export default function SideMenu() {
         <div style={{ padding: '0.55rem 1.2rem' }}>
           <GetAppButton variant="menu" />
         </div>
-        <div onClick={() => { setInviteOpen(true); setSideMenuOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.75rem 1.2rem', fontSize: '0.78rem', color: 'rgba(239,246,255,0.6)', cursor: 'pointer', letterSpacing: '0.06em' }}>+ {t('inviteBtn', lang)}</div>
+        <div onClick={() => { setInviteOpen(true); setSideMenuOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.75rem 1.2rem', fontSize: '0.78rem', color: 'rgba(224,235,255,0.86)', cursor: 'pointer', letterSpacing: '0.06em' }}>+ {t('inviteBtn', lang)}</div>
 
         <div style={{ padding: '0.6rem 1.2rem' }}>
-          <select value={lang} onChange={(e) => setLang(e.target.value as typeof lang)} style={{ width: '100%', background: 'rgba(4,3,10,0.8)', border: '1px solid rgba(0,255,209,0.13)', color: '#EFF6FF', fontFamily: "'DM Mono',monospace", fontSize: '0.72rem', padding: '0.45rem 0.7rem', borderRadius: 6, outline: 'none', cursor: 'pointer' }}>
+          <select value={lang} onChange={(e) => setLang(e.target.value as typeof lang)} style={{ width: '100%', background: 'rgba(4,3,10,0.8)', border: '1px solid rgba(0,255,209,0.13)', color: '#EFF6FF', fontFamily: 'var(--body-font)', fontSize: '0.72rem', padding: '0.45rem 0.7rem', borderRadius: 6, outline: 'none', cursor: 'pointer' }}>
             {Object.values(LANGS).map(l => <option key={l.code} value={l.code}>{l.flag} {l.label}</option>)}
           </select>
         </div>
 
         {!premium && (
           <div style={{ margin: '1rem 1.2rem 0', padding: '0.7rem', background: 'rgba(255,179,71,0.06)', border: '1px solid rgba(255,179,71,0.22)', borderRadius: 8, textAlign: 'center', cursor: 'pointer' }} onClick={() => { setUpgradeOpen(true); setSideMenuOpen(false); }}>
-            <p style={{ fontSize: '0.65rem', color: 'rgba(255,179,71,0.7)', letterSpacing: '0.06em', lineHeight: 1.6, marginBottom: '0.5rem' }}>{t('upgradeDesc', lang)}</p>
+            <p style={{ fontSize: '0.65rem', color: 'rgba(255,196,120,0.92)', letterSpacing: '0.06em', lineHeight: 1.6, marginBottom: '0.5rem' }}>{t('upgradeDesc', lang)}</p>
             <button className="btn-amber" style={{ width: '100%', marginTop: 0 }}>✦ {t('unlockBtn', lang)}</button>
           </div>
         )}

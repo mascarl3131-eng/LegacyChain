@@ -104,7 +104,7 @@ const StoreContext = createContext<(AppState & AppActions) | null>(null);
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [page, setPage] = useState<PageName>('landing');
-  const [tab, setTab] = useState<TabName>('chain');
+  const [tab, setTab] = useState<TabName>('humanity');
   const [lang, setLangState] = useState<LangCode>(getInitialLanguage);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);

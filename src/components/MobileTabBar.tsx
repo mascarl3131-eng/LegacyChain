@@ -4,8 +4,8 @@ import { t } from '@/lib/i18n';
 import type { TabName } from '@/lib/store';
 
 const ITEMS: { id: TabName; label: string; icon: typeof Link2 }[] = [
-  { id: 'chain', label: 'navFamilyLegacy', icon: Link2 },
   { id: 'humanity', label: 'navHumanity', icon: Globe2 },
+  { id: 'chain', label: 'navFamilyLegacy', icon: Link2 },
   { id: 'tree', label: 'navTree', icon: Network },
   { id: 'origins', label: 'navOrigins', icon: Dna },
   { id: 'book', label: 'navBook', icon: BookOpen },

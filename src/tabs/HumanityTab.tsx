@@ -5,6 +5,7 @@ import { t } from '@/lib/i18n';
 import { FLAGS, BANNED_WORDS, getDemoHumanity } from '@/lib/data';
 import { countryFlag, getCountryOptions } from '@/lib/countries';
 import HumanityWorldMap from '@/components/HumanityWorldMap';
+import UnlockYearPicker from '@/components/UnlockYearPicker';
 
 const EMOTIONS = ['hope', 'love', 'wisdom', 'peace', 'warning', 'memory'];
 const AUDIENCES = ['future', 'descendants', 'humanity', 'whoever'];
@@ -19,7 +20,7 @@ const EMO_GLOW: Record<string, string> = { hope: '#00FFD1', love: '#FF6B9D', wis
 
 type Voice = {
   id: string; display_name: string; show_profile: boolean; country: string; country_code?: string | null;
-  message: string; emotion: string; audience: string; language: string; reaction_count: number; created_at: string;
+  message: string; emotion: string; audience: string; language: string; reaction_count: number; unlock_year?: number | null; created_at: string;
 };
 
 function getVisitorId() {
@@ -53,10 +54,11 @@ export default function HumanityTab() {
   const [hCountryCode, setHCountryCode] = useState('');
   const [hAudience, setHAudience] = useState('future');
   const [hMsg, setHMsg] = useState('');
-  const [visibility, setVisibility] = useState<'public' | 'family'>('public');
+  const [hUnlockYr, setHUnlockYr] = useState('');
   const [showProfile, setShowProfile] = useState(false);
   const [formError, setFormError] = useState('');
   const countryOptions = useMemo(() => getCountryOptions(lang), [lang]);
+  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -102,6 +104,7 @@ export default function HumanityTab() {
         const samples = getDemoHumanity(lang).map(item => ({
           id: item.id, display_name: item.a, show_profile: false, country: item.c, message: item.text,
           emotion: item.e, audience: 'future', language: lang, reaction_count: item.likes,
+          unlock_year: null,
           created_at: `${item.y}-06-20T00:00:00Z`,
         }));
         setVoices(samples);
@@ -211,23 +214,22 @@ export default function HumanityTab() {
     setFormError('');
     if (!text || !selectedCountry) return setFormError(t('completeRequired', lang));
     if (BANNED_WORDS.some(word => text.toLowerCase().includes(word))) return setFormError(t('modBanned', lang));
-    if (visibility === 'family' && !session) return setFormError(t('loginForFamilyVoice', lang));
-
     const response = await fetch('/api/humanity-messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
       body: JSON.stringify({
         message: text, country: selectedCountry.canonicalName, countryCode: selectedCountry.code,
-        emotion: hEmo, audience: hAudience, visibility, language: lang,
-        displayName: hName.trim(), showProfile,
+        emotion: hEmo, audience: hAudience, visibility: 'public', language: lang,
+        displayName: hName.trim(), showProfile, unlockYear: hUnlockYr || null,
       }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) return setFormError(data.error || t('publishError', lang));
 
     setShowSubmitAnim(true);
-    setHMsg(''); setHName(''); setHCountryCode(''); setFormError('');
-    if (visibility === 'public') {
+    const visibleNow = !hUnlockYr || Number(hUnlockYr) <= currentYear;
+    setHMsg(''); setHName(''); setHCountryCode(''); setHUnlockYr(''); setFormError('');
+    if (visibleNow) {
       setVoices(items => [data.message, ...items].slice(0, PER_PAGE));
       setTotal(value => value + 1);
     }
@@ -298,6 +300,7 @@ export default function HumanityTab() {
                 <span style={{ color: EMO_GLOW[voice.emotion], fontSize: '.5rem' }}>{t(`e${voice.emotion[0].toUpperCase()}${voice.emotion.slice(1)}`, lang)}</span>
               </div>
               <p style={{ color: 'rgba(239,246,255,.8)', fontSize: '.76rem', lineHeight: 1.75 }}>{voice.message}</p>
+              {voice.unlock_year && <div style={{ fontSize: '.56rem', color: 'rgba(239,246,255,.34)', marginTop: '-.2rem', marginBottom: '.55rem' }}>🔒 {t('sealedUntil', lang)} {voice.unlock_year}</div>}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '.5rem', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', gap: '.25rem' }}>
                   <button className="btn-sec" onClick={() => void react(voice, 'hope')} style={{ color: activeReaction === 'hope' ? '#FFB347' : undefined, padding: '.28rem .45rem' }} aria-label={t('supportVoice', lang)}><Sparkles size={12} /></button>
@@ -328,7 +331,16 @@ export default function HumanityTab() {
         <textarea className="form-textarea" value={hMsg} onChange={event => setHMsg(event.target.value)} maxLength={500} placeholder={t('yourMsg', lang)} />
         <div style={{ textAlign: 'right', color: 'rgba(239,246,255,.25)', fontSize: '.52rem' }}>{hMsg.length}/500</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.3rem', margin: '.55rem 0' }}>{EMOTIONS.map(item => <button key={item} className={`emo-btn sel-${item === hEmo ? item : ''}`} onClick={() => setHEmo(item)}>{t(`e${item[0].toUpperCase()}${item.slice(1)}`, lang)}</button>)}</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.4rem', marginBottom: '.55rem' }}><button className="btn-sec" onClick={() => setVisibility('public')} style={{ borderColor: visibility === 'public' ? '#00FFD1' : undefined, color: visibility === 'public' ? '#00FFD1' : undefined }}>{t('publicVoice', lang)}</button><button className="btn-sec" onClick={() => setVisibility('family')} style={{ borderColor: visibility === 'family' ? '#C084FC' : undefined, color: visibility === 'family' ? '#C084FC' : undefined }}>{t('familyVoice', lang)}</button></div>
+        <div style={{ marginBottom: '.55rem' }}>
+          <label style={{ display: 'block', fontSize: '.62rem', color: 'rgba(239,246,255,.42)', letterSpacing: '.12em', marginBottom: '.32rem' }}>
+            {t('unlockYr', lang)} <span style={{ opacity: 0.4 }}>({t('optional', lang)})</span>
+          </label>
+          <UnlockYearPicker lang={lang} value={hUnlockYr} onChange={setHUnlockYr} />
+        </div>
+        <div className="glass-card" style={{ padding: '.65rem .75rem', marginBottom: '.55rem', borderColor: 'rgba(0,255,209,.16)', background: 'rgba(0,255,209,.04)' }}>
+          <div style={{ color: '#00FFD1', fontSize: '.58rem', letterSpacing: '.1em', marginBottom: '.2rem' }}>{t('publicVoice', lang)}</div>
+          <div style={{ color: 'rgba(239,246,255,.42)', fontSize: '.56rem', lineHeight: 1.55 }}>{t('featureHumanityDesc', lang)}</div>
+        </div>
         {session && <label style={{ display: 'flex', alignItems: 'center', gap: '.45rem', color: 'rgba(239,246,255,.45)', fontSize: '.58rem', marginBottom: '.6rem' }}><input type="checkbox" checked={showProfile} onChange={event => setShowProfile(event.target.checked)} /> {t('showPublicProfile', lang)} ({user?.first})</label>}
         {formError && <div style={{ color: '#FF6B6B', fontSize: '.58rem', marginBottom: '.5rem' }}>{formError}</div>}
         <button className="btn-primary" onClick={() => void submit()} disabled={sampleMode}>{sampleMode ? t('databaseSetupRequired', lang) : t('sealVoice', lang)}</button>

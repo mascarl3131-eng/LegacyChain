@@ -110,7 +110,7 @@ export default function OnboardingPage() {
             background: 'rgba(4,3,10,0.7)',
             border: '1px solid rgba(0,255,209,0.13)',
             color: '#00FFD1',
-            fontFamily: "'DM Mono',monospace",
+            fontFamily: "var(--body-font)",
             fontSize: '0.68rem',
             padding: '0.35rem 0.7rem',
             borderRadius: 4,
@@ -143,7 +143,7 @@ export default function OnboardingPage() {
                   gap: '0.5rem',
                   padding: '0.55rem 0.9rem',
                   fontSize: '0.72rem',
-                  color: l.code === lang ? '#00FFD1' : 'rgba(239,246,255,0.7)',
+                  color: l.code === lang ? '#00FFD1' : 'rgba(224,235,255,0.9)',
                   cursor: 'pointer',
                   letterSpacing: '0.05em',
                   background: l.code === lang ? 'rgba(0,255,209,0.05)' : 'transparent',
@@ -167,7 +167,7 @@ export default function OnboardingPage() {
           background: 'transparent',
           border: '1px solid rgba(0,255,209,0.13)',
           color: '#00FFD1',
-          fontFamily: "'DM Mono',monospace",
+          fontFamily: "var(--body-font)",
           fontSize: '0.72rem',
           padding: '0.4rem 0.85rem',
           borderRadius: 4,
@@ -180,7 +180,7 @@ export default function OnboardingPage() {
 
       {/* Center Text */}
       <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '1rem' }}>
-        <p style={{ color: 'rgba(239,246,255,0.5)', marginTop: '0.8rem', fontSize: '0.8rem', letterSpacing: '0.12em' }}>
+        <p style={{ color: 'rgba(224,235,255,0.92)', textShadow: '0 0 10px rgba(4,3,10,0.65)', marginTop: '0.8rem', fontSize: '0.84rem', letterSpacing: '0.08em' }}>
           {t('obSub', lang)}
         </p>
       </div>

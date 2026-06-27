@@ -11,6 +11,7 @@ function getParams(req: ApiRequest) {
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
   const admin = getAdminSupabase();
+  const currentYear = new Date().getFullYear();
 
   if (req.method === 'GET') {
     const params = getParams(req);
@@ -26,9 +27,10 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
     let query = admin
       .from('humanity_messages')
-      .select('id,display_name,show_profile,country,country_code,message,emotion,audience,language,reaction_count,created_at', { count: 'exact' })
+      .select('id,display_name,show_profile,country,country_code,message,emotion,audience,language,reaction_count,unlock_year,created_at', { count: 'exact' })
       .eq('visibility', 'public')
-      .eq('status', 'published');
+      .eq('status', 'published')
+      .or(`unlock_year.is.null,unlock_year.lte.${currentYear}`);
 
     if (country) query = query.eq('country', country);
     if (emotion && ALLOWED_EMOTIONS.has(emotion)) query = query.eq('emotion', emotion);
@@ -63,9 +65,10 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const audience = String(body.audience || '');
     const visibility = body.visibility === 'family' ? 'family' : 'public';
     const language = String(body.language || 'en').slice(0, 5);
+    const unlockYear = body.unlockYear ? Number(body.unlockYear) : null;
     const user = await getAuthenticatedUser(req);
 
-    if (message.length < 3 || message.length > 500 || !country || !/^[A-Z]{2}$/.test(countryCode) || !ALLOWED_EMOTIONS.has(emotion) || !ALLOWED_AUDIENCES.has(audience)) {
+    if (message.length < 3 || message.length > 500 || !country || !/^[A-Z]{2}$/.test(countryCode) || !ALLOWED_EMOTIONS.has(emotion) || !ALLOWED_AUDIENCES.has(audience) || (unlockYear !== null && (unlockYear < 1900 || unlockYear > 2300))) {
       return res.status(400).json({ error: 'Invalid voice data' });
     }
     const moderation = moderateText(message);
@@ -91,9 +94,10 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         audience,
         visibility,
         language,
+        unlock_year: unlockYear,
         status: 'published',
       })
-      .select('id,display_name,show_profile,country,country_code,message,emotion,audience,language,reaction_count,created_at')
+      .select('id,display_name,show_profile,country,country_code,message,emotion,audience,language,reaction_count,unlock_year,created_at')
       .single();
     if (error) return res.status(500).json({ error: error.message });
     return res.status(201).json({ message: data });

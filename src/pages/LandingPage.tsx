@@ -6,13 +6,13 @@ import GetAppButton from '@/components/GetAppButton';
 import TextSizeControl from '@/components/TextSizeControl';
 
 const FEATURES = [
+  { icon: '🌍', titleKey: 'hvTitle', descKey: 'featureHumanityDesc', color: '#00FFD1' },
   { icon: '⬡', titleKey: 'chainTitle', descKey: 'featureChainDesc', color: '#00FFD1' },
   { icon: '🌳', titleKey: 'treeTitle', descKey: 'featureTreeDesc', color: '#00FFD1' },
   { icon: '🧬', titleKey: 'originsTitle', descKey: 'featureOriginsDesc', color: '#00FFD1' },
   { icon: '🎨', titleKey: 'navMural', descKey: 'featureMuralDesc', color: '#C084FC', premium: true },
-  { icon: '🏆', titleKey: 'chalTitle', descKey: 'featureChallengesDesc', color: '#00FFD1' },
+  { icon: '🏆', titleKey: 'navChal', descKey: 'featureChallengesDesc', color: '#00FFD1' },
   { icon: '📖', titleKey: 'bookTitle', descKey: 'featureBookDesc', color: '#C084FC', premium: true },
-  { icon: '🌍', titleKey: 'hvTitle', descKey: 'featureHumanityDesc', color: '#00FFD1' },
   { icon: '🎙', titleKey: 'audioVideo', descKey: 'featureAudioDesc', color: '#FFB347', premium: true },
 ];
 
@@ -104,9 +104,9 @@ export default function LandingPage() {
       <div style={{ position: 'fixed', top: 14, right: 14, zIndex: 7 }}>
         <TextSizeControl compact />
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', maxWidth: 320, textAlign: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', maxWidth: 340, textAlign: 'center' }}>
         {/* Tagline */}
-        <div style={{ fontSize: '0.56rem', letterSpacing: '0.3em', color: 'rgba(0,255,209,0.6)' }}>
+        <div style={{ fontSize: '0.56rem', letterSpacing: '0.3em', color: 'rgba(0,255,209,0.82)' }}>
           {t('landingTagline', lang)}
         </div>
 
@@ -144,7 +144,7 @@ export default function LandingPage() {
         </div>
 
         {/* Subtitle */}
-        <p style={{ fontSize: '0.7rem', color: 'rgba(239,246,255,0.4)', lineHeight: 1.85, width: 240, flexShrink: 0 }}>
+        <p style={{ fontSize: '0.72rem', color: 'rgba(224,235,255,0.86)', lineHeight: 1.85, width: 260, flexShrink: 0 }}>
           {t('landingSub', lang)}
         </p>
 
@@ -164,7 +164,7 @@ export default function LandingPage() {
               <div style={{ fontSize: '0.58rem', color: f.color, letterSpacing: '0.1em', marginBottom: '0.25rem' }}>
                 {f.icon} {t(f.titleKey, lang)} {f.premium && '✦'}
               </div>
-              <div style={{ fontSize: '0.6rem', color: 'rgba(239,246,255,0.4)', lineHeight: 1.5 }}>
+              <div style={{ fontSize: '0.6rem', color: 'rgba(224,235,255,0.82)', lineHeight: 1.5 }}>
                 {t(f.descKey, lang)}
               </div>
             </div>
@@ -172,7 +172,7 @@ export default function LandingPage() {
         </div>
 
         {/* Premium Note */}
-        <div style={{ fontSize: '0.55rem', color: 'rgba(255,179,71,0.5)', letterSpacing: '0.08em' }}>
+        <div style={{ fontSize: '0.55rem', color: 'rgba(255,191,104,0.85)', letterSpacing: '0.08em' }}>
           {t('premiumNote', lang)}
         </div>
 
@@ -181,15 +181,15 @@ export default function LandingPage() {
             <span style={{ display: 'flex', alignItems: 'center', gap: '.45rem', color: '#FFB347', fontSize: '.65rem', letterSpacing: '.11em' }}><Crown size={16} /> {t('premiumLandingTitle', lang)}</span>
             <strong style={{ color: '#EFF6FF', fontSize: '.8rem' }}>$10</strong>
           </div>
-          <p style={{ margin: '0 0 .65rem', color: 'rgba(239,246,255,.46)', fontSize: '.56rem', lineHeight: 1.6 }}>{t('premiumLandingDesc', lang)}</p>
+          <p style={{ margin: '0 0 .65rem', color: 'rgba(224,235,255,.84)', fontSize: '.58rem', lineHeight: 1.65 }}>{t('premiumLandingDesc', lang)}</p>
           <div style={{ display: 'grid', gap: '.35rem' }}>
             {['f2', 'f3', 'f4', 'f6', 'f8'].map(key => (
-              <span key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: '.4rem', color: 'rgba(239,246,255,.64)', fontSize: '.55rem', lineHeight: 1.45 }}>
+              <span key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: '.4rem', color: 'rgba(224,235,255,.9)', fontSize: '.56rem', lineHeight: 1.45 }}>
                 <Check size={12} color="#00FFD1" style={{ flexShrink: 0, marginTop: 1 }} /> {t(key, lang)}
               </span>
             ))}
           </div>
-          <div style={{ marginTop: '.65rem', paddingTop: '.55rem', borderTop: '1px solid rgba(255,179,71,.14)', color: 'rgba(255,179,71,.65)', fontSize: '.51rem', lineHeight: 1.5 }}>{t('premiumLifetimeClarification', lang)}</div>
+          <div style={{ marginTop: '.65rem', paddingTop: '.55rem', borderTop: '1px solid rgba(255,179,71,.14)', color: 'rgba(255,196,120,.86)', fontSize: '.52rem', lineHeight: 1.55 }}>{t('premiumLifetimeClarification', lang)}</div>
         </section>
 
         <div style={{ width: 'min(260px,80vw)', display: 'flex', flexDirection: 'column', gap: '0.55rem', flexShrink: 0 }}>
@@ -210,7 +210,7 @@ export default function LandingPage() {
               border: '1px solid #fff',
               borderRadius: 10,
               color: '#2d2d2d',
-              fontFamily: "'DM Mono',monospace",
+              fontFamily: "var(--body-font)",
               fontSize: '0.75rem',
               cursor: loading ? 'wait' : 'pointer',
               opacity: loading ? 0.7 : 1,
@@ -225,7 +225,7 @@ export default function LandingPage() {
             <span>{t('googleLogin', lang)}</span>
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'rgba(239,246,255,0.24)', fontSize: '0.52rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'rgba(224,235,255,0.7)', fontSize: '0.54rem' }}>
             <span style={{ height: 1, flex: 1, background: 'rgba(239,246,255,0.12)' }} />
             <span>{t('orLabel', lang)}</span>
             <span style={{ height: 1, flex: 1, background: 'rgba(239,246,255,0.12)' }} />
@@ -239,8 +239,8 @@ export default function LandingPage() {
               padding: '0.75rem',
               background: 'rgba(0,255,209,0.025)',
               border: '1px solid rgba(0,255,209,0.25)',
-              color: 'rgba(239,246,255,0.72)',
-              fontFamily: "'DM Mono',monospace",
+              color: '#EFF6FF',
+              fontFamily: "var(--body-font)",
               fontSize: '0.7rem',
               cursor: 'pointer',
               borderRadius: 10,
@@ -251,7 +251,7 @@ export default function LandingPage() {
         </div>
 
         {/* Counters */}
-        <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.6rem', color: 'rgba(239,246,255,0.32)', flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.6rem', color: 'rgba(224,235,255,0.82)', flexShrink: 0 }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '0.88rem', color: '#00FFD1', fontWeight: 500 }}>{counters.fam.toLocaleString()}</div>
             <span>{t('families', lang)}</span>
@@ -266,14 +266,14 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div style={{ fontSize: '0.5rem', letterSpacing: '0.2em', color: 'rgba(0,255,209,0.2)', paddingBottom: '0.5rem' }}>
+        <div style={{ fontSize: '0.5rem', letterSpacing: '0.2em', color: 'rgba(0,255,209,0.56)', paddingBottom: '0.5rem' }}>
           {t('landingFooter', lang)}
         </div>
         <div style={{ display: 'flex', gap: '.75rem', flexWrap: 'wrap', justifyContent: 'center', fontSize: '.5rem', paddingBottom: '.75rem' }}>
-          <a href="/legal/privacy.html" style={{ color: 'rgba(239,246,255,.38)' }}>{t('privacyPolicy', lang)}</a>
-          <a href="/legal/terms.html" style={{ color: 'rgba(239,246,255,.38)' }}>{t('termsPolicy', lang)}</a>
-          <a href="/legal/cookies.html" style={{ color: 'rgba(239,246,255,.38)' }}>{t('cookiesPolicy', lang)}</a>
-          <a href="/legal/data-deletion.html" style={{ color: 'rgba(239,246,255,.38)' }}>{t('dataDeletionPolicy', lang)}</a>
+          <a href="/legal/privacy.html" style={{ color: 'rgba(224,235,255,.8)' }}>{t('privacyPolicy', lang)}</a>
+          <a href="/legal/terms.html" style={{ color: 'rgba(224,235,255,.8)' }}>{t('termsPolicy', lang)}</a>
+          <a href="/legal/cookies.html" style={{ color: 'rgba(224,235,255,.8)' }}>{t('cookiesPolicy', lang)}</a>
+          <a href="/legal/data-deletion.html" style={{ color: 'rgba(224,235,255,.8)' }}>{t('dataDeletionPolicy', lang)}</a>
         </div>
       </div>
     </div>
