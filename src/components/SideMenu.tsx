@@ -65,12 +65,12 @@ export default function SideMenu() {
           <button onClick={() => setSideMenuOpen(false)} style={{ background: 'transparent', border: 'none', color: 'rgba(239,246,255,0.4)', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
         </div>
 
-        <SectionTitle>{t('familySection', lang)}</SectionTitle>
-        {FAMILY_TABS.map(renderMenuItem)}
-
-        <Divider />
         <SectionTitle>{t('legacySection', lang)}</SectionTitle>
         {LEGACY_TABS.map(renderMenuItem)}
+
+        <Divider />
+        <SectionTitle>{t('familySection', lang)}</SectionTitle>
+        {FAMILY_TABS.map(renderMenuItem)}
 
         <Divider />
         <SectionTitle>{t('accountSection', lang)}</SectionTitle>
