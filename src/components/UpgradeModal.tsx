@@ -50,7 +50,7 @@ export default function UpgradeModal() {
         <h3 className="font-display" style={{ color: '#FFB347', fontSize: '0.9rem', marginBottom: '0.35rem', letterSpacing: '0.1em' }}>{t('upgradeTitle', lang)}</h3>
         <p style={{ fontSize: '0.72rem', color: 'rgba(224,235,255,0.86)', marginBottom: '1.2rem', lineHeight: 1.7 }}>{t('upgradeDesc', lang)}</p>
         <div style={{ fontSize: '2.2rem', color: '#EFF6FF', fontWeight: 500, margin: '0.8rem 0' }}>
-          $10 <span style={{ fontSize: '0.72rem', color: 'rgba(224,235,255,0.82)' }}>{t('once', lang)}</span>
+          €9.99 <span style={{ fontSize: '0.72rem', color: 'rgba(224,235,255,0.82)' }}>{t('once', lang)}</span>
         </div>
         <div style={{ textAlign: 'left', margin: '0.8rem 0', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
           {FEATS.map(f => (

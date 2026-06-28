@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Focus, List, Maximize2, MessageCircle, Network, Plus, Search, UserRound, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
@@ -11,7 +11,7 @@ const GEN_Y = [70, 190, 310];
 const DEMO_TREE_NAMES = ['Robert Doe', 'Irène Doe', 'Jean Doe', 'Marie Doe', 'Sophie Doe', 'Lucas Doe'];
 
 export default function TreeTab() {
-  const { lang, msgs, treeNodes, setTreeNodes } = useStore();
+  const { lang, msgs, treeNodes, setTreeNodes, session, activeFamilyId, showNotif } = useStore();
   const viewportRef = useRef<HTMLDivElement>(null);
   const canvasScrollerRef = useRef<HTMLDivElement>(null);
   const panRef = useRef({ active: false, pointerId: -1, x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
@@ -28,6 +28,7 @@ export default function TreeTab() {
   const [by, setBy] = useState('');
   const [rel, setRel] = useState('child');
   const [relativeTo, setRelativeTo] = useState(treeNodes[3]?.id || treeNodes[0]?.id || 0);
+  const [cloudReady, setCloudReady] = useState(false);
   const isDemoTree = treeNodes.length === DEMO_TREE_NAMES.length && treeNodes.every(node => DEMO_TREE_NAMES.includes(node.n));
 
   const selectedMem = treeNodes.find(node => node.id === selectedId) || null;
@@ -37,9 +38,101 @@ export default function TreeTab() {
     return matchesGeneration && matchesQuery;
   }), [generation, query, treeNodes]);
   const visibleIds = new Set(visibleNodes.map(node => node.id));
+  const layout = useMemo(() => {
+    const groups = new Map<number, TreeNode[]>();
+    treeNodes.forEach(node => {
+      const items = groups.get(node.gen) || [];
+      items.push(node);
+      groups.set(node.gen, items);
+    });
+
+    const positions = new Map<number, { x: number; y: number }>();
+    let canvasWidth = 700;
+
+    [0, 1, 2].forEach(gen => {
+      const items = (groups.get(gen) || []).slice().sort((a, b) => a.b - b.b || a.n.localeCompare(b.n) || a.id - b.id);
+      const cardWidth = 120;
+      const gap = 52;
+      const totalWidth = items.length ? (items.length * cardWidth) + ((items.length - 1) * gap) : 0;
+      canvasWidth = Math.max(canvasWidth, totalWidth + 140);
+      const startX = Math.max(50, (canvasWidth - totalWidth) / 2);
+      items.forEach((node, index) => {
+        positions.set(node.id, {
+          x: Math.round(startX + index * (cardWidth + gap)),
+          y: GEN_Y[gen] - 32,
+        });
+      });
+    });
+
+    return {
+      positions,
+      canvasWidth: Math.max(700, canvasWidth),
+      canvasHeight: 390,
+    };
+  }, [treeNodes]);
 
   const getNodeMsgs = (name: string) => msgs.filter(message => message.a === name.split(' ')[0]);
   const generationLabel = (gen: number) => t(['genGrandparents', 'genParents', 'genChildren'][gen], lang);
+
+  const persistTree = async (nextNodes: TreeNode[], nextLinks: [number, number][]) => {
+    if (!session?.access_token || !activeFamilyId) return;
+    try {
+      const response = await fetch('/api/family-tree', {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          familyId: activeFamilyId,
+          nodes: nextNodes,
+          links: nextLinks,
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Family tree sync failed');
+      }
+      setCloudReady(true);
+    } catch (error) {
+      console.error('Family tree sync:', error);
+      showNotif(lang === 'fr' ? "Erreur de synchro de l'arbre familial" : 'Family tree sync error', '#FF6B6B');
+    }
+  };
+
+  useEffect(() => {
+    if (!session?.access_token || !activeFamilyId) return;
+    let active = true;
+    const loadTree = async () => {
+      try {
+        const response = await fetch(`/api/family-tree?familyId=${encodeURIComponent(activeFamilyId)}`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !active) return;
+        if (Array.isArray(data.nodes) && data.nodes.length) {
+          setTreeNodes(data.nodes);
+          setLinks(Array.isArray(data.links) ? data.links : []);
+          setRelativeTo((current) => current || data.nodes[0]?.id || 0);
+        }
+        setCloudReady(true);
+      } catch {
+        if (active) setCloudReady(false);
+      }
+    };
+
+    void loadTree();
+    const timer = window.setInterval(() => void loadTree(), 20000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [activeFamilyId, session?.access_token, setTreeNodes]);
+
+  useEffect(() => {
+    if (selectedId && !treeNodes.some(node => node.id === selectedId)) setSelectedId(null);
+    if (relativeTo && !treeNodes.some(node => node.id === relativeTo)) setRelativeTo(treeNodes[0]?.id || 0);
+  }, [relativeTo, selectedId, treeNodes]);
 
   const addMember = () => {
     if (!fn.trim()) return;
@@ -52,8 +145,11 @@ export default function TreeTab() {
         y: GEN_Y[1],
         gen: 1,
       };
-      setTreeNodes([newNode]);
-      setLinks([]);
+      const nextNodes = [newNode];
+      const nextLinks: [number, number][] = [];
+      setTreeNodes(nextNodes);
+      setLinks(nextLinks);
+      void persistTree(nextNodes, nextLinks);
       setFn('');
       setLn('');
       setBy('');
@@ -75,15 +171,19 @@ export default function TreeTab() {
       id,
       n: `${fn.trim()} ${ln.trim() || reference?.n.split(' ').slice(1).join(' ') || 'Doe'}`,
       b: parseInt(by) || new Date().getFullYear(),
-      x: 110 + sameGeneration.length * 145,
+      x: 110 + sameGeneration.length * 165,
       y: GEN_Y[gen],
       gen,
     };
 
-    setTreeNodes([...treeNodes, newNode]);
+    const nextNodes = [...treeNodes, newNode];
+    let nextLinks = links;
     if (reference) {
-      setLinks(current => [...current, rel === 'parent' || rel === 'grandparent' ? [id, reference.id] : [reference.id, id]]);
+      nextLinks = [...links, rel === 'parent' || rel === 'grandparent' ? [id, reference.id] : [reference.id, id]];
+      setLinks(nextLinks);
     }
+    setTreeNodes(nextNodes);
+    void persistTree(nextNodes, nextLinks);
     setFn('');
     setLn('');
     setBy('');
@@ -126,6 +226,12 @@ export default function TreeTab() {
     scroller.scrollLeft = pan.scrollLeft - (event.clientX - pan.x);
     scroller.scrollTop = pan.scrollTop - (event.clientY - pan.y);
     event.preventDefault();
+  };
+
+  const handleWheelZoom = (event: React.WheelEvent<HTMLDivElement>) => {
+    if (!event.ctrlKey) return;
+    event.preventDefault();
+    setZoom(value => Math.min(1.75, Math.max(0.42, value + (event.deltaY > 0 ? -0.08 : 0.08))));
   };
 
   const stopPan = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -188,6 +294,7 @@ export default function TreeTab() {
             onPointerMove={movePan}
             onPointerUp={stopPan}
             onPointerCancel={stopPan}
+            onWheel={handleWheelZoom}
             style={{
               overflow: 'auto',
               minHeight: 390,
@@ -196,15 +303,20 @@ export default function TreeTab() {
               touchAction: 'pan-x pan-y',
             }}
           >
-            <div style={{ width: 700, height: 390, transform: `scale(${zoom})`, transformOrigin: 'center center', transition: 'transform .2s ease' }}>
-              <svg viewBox="0 0 700 390" width="700" height="390" style={{ display: 'block' }}>
+            <div style={{ width: layout.canvasWidth, height: layout.canvasHeight, transform: `scale(${zoom})`, transformOrigin: 'center center', transition: 'transform .2s ease', position: 'relative' }}>
+              <svg viewBox={`0 0 ${layout.canvasWidth} ${layout.canvasHeight}`} width={layout.canvasWidth} height={layout.canvasHeight} style={{ display: 'block' }}>
                 {links.map(([from, to], index) => {
                   const a = treeNodes.find(node => node.id === from);
                   const b = treeNodes.find(node => node.id === to);
                   if (!a || !b || !visibleIds.has(a.id) || !visibleIds.has(b.id)) return null;
-                  const ax = a.x + 55;
-                  const bx = b.x + 55;
-                  return <path key={index} d={`M${ax},${a.y + 32} C${ax},${(a.y + b.y) / 2} ${bx},${(a.y + b.y) / 2} ${bx},${b.y - 32}`} fill="none" stroke="rgba(0,255,209,0.28)" strokeWidth="1.4" />;
+                  const fromPos = layout.positions.get(a.id);
+                  const toPos = layout.positions.get(b.id);
+                  if (!fromPos || !toPos) return null;
+                  const ax = fromPos.x + 60;
+                  const bx = toPos.x + 60;
+                  const ay = fromPos.y + 64;
+                  const by = toPos.y;
+                  return <path key={index} d={`M${ax},${ay} C${ax},${(ay + by) / 2} ${bx},${(ay + by) / 2} ${bx},${by}`} fill="none" stroke="rgba(0,255,209,0.28)" strokeWidth="1.4" />;
                 })}
               </svg>
 
@@ -212,13 +324,14 @@ export default function TreeTab() {
                 const color = GEN_COLORS[node.gen];
                 const nodeMsgs = getNodeMsgs(node.n);
                 const active = selectedId === node.id;
+                const pos = layout.positions.get(node.id) || { x: node.x, y: node.y - 32 };
                 return (
                   <button
                     type="button"
                     key={node.id}
                     onClick={() => setSelectedId(node.id)}
                     style={{
-                      position: 'absolute', left: node.x, top: node.y - 32, width: 110, minHeight: 64,
+                      position: 'absolute', left: pos.x, top: pos.y, width: 120, minHeight: 64,
                       borderRadius: 12, border: `1px solid ${active ? color : `${color}66`}`,
                       background: active ? `${color}18` : 'rgba(4,3,10,0.92)', color: '#EFF6FF',
                       boxShadow: active ? `0 0 20px ${color}22` : 'none', cursor: 'pointer', padding: '0.55rem',
@@ -256,6 +369,14 @@ export default function TreeTab() {
       <button className="btn-primary" style={{ marginTop: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem' }} onClick={() => setShowAdd(true)}>
         <Plus size={15} /> {t('addMember', lang).replace('+ ', '')}
       </button>
+
+      {activeFamilyId && (
+        <div style={{ marginTop: '0.45rem', fontSize: '0.56rem', color: cloudReady ? 'rgba(0,255,209,0.7)' : 'rgba(255,179,71,0.8)' }}>
+          {cloudReady
+            ? (lang === 'fr' ? "Arbre synchronisé avec votre famille" : 'Tree synced with your family')
+            : (lang === 'fr' ? "Synchronisation de l'arbre en attente" : 'Tree sync pending')}
+        </div>
+      )}
 
       {showAdd && (
         <div className="glass-card" style={{ marginTop: '0.9rem', position: 'relative' }}>

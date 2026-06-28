@@ -206,6 +206,30 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, [loadPremium, syncUserFromSupabase]);
 
+  useEffect(() => {
+    if (!session?.access_token) {
+      setActiveFamilyId(null);
+      return;
+    }
+    let active = true;
+    fetch('/api/families', { headers: { Authorization: `Bearer ${session.access_token}` } })
+      .then(async response => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !active) return;
+        const families = Array.isArray(data.families) ? data.families : [];
+        const preferred = activeFamilyId && families.some((item: { family?: { id?: string } }) => item.family?.id === activeFamilyId)
+          ? activeFamilyId
+          : families[0]?.family?.id || null;
+        if (preferred) {
+          setActiveFamilyId(preferred);
+          const family = families.find((item: { family?: { id?: string; name?: string } }) => item.family?.id === preferred)?.family;
+          if (family?.name) setFamilyName(family.name);
+        }
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [activeFamilyId, session?.access_token]);
+
   const setLang = useCallback((l: LangCode) => {
     setLangState(l);
     localStorage.setItem('legacychain-language', l);
