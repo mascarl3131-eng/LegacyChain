@@ -26,6 +26,16 @@ function extensionForMime(type: string) {
   return 'webm';
 }
 
+async function uploadMedia(path: string, file: Blob | File, contentType: string) {
+  const first = await supabase.storage.from('family-media').upload(path, file, { contentType, upsert: false });
+  if (!first.error) return first;
+  const message = first.error.message.toLowerCase();
+  if (contentType.startsWith('video/webm') && (message.includes('mime') || message.includes('type'))) {
+    return supabase.storage.from('family-media').upload(path, file, { contentType: 'audio/webm', upsert: false });
+  }
+  return first;
+}
+
 export default function ChainTab() {
   const { lang, user, session, premium, familyName, activeFamilyId, emo, setEmo, msgs, addMsg, setMsgs, setImmersiveMsg, setUpgradeOpen, setShowSubmitAnim, showNotif } = useStore();
   const [msgType, setMsgType] = useState('standard');
@@ -127,22 +137,22 @@ export default function ChainTab() {
         if (photoFile) {
           const extension = photoFile.name.split('.').pop()?.toLowerCase() || 'jpg';
           photoPath = `${basePath}/${crypto.randomUUID()}.${extension}`;
-          const { error } = await supabase.storage.from('family-media').upload(photoPath, photoFile, { contentType: photoFile.type, upsert: false });
+          const { error } = await uploadMedia(photoPath, photoFile, photoFile.type);
           if (error) throw error;
           uploadedPaths.push(photoPath);
         }
         if (audioBlob) {
           const extension = audioBlob.type.includes('mp4') ? 'm4a' : audioBlob.type.includes('ogg') ? 'ogg' : 'webm';
           audioPath = `${basePath}/${crypto.randomUUID()}.${extension}`;
-          const { error } = await supabase.storage.from('family-media').upload(audioPath, audioBlob, { contentType: audioBlob.type || 'audio/webm', upsert: false });
+          const { error } = await uploadMedia(audioPath, audioBlob, audioBlob.type || 'audio/webm');
           if (error) throw error;
           uploadedPaths.push(audioPath);
         }
         if (videoBlob) {
           if (videoBlob.size > MAX_MEDIA_BYTES) throw new Error('Video too large');
           const extension = extensionForMime(videoBlob.type);
-          videoPath = `${basePath}/${crypto.randomUUID()}.${extension}`;
-          const { error } = await supabase.storage.from('family-media').upload(videoPath, videoBlob, { contentType: videoBlob.type || 'video/webm', upsert: false });
+          videoPath = `${basePath}/video-${crypto.randomUUID()}.${extension}`;
+          const { error } = await uploadMedia(videoPath, videoBlob, videoBlob.type || 'video/webm');
           if (error) throw error;
           uploadedPaths.push(videoPath);
         }
