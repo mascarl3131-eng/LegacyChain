@@ -31,6 +31,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   const user = await getAuthenticatedUser(req);
   if (!user) return res.status(401).json({ error: 'Authentication required' });
   const admin = getAdminSupabase();
+  const currentYear = new Date().getFullYear();
 
   if (req.method === 'GET') {
     const familyId = String(params(req).get('familyId') || '');
@@ -40,6 +41,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       .from('family_messages')
       .select('id,author_name,message,emotion,message_type,unlock_year,baby_name,adulthood_year,photo_path,audio_path,video_path,created_at')
       .eq('family_id', familyId)
+      .or(`unlock_year.is.null,unlock_year.lte.${currentYear}`)
       .order('created_at', { ascending: false })
       .limit(200);
     if (error && isMissingVideoPathError(error)) {
@@ -47,6 +49,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         .from('family_messages')
         .select('id,author_name,message,emotion,message_type,unlock_year,baby_name,adulthood_year,photo_path,audio_path,created_at')
         .eq('family_id', familyId)
+        .or(`unlock_year.is.null,unlock_year.lte.${currentYear}`)
         .order('created_at', { ascending: false })
         .limit(200);
       data = fallback.data;
