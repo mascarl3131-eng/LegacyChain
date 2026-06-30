@@ -12,6 +12,7 @@ export interface Message {
   dy?: number | null;
   audioUrl?: string | null;
   photo?: string | null;
+  videoUrl?: string | null;
 }
 
 export interface HumanityMessage {

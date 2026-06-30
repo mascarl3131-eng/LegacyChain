@@ -25,14 +25,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
     const { data, error } = await admin
       .from('family_messages')
-      .select('id,author_name,message,emotion,message_type,unlock_year,baby_name,adulthood_year,photo_path,audio_path,created_at')
+      .select('id,author_name,message,emotion,message_type,unlock_year,baby_name,adulthood_year,photo_path,audio_path,video_path,created_at')
       .eq('family_id', familyId)
       .order('created_at', { ascending: false })
       .limit(200);
     if (error) return res.status(500).json({ error: error.message });
 
     const messages = await Promise.all((data || []).map(async row => {
-      const paths = [row.photo_path, row.audio_path].filter(Boolean) as string[];
+      const paths = [row.photo_path, row.audio_path, row.video_path].filter(Boolean) as string[];
       const signed = paths.length
         ? await admin.storage.from('family-media').createSignedUrls(paths, 60 * 60)
         : { data: [] };
@@ -49,6 +49,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         dy: row.adulthood_year,
         photo: row.photo_path ? urls.get(row.photo_path) || null : null,
         audioUrl: row.audio_path ? urls.get(row.audio_path) || null : null,
+        videoUrl: row.video_path ? urls.get(row.video_path) || null : null,
       };
     }));
     return res.status(200).json({ messages });
@@ -68,6 +69,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const adulthoodYear = body.adulthoodYear ? Number(body.adulthoodYear) : null;
     const photoPath = String(body.photoPath || '') || null;
     const audioPath = String(body.audioPath || '') || null;
+    const videoPath = String(body.videoPath || '') || null;
     const expectedPrefix = `${familyId}/${user.id}/`;
 
     if (!message || message.length > 500 || !EMOTIONS.has(emotion) || !TYPES.has(messageType)) {
@@ -75,7 +77,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     }
     const moderation = moderateText(message);
     if (!moderation.allowed) return res.status(422).json({ error: 'Message rejected by safety moderation', reason: moderation.reason });
-    if ((photoPath && !photoPath.startsWith(expectedPrefix)) || (audioPath && !audioPath.startsWith(expectedPrefix))) {
+    if (
+      (photoPath && !photoPath.startsWith(expectedPrefix))
+      || (audioPath && !audioPath.startsWith(expectedPrefix))
+      || (videoPath && !videoPath.startsWith(expectedPrefix))
+    ) {
       return res.status(400).json({ error: 'Invalid media path' });
     }
 
@@ -91,6 +97,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       adulthood_year: adulthoodYear,
       photo_path: photoPath,
       audio_path: audioPath,
+      video_path: videoPath,
     }).select('id,created_at').single();
     if (error) return res.status(500).json({ error: error.message });
     return res.status(201).json({ id: data.id, createdAt: data.created_at });

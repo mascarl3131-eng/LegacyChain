@@ -10,7 +10,7 @@ const COLORS = ['#00FFD1', '#C084FC', '#FFB347', '#FF6B9D', '#EFF6FF', '#FF2D55'
 
 export default function MuralTab() {
   const { lang, premium, user, familyName, msgs, setUpgradeOpen } = useStore();
-  const familyMedia = msgs.filter(message => message.photo || message.audioUrl);
+  const familyMedia = msgs.filter(message => message.photo || message.audioUrl || message.videoUrl);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [tool, setTool] = useState<Tool>('brush');
   const [color, setColor] = useState('#00FFD1');

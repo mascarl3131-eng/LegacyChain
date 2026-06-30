@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Mic, RotateCcw, Trash2 } from 'lucide-react';
+import { Camera, Mic, RotateCcw, Trash2, Video } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
@@ -12,6 +12,19 @@ const EMOJIS = ['hope', 'love', 'wisdom', 'memory', 'warning'];
 const EMO_COLORS: Record<string, string> = {
   hope: '#00FFD1', love: '#FF6B9D', wisdom: '#C084FC', memory: '#FFB347', warning: '#FF2D55',
 };
+const MAX_MEDIA_BYTES = 15 * 1024 * 1024;
+const VIDEO_MIME_TYPES = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'];
+
+function getSupportedVideoMimeType() {
+  if (typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) return '';
+  return VIDEO_MIME_TYPES.find(type => MediaRecorder.isTypeSupported(type)) || '';
+}
+
+function extensionForMime(type: string) {
+  if (type.includes('mp4')) return 'mp4';
+  if (type.includes('quicktime')) return 'mov';
+  return 'webm';
+}
 
 export default function ChainTab() {
   const { lang, user, session, premium, familyName, activeFamilyId, emo, setEmo, msgs, addMsg, setMsgs, setImmersiveMsg, setUpgradeOpen, setShowSubmitAnim, showNotif } = useStore();
@@ -27,27 +40,48 @@ export default function ChainTab() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioPreviewUrl, setAudioPreviewUrl] = useState('');
+  const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState('');
+  const [isVideoRecording, setIsVideoRecording] = useState(false);
+  const [videoSeconds, setVideoSeconds] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
   const [recSeconds, setRecSeconds] = useState(0);
   const [saving, setSaving] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const videoRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingAudioContextRef = useRef<AudioContext | null>(null);
   const recIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const videoIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const waveCanvasRef = useRef<HTMLCanvasElement>(null);
+  const liveVideoRef = useRef<HTMLVideoElement>(null);
+  const videoStreamRef = useRef<MediaStream | null>(null);
 
   const charMax = premium ? 500 : 300;
 
+  const stopVideoStream = () => {
+    if (liveVideoRef.current) liveVideoRef.current.srcObject = null;
+    if (videoStreamRef.current) {
+      videoStreamRef.current.getTracks().forEach(track => track.stop());
+      videoStreamRef.current = null;
+    }
+  };
+
   useEffect(() => () => {
     if (recIntervalRef.current) clearInterval(recIntervalRef.current);
+    if (videoIntervalRef.current) clearInterval(videoIntervalRef.current);
     if (audioPreviewUrl) URL.revokeObjectURL(audioPreviewUrl);
+    if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
     const recorder = mediaRecorderRef.current;
     if (recorder?.state === 'recording') {
       recorder.stream.getTracks().forEach(track => track.stop());
       recorder.stop();
     }
+    const videoRecorder = videoRecorderRef.current;
+    if (videoRecorder?.state === 'recording') videoRecorder.stop();
+    stopVideoStream();
     void recordingAudioContextRef.current?.close();
-  }, [audioPreviewUrl]);
+  }, [audioPreviewUrl, videoPreviewUrl]);
 
   const isBanned = (txt: string) => BANNED_WORDS.some((w: string) => txt.toLowerCase().includes(w));
 
@@ -76,8 +110,9 @@ export default function ChainTab() {
       lock: unlockYr ? parseInt(unlockYr) : null,
       baby: msgType === 'birth' ? babyName || null : null,
       dy: msgType === 'birth' && babyDob ? new Date(babyDob).getFullYear() + 18 : null,
-      audioUrl: audioBlob ? URL.createObjectURL(audioBlob) : null,
+      audioUrl: audioBlob ? audioPreviewUrl || URL.createObjectURL(audioBlob) : null,
       photo: photoData,
+      videoUrl: videoBlob ? videoPreviewUrl || URL.createObjectURL(videoBlob) : null,
     };
 
     if (session && activeFamilyId) {
@@ -87,6 +122,7 @@ export default function ChainTab() {
         const basePath = `${activeFamilyId}/${session.user.id}`;
         let photoPath: string | null = null;
         let audioPath: string | null = null;
+        let videoPath: string | null = null;
 
         if (photoFile) {
           const extension = photoFile.name.split('.').pop()?.toLowerCase() || 'jpg';
@@ -101,6 +137,14 @@ export default function ChainTab() {
           const { error } = await supabase.storage.from('family-media').upload(audioPath, audioBlob, { contentType: audioBlob.type || 'audio/webm', upsert: false });
           if (error) throw error;
           uploadedPaths.push(audioPath);
+        }
+        if (videoBlob) {
+          if (videoBlob.size > MAX_MEDIA_BYTES) throw new Error('Video too large');
+          const extension = extensionForMime(videoBlob.type);
+          videoPath = `${basePath}/${crypto.randomUUID()}.${extension}`;
+          const { error } = await supabase.storage.from('family-media').upload(videoPath, videoBlob, { contentType: videoBlob.type || 'video/webm', upsert: false });
+          if (error) throw error;
+          uploadedPaths.push(videoPath);
         }
 
         const response = await fetch('/api/family-messages', {
@@ -117,6 +161,7 @@ export default function ChainTab() {
             adulthoodYear: newMsg.dy,
             photoPath,
             audioPath,
+            videoPath,
           }),
         });
         const result = await response.json().catch(() => ({}));
@@ -151,6 +196,10 @@ export default function ChainTab() {
       setAudioBlob(null);
       if (audioPreviewUrl) URL.revokeObjectURL(audioPreviewUrl);
       setAudioPreviewUrl('');
+      setVideoBlob(null);
+      if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
+      setVideoPreviewUrl('');
+      setVideoSeconds(0);
       setModWarn('');
       setSaving(false);
       showNotif(t('messageSealed', lang), '#00FFD1');
@@ -223,6 +272,80 @@ export default function ChainTab() {
     setAudioPreviewUrl('');
     setAudioBlob(null);
     setRecSeconds(0);
+  };
+
+  const toggleVideoRecording = async () => {
+    if (!premium) { setUpgradeOpen(true); return; }
+    if (!isVideoRecording) {
+      try {
+        if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
+        setVideoPreviewUrl('');
+        setVideoBlob(null);
+        stopVideoStream();
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: true,
+        });
+        videoStreamRef.current = stream;
+        if (liveVideoRef.current) {
+          liveVideoRef.current.srcObject = stream;
+          await liveVideoRef.current.play().catch(() => undefined);
+        }
+        const mimeType = getSupportedVideoMimeType();
+        const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+        const chunks: Blob[] = [];
+        recorder.ondataavailable = event => {
+          if (event.data.size > 0) chunks.push(event.data);
+        };
+        recorder.onstop = () => {
+          const blob = new Blob(chunks, { type: recorder.mimeType || chunks[0]?.type || 'video/webm' });
+          if (!blob.size) {
+            stopVideoStream();
+            return;
+          }
+          if (blob.size > MAX_MEDIA_BYTES) {
+            showNotif(t('mediaTooLarge', lang), '#FF6B6B');
+            stopVideoStream();
+            return;
+          }
+          const previewUrl = URL.createObjectURL(blob);
+          setVideoBlob(blob);
+          setVideoPreviewUrl(previewUrl);
+          stopVideoStream();
+        };
+        recorder.start(250);
+        videoRecorderRef.current = recorder;
+        setIsVideoRecording(true);
+        setVideoSeconds(0);
+        videoIntervalRef.current = setInterval(() => {
+          setVideoSeconds(seconds => {
+            if (seconds >= 59) {
+              recorder.stop();
+              setIsVideoRecording(false);
+              if (videoIntervalRef.current) clearInterval(videoIntervalRef.current);
+              return 60;
+            }
+            return seconds + 1;
+          });
+        }, 1000);
+      } catch {
+        stopVideoStream();
+        alert(t('cameraDenied', lang));
+      }
+    } else {
+      videoRecorderRef.current?.stop();
+      setIsVideoRecording(false);
+      if (videoIntervalRef.current) clearInterval(videoIntervalRef.current);
+    }
+  };
+
+  const deleteVideoRecording = () => {
+    if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
+    setVideoPreviewUrl('');
+    setVideoBlob(null);
+    setVideoSeconds(0);
+    stopVideoStream();
+    setIsVideoRecording(false);
   };
 
   const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -406,6 +529,56 @@ export default function ChainTab() {
             ) : (
               <div style={{ fontSize: '0.6rem', color: 'rgba(239,246,255,0.28)', textAlign: 'center' }}>
                 {isRecording ? t('recording', lang) : <><Mic size={12} style={{ display: 'inline', marginRight: 5 }} />{t('tapRecord', lang)}</>}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '0.85rem' }}>
+          <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>
+            {t('video', lang)} {!premium && <span style={{ color: '#FFB347', fontSize: '0.56rem' }}>✦ PREMIUM · 60 SEC</span>}
+          </label>
+          <p style={{ margin: '0 0 .55rem', color: 'rgba(239,246,255,.38)', fontSize: '.54rem', lineHeight: 1.6 }}>{t('videoLegacyPhrase', lang)}</p>
+          <div style={{ background: 'rgba(255,179,71,0.04)', border: '1px solid rgba(255,179,71,0.18)', borderRadius: 12, padding: '1rem' }}>
+            {isVideoRecording ? (
+              <video ref={liveVideoRef} muted playsInline autoPlay style={{ width: '100%', maxHeight: 220, borderRadius: 10, background: '#020207', objectFit: 'cover', marginBottom: '.65rem' }} />
+            ) : videoPreviewUrl ? (
+              <video src={videoPreviewUrl} controls playsInline style={{ width: '100%', maxHeight: 220, borderRadius: 10, background: '#020207', objectFit: 'cover', marginBottom: '.65rem' }} />
+            ) : (
+              <div style={{ border: '1px dashed rgba(255,179,71,.2)', borderRadius: 10, minHeight: 140, display: 'grid', placeItems: 'center', marginBottom: '.65rem', color: 'rgba(239,246,255,.28)', fontSize: '.62rem', textAlign: 'center', padding: '1rem' }}>
+                <div><Camera size={18} style={{ display: 'block', margin: '0 auto .45rem' }} />{t('tapVideo', lang)}</div>
+              </div>
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: videoPreviewUrl ? '.55rem' : 0 }}>
+              <button
+                type="button"
+                onClick={() => void toggleVideoRecording()}
+                style={{
+                  width: 46, height: 46, borderRadius: '50%', border: `2px solid ${isVideoRecording ? '#FF6B6B' : '#FFB347'}`,
+                  background: 'transparent', color: isVideoRecording ? '#FF6B6B' : '#FFB347', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}
+              >
+                {isVideoRecording ? '⏹' : <Video size={18} />}
+              </button>
+              <div style={{ flex: 1, color: isVideoRecording ? '#FFB347' : 'rgba(239,246,255,.42)', fontSize: '.6rem', lineHeight: 1.55 }}>
+                {isVideoRecording ? t('recording', lang) : t('recordVideo', lang)}
+              </div>
+              <span style={{ fontSize: '0.75rem', color: isVideoRecording ? '#FFB347' : 'rgba(239,246,255,.55)', letterSpacing: '0.1em', flexShrink: 0 }}>
+                {Math.floor(videoSeconds / 60)}:{(videoSeconds % 60).toString().padStart(2, '0')}
+              </span>
+            </div>
+            {videoBlob && videoPreviewUrl && (
+              <div style={{ display: 'grid', gap: '.55rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.45rem' }}>
+                  <button type="button" className="btn-sec" onClick={() => void toggleVideoRecording()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.35rem' }}>
+                    <RotateCcw size={13} /> {t('recordAgain', lang)}
+                  </button>
+                  <button type="button" className="btn-sec" onClick={deleteVideoRecording} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.35rem', color: '#FF6B6B', borderColor: 'rgba(255,107,107,.25)' }}>
+                    <Trash2 size={13} /> {t('deleteRecording', lang)}
+                  </button>
+                </div>
+                <div style={{ fontSize: '0.58rem', color: '#FFB347', textAlign: 'center' }}>{t('videoReadyReview', lang)}</div>
               </div>
             )}
           </div>

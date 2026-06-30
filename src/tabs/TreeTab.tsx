@@ -15,6 +15,7 @@ export default function TreeTab() {
   const viewportRef = useRef<HTMLDivElement>(null);
   const canvasScrollerRef = useRef<HTMLDivElement>(null);
   const panRef = useRef({ active: false, pointerId: -1, x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
+  const pinchRef = useRef({ active: false, startDistance: 0, startZoom: 1 });
   const [links, setLinks] = useState<[number, number][]>(TREE_LINKS);
   const [showAdd, setShowAdd] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -28,6 +29,11 @@ export default function TreeTab() {
   const [by, setBy] = useState('');
   const [rel, setRel] = useState('child');
   const [relativeTo, setRelativeTo] = useState(treeNodes[3]?.id || treeNodes[0]?.id || 0);
+  const [editFn, setEditFn] = useState('');
+  const [editLn, setEditLn] = useState('');
+  const [editBy, setEditBy] = useState('');
+  const [editRel, setEditRel] = useState('child');
+  const [editRelativeTo, setEditRelativeTo] = useState(0);
   const [cloudReady, setCloudReady] = useState(false);
   const isDemoTree = treeNodes.length === DEMO_TREE_NAMES.length && treeNodes.every(node => DEMO_TREE_NAMES.includes(node.n));
 
@@ -73,6 +79,60 @@ export default function TreeTab() {
 
   const getNodeMsgs = (name: string) => msgs.filter(message => message.a === name.split(' ')[0]);
   const generationLabel = (gen: number) => t(['genGrandparents', 'genParents', 'genChildren'][gen], lang);
+
+  const getRelationMeta = (memberId: number) => {
+    const outgoing = links.find(([from]) => from === memberId);
+    const incoming = links.find(([, to]) => to === memberId);
+    if (outgoing) {
+      const referenceId = outgoing[1];
+      const member = treeNodes.find(node => node.id === memberId);
+      const reference = treeNodes.find(node => node.id === referenceId);
+      if (member && reference) {
+        const gap = reference.gen - member.gen;
+        if (gap >= 2) return { relation: 'grandparent', referenceId };
+        if (gap === 1) return { relation: 'parent', referenceId };
+        if (gap === 0) return { relation: 'sibling', referenceId };
+      }
+      return { relation: 'parent', referenceId };
+    }
+    if (incoming) {
+      const referenceId = incoming[0];
+      const member = treeNodes.find(node => node.id === memberId);
+      const reference = treeNodes.find(node => node.id === referenceId);
+      if (member && reference) {
+        const gap = member.gen - reference.gen;
+        if (gap >= 1) return { relation: 'child', referenceId };
+        if (gap === 0) return { relation: 'sibling', referenceId };
+      }
+      return { relation: 'child', referenceId };
+    }
+    const fallback = treeNodes.find(node => node.id !== memberId)?.id || 0;
+    return { relation: 'child', referenceId: fallback };
+  };
+
+  const buildNodeDraft = (memberId: number, relation: string, referenceId: number, firstName: string, lastName: string, birthYear: string) => {
+    const current = treeNodes.find(node => node.id === memberId);
+    const reference = treeNodes.find(node => node.id === referenceId && node.id !== memberId) || null;
+    let gen = current?.gen ?? 1;
+    if (reference) {
+      gen = reference.gen;
+      if (relation === 'parent') gen = Math.max(0, reference.gen - 1);
+      if (relation === 'grandparent') gen = 0;
+      if (relation === 'child') gen = Math.min(2, reference.gen + 1);
+      if (relation === 'sibling' || relation === 'partner') gen = reference.gen;
+    }
+    return {
+      reference,
+      node: {
+        id: memberId,
+        n: `${firstName.trim()} ${lastName.trim()}`.trim(),
+        b: parseInt(birthYear, 10) || current?.b || new Date().getFullYear(),
+        x: current?.x || 0,
+        y: current?.y || GEN_Y[gen],
+        gen,
+      } as TreeNode,
+    };
+  };
 
   const persistTree = async (nextNodes: TreeNode[], nextLinks: [number, number][]) => {
     if (!session?.access_token || !activeFamilyId) return;
@@ -122,7 +182,7 @@ export default function TreeTab() {
     };
 
     void loadTree();
-    const timer = window.setInterval(() => void loadTree(), 20000);
+    const timer = window.setInterval(() => void loadTree(), 5000);
     return () => {
       active = false;
       window.clearInterval(timer);
@@ -133,6 +193,17 @@ export default function TreeTab() {
     if (selectedId && !treeNodes.some(node => node.id === selectedId)) setSelectedId(null);
     if (relativeTo && !treeNodes.some(node => node.id === relativeTo)) setRelativeTo(treeNodes[0]?.id || 0);
   }, [relativeTo, selectedId, treeNodes]);
+
+  useEffect(() => {
+    if (!selectedMem) return;
+    const parts = selectedMem.n.split(' ');
+    const meta = getRelationMeta(selectedMem.id);
+    setEditFn(parts[0] || '');
+    setEditLn(parts.slice(1).join(' '));
+    setEditBy(String(selectedMem.b || ''));
+    setEditRel(meta.relation);
+    setEditRelativeTo(meta.referenceId);
+  }, [selectedMem?.id, links, treeNodes]);
 
   const addMember = () => {
     if (!fn.trim()) return;
@@ -192,6 +263,36 @@ export default function TreeTab() {
     setRelativeTo(id);
   };
 
+  const saveMember = () => {
+    if (!selectedMem || !editFn.trim()) return;
+    const { node, reference } = buildNodeDraft(selectedMem.id, editRel, editRelativeTo, editFn, editLn, editBy);
+    const nextNodes = treeNodes.map(item => item.id === selectedMem.id ? node : item);
+    const nextLinksBase = links.filter(([from, to]) => from !== selectedMem.id && to !== selectedMem.id);
+    const nextLinks = reference
+      ? [...nextLinksBase, editRel === 'parent' || editRel === 'grandparent' ? [selectedMem.id, reference.id] as [number, number] : [reference.id, selectedMem.id] as [number, number]]
+      : nextLinksBase;
+    setTreeNodes(nextNodes);
+    setLinks(nextLinks);
+    void persistTree(nextNodes, nextLinks);
+    showNotif(lang === 'fr' ? 'Membre mis à jour' : 'Member updated', '#00FFD1');
+  };
+
+  const deleteMember = () => {
+    if (!selectedMem) return;
+    const confirmed = window.confirm(lang === 'fr'
+      ? `Supprimer ${selectedMem.n} de l'arbre ?`
+      : `Remove ${selectedMem.n} from the tree?`);
+    if (!confirmed) return;
+    const nextNodes = treeNodes.filter(node => node.id !== selectedMem.id);
+    const nextLinks = links.filter(([from, to]) => from !== selectedMem.id && to !== selectedMem.id);
+    setTreeNodes(nextNodes);
+    setLinks(nextLinks);
+    setSelectedId(null);
+    setRelativeTo(nextNodes[0]?.id || 0);
+    void persistTree(nextNodes, nextLinks);
+    showNotif(lang === 'fr' ? 'Membre supprimé' : 'Member removed', '#FFB347');
+  };
+
   const resetView = () => {
     setZoom(1);
     setGeneration('all');
@@ -232,6 +333,26 @@ export default function TreeTab() {
     if (!event.ctrlKey) return;
     event.preventDefault();
     setZoom(value => Math.min(1.75, Math.max(0.42, value + (event.deltaY > 0 ? -0.08 : 0.08))));
+  };
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length !== 2) return;
+    const [a, b] = Array.from(event.touches);
+    const distance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    pinchRef.current = { active: true, startDistance: distance, startZoom: zoom };
+  };
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (!pinchRef.current.active || event.touches.length !== 2) return;
+    const [a, b] = Array.from(event.touches);
+    const distance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    const ratio = distance / Math.max(pinchRef.current.startDistance, 1);
+    setZoom(Math.min(1.9, Math.max(0.35, pinchRef.current.startZoom * ratio)));
+    event.preventDefault();
+  };
+
+  const handleTouchEnd = () => {
+    pinchRef.current.active = false;
   };
 
   const stopPan = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -282,7 +403,7 @@ export default function TreeTab() {
         <div ref={viewportRef} className="glass-card" style={{ padding: 0, overflow: 'hidden', marginTop: '0.75rem', position: 'relative' }}>
           <div className="desktop-zoom-controls" style={{ position: 'absolute', zIndex: 3, top: 9, right: 9, display: 'flex', gap: 5 }}>
             <button className="btn-sec" onClick={() => setZoom(value => Math.min(1.55, value + 0.12))} style={{ width: 32, height: 32, padding: 0 }} aria-label="Zoom in"><ZoomIn size={14} /></button>
-            <button className="btn-sec" onClick={() => setZoom(value => Math.max(0.72, value - 0.12))} style={{ width: 32, height: 32, padding: 0 }} aria-label="Zoom out"><ZoomOut size={14} /></button>
+            <button className="btn-sec" onClick={() => setZoom(value => Math.max(0.35, value - 0.12))} style={{ width: 32, height: 32, padding: 0 }} aria-label="Zoom out"><ZoomOut size={14} /></button>
             <button className="btn-sec" onClick={resetView} style={{ width: 32, height: 32, padding: 0 }} aria-label="Reset"><Focus size={14} /></button>
             <button className="btn-sec" onClick={() => void viewportRef.current?.requestFullscreen()} style={{ width: 32, height: 32, padding: 0 }} aria-label="Fullscreen"><Maximize2 size={14} /></button>
           </div>
@@ -295,12 +416,15 @@ export default function TreeTab() {
             onPointerUp={stopPan}
             onPointerCancel={stopPan}
             onWheel={handleWheelZoom}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
             style={{
               overflow: 'auto',
               minHeight: 390,
               cursor: isPanning ? 'grabbing' : 'grab',
               userSelect: isPanning ? 'none' : undefined,
-              touchAction: 'pan-x pan-y',
+              touchAction: 'none',
             }}
           >
             <div style={{ width: layout.canvasWidth, height: layout.canvasHeight, transform: `scale(${zoom})`, transformOrigin: 'center center', transition: 'transform .2s ease', position: 'relative' }}>
@@ -406,6 +530,22 @@ export default function TreeTab() {
               <div><strong style={{ display: 'block', color: '#EFF6FF', fontSize: '0.75rem' }}>{selectedMem.n}</strong><small style={{ color: 'rgba(239,246,255,.35)' }}>{generationLabel(selectedMem.gen)} · {selectedMem.b}</small></div>
             </div>
             <button type="button" onClick={() => setSelectedId(null)} style={{ border: 0, background: 'transparent', color: 'rgba(239,246,255,.4)', cursor: 'pointer' }}><X size={16} /></button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '0.8rem' }}>
+            <input type="text" className="form-input" value={editFn} onChange={event => setEditFn(event.target.value)} placeholder={t('firstName', lang)} />
+            <input type="text" className="form-input" value={editLn} onChange={event => setEditLn(event.target.value)} placeholder={t('lastName', lang)} />
+            <input type="number" className="form-input" value={editBy} onChange={event => setEditBy(event.target.value)} placeholder={t('birthYear', lang)} min="1850" max={new Date().getFullYear()} />
+            <select className="form-select" value={editRel} onChange={event => setEditRel(event.target.value)}>
+              {['parent', 'child', 'sibling', 'grandparent', 'partner'].map(relation => <option key={relation} value={relation}>{t(relation, lang)}</option>)}
+            </select>
+          </div>
+          <label style={{ display: 'block', fontSize: '0.57rem', color: 'rgba(239,246,255,.35)', margin: '0 0 0.3rem' }}>{t('relativeTo', lang)}</label>
+          <select className="form-select" value={editRelativeTo} onChange={event => setEditRelativeTo(Number(event.target.value))}>
+            {treeNodes.filter(node => node.id !== selectedMem.id).map(node => <option key={node.id} value={node.id}>{node.n}</option>)}
+          </select>
+          <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap', margin: '0.8rem 0 0.2rem' }}>
+            <button type="button" className="btn-primary" onClick={saveMember}>{t('saveMember', lang)}</button>
+            <button type="button" className="btn-sec" onClick={deleteMember} style={{ borderColor: 'rgba(255,107,107,0.5)', color: '#FFB4B4' }}>{t('deleteMember', lang)}</button>
           </div>
           {getNodeMsgs(selectedMem.n).length ? getNodeMsgs(selectedMem.n).map(message => (
             <div key={message.id} style={{ padding: '0.7rem 0', borderTop: '1px solid rgba(0,255,209,0.13)' }}>
