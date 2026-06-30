@@ -15,7 +15,9 @@ export default function TreeTab() {
   const viewportRef = useRef<HTMLDivElement>(null);
   const canvasScrollerRef = useRef<HTMLDivElement>(null);
   const panRef = useRef({ active: false, pointerId: -1, x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
+  const touchPanRef = useRef({ active: false, x: 0, y: 0, scrollLeft: 0, scrollTop: 0, moved: false });
   const pinchRef = useRef({ active: false, startDistance: 0, startZoom: 1 });
+  const suppressClickRef = useRef(false);
   const [links, setLinks] = useState<[number, number][]>(TREE_LINKS);
   const [showAdd, setShowAdd] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -297,9 +299,17 @@ export default function TreeTab() {
     setZoom(1);
     setGeneration('all');
     setQuery('');
-    if (canvasScrollerRef.current) {
-      canvasScrollerRef.current.scrollTo({ left: 0, top: 0, behavior: 'smooth' });
-    }
+    window.setTimeout(() => centerTree(), 0);
+  };
+
+  const centerTree = () => {
+    const scroller = canvasScrollerRef.current;
+    if (!scroller) return;
+    scroller.scrollTo({
+      left: Math.max(0, (scroller.scrollWidth - scroller.clientWidth) / 2),
+      top: Math.max(0, (scroller.scrollHeight - scroller.clientHeight) / 2),
+      behavior: 'smooth',
+    });
   };
 
   const startPan = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -336,23 +346,62 @@ export default function TreeTab() {
   };
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (event.touches.length !== 2) return;
-    const [a, b] = Array.from(event.touches);
-    const distance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-    pinchRef.current = { active: true, startDistance: distance, startZoom: zoom };
+    const scroller = canvasScrollerRef.current;
+    if (event.touches.length === 1 && scroller) {
+      const touch = event.touches[0];
+      touchPanRef.current = {
+        active: true,
+        x: touch.clientX,
+        y: touch.clientY,
+        scrollLeft: scroller.scrollLeft,
+        scrollTop: scroller.scrollTop,
+        moved: false,
+      };
+      pinchRef.current.active = false;
+      return;
+    }
+    if (event.touches.length === 2) {
+      touchPanRef.current.active = false;
+      const [a, b] = Array.from(event.touches);
+      const distance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+      pinchRef.current = { active: true, startDistance: distance, startZoom: zoom };
+    }
   };
 
   const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (!pinchRef.current.active || event.touches.length !== 2) return;
-    const [a, b] = Array.from(event.touches);
-    const distance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-    const ratio = distance / Math.max(pinchRef.current.startDistance, 1);
-    setZoom(Math.min(1.9, Math.max(0.35, pinchRef.current.startZoom * ratio)));
-    event.preventDefault();
+    const scroller = canvasScrollerRef.current;
+    if (event.touches.length === 1 && touchPanRef.current.active && scroller) {
+      const touch = event.touches[0];
+      const dx = touch.clientX - touchPanRef.current.x;
+      const dy = touch.clientY - touchPanRef.current.y;
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+        touchPanRef.current.moved = true;
+        suppressClickRef.current = true;
+      }
+      scroller.scrollLeft = touchPanRef.current.scrollLeft - dx;
+      scroller.scrollTop = touchPanRef.current.scrollTop - dy;
+      event.preventDefault();
+      return;
+    }
+    if (event.touches.length === 2 && pinchRef.current.active) {
+      const [a, b] = Array.from(event.touches);
+      const distance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+      const ratio = distance / Math.max(pinchRef.current.startDistance, 1);
+      setZoom(Math.min(1.9, Math.max(0.35, pinchRef.current.startZoom * ratio)));
+      event.preventDefault();
+    }
   };
 
   const handleTouchEnd = () => {
     pinchRef.current.active = false;
+    touchPanRef.current.active = false;
+    window.setTimeout(() => { suppressClickRef.current = false; }, 0);
+  };
+
+  const handleTreeClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!suppressClickRef.current) return;
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   const stopPan = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -405,6 +454,7 @@ export default function TreeTab() {
             <button className="btn-sec" onClick={() => setZoom(value => Math.min(1.55, value + 0.12))} style={{ width: 32, height: 32, padding: 0 }} aria-label="Zoom in"><ZoomIn size={14} /></button>
             <button className="btn-sec" onClick={() => setZoom(value => Math.max(0.35, value - 0.12))} style={{ width: 32, height: 32, padding: 0 }} aria-label="Zoom out"><ZoomOut size={14} /></button>
             <button className="btn-sec" onClick={resetView} style={{ width: 32, height: 32, padding: 0 }} aria-label="Reset"><Focus size={14} /></button>
+            <button className="btn-sec" onClick={centerTree} style={{ width: 32, height: 32, padding: 0 }} aria-label="Center"><Network size={14} /></button>
             <button className="btn-sec" onClick={() => void viewportRef.current?.requestFullscreen()} style={{ width: 32, height: 32, padding: 0 }} aria-label="Fullscreen"><Maximize2 size={14} /></button>
           </div>
 
@@ -419,6 +469,7 @@ export default function TreeTab() {
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
+            onClickCapture={handleTreeClickCapture}
             style={{
               overflow: 'auto',
               minHeight: 390,
@@ -427,8 +478,9 @@ export default function TreeTab() {
               touchAction: 'none',
             }}
           >
-            <div style={{ width: layout.canvasWidth, height: layout.canvasHeight, transform: `scale(${zoom})`, transformOrigin: 'center center', transition: 'transform .2s ease', position: 'relative' }}>
-              <svg viewBox={`0 0 ${layout.canvasWidth} ${layout.canvasHeight}`} width={layout.canvasWidth} height={layout.canvasHeight} style={{ display: 'block' }}>
+            <div style={{ width: layout.canvasWidth * zoom, height: layout.canvasHeight * zoom, position: 'relative' }}>
+              <div style={{ width: layout.canvasWidth, height: layout.canvasHeight, transform: `scale(${zoom})`, transformOrigin: 'top left', transition: 'transform .2s ease', position: 'relative' }}>
+                <svg viewBox={`0 0 ${layout.canvasWidth} ${layout.canvasHeight}`} width={layout.canvasWidth} height={layout.canvasHeight} style={{ display: 'block' }}>
                 {links.map(([from, to], index) => {
                   const a = treeNodes.find(node => node.id === from);
                   const b = treeNodes.find(node => node.id === to);
@@ -442,9 +494,9 @@ export default function TreeTab() {
                   const by = toPos.y;
                   return <path key={index} d={`M${ax},${ay} C${ax},${(ay + by) / 2} ${bx},${(ay + by) / 2} ${bx},${by}`} fill="none" stroke="rgba(0,255,209,0.28)" strokeWidth="1.4" />;
                 })}
-              </svg>
+                </svg>
 
-              {visibleNodes.map(node => {
+                {visibleNodes.map(node => {
                 const color = GEN_COLORS[node.gen];
                 const nodeMsgs = getNodeMsgs(node.n);
                 const active = selectedId === node.id;
@@ -472,7 +524,8 @@ export default function TreeTab() {
                     {nodeMsgs.length > 0 && <span style={{ position: 'absolute', right: 6, top: 6, minWidth: 17, height: 17, borderRadius: 9, background: '#00FFD1', color: '#04030A', fontSize: '0.48rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>{nodeMsgs.length}</span>}
                   </button>
                 );
-              })}
+                })}
+              </div>
             </div>
           </div>
         </div>
