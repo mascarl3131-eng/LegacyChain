@@ -176,6 +176,22 @@ export default function LandingPage() {
           {t('premiumNote', lang)}
         </div>
 
+        <div
+          style={{
+            width: 'min(320px,90vw)',
+            padding: '0.7rem 0.8rem',
+            borderRadius: 10,
+            border: '1px solid rgba(0,255,209,0.18)',
+            background: 'rgba(0,255,209,0.04)',
+            color: 'rgba(224,235,255,0.9)',
+            fontSize: '0.58rem',
+            lineHeight: 1.65,
+            textAlign: 'left',
+          }}
+        >
+          {t('sealedVisibilityNote', lang)}
+        </div>
+
         <section style={{ width: 'min(320px,90vw)', padding: '.85rem', borderRadius: 12, textAlign: 'left', background: 'linear-gradient(135deg,rgba(255,179,71,.08),rgba(192,132,252,.055))', border: '1px solid rgba(255,179,71,.25)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '.7rem', marginBottom: '.55rem' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '.45rem', color: '#FFB347', fontSize: '.65rem', letterSpacing: '.11em' }}><Crown size={16} /> {t('premiumLandingTitle', lang)}</span>
