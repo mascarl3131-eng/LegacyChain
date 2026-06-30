@@ -93,6 +93,21 @@ export default function ChainTab() {
     void recordingAudioContextRef.current?.close();
   }, [audioPreviewUrl, videoPreviewUrl]);
 
+  useEffect(() => {
+    const video = liveVideoRef.current;
+    const stream = videoStreamRef.current;
+    if (!isVideoRecording || !video || !stream) return;
+
+    video.srcObject = stream;
+    video.muted = true;
+    video.playsInline = true;
+    void video.play().catch(() => undefined);
+
+    return () => {
+      if (video.srcObject === stream) video.srcObject = null;
+    };
+  }, [isVideoRecording]);
+
   const isBanned = (txt: string) => BANNED_WORDS.some((w: string) => txt.toLowerCase().includes(w));
 
   const handleSubmit = async () => {
@@ -297,10 +312,7 @@ export default function ChainTab() {
           audio: true,
         });
         videoStreamRef.current = stream;
-        if (liveVideoRef.current) {
-          liveVideoRef.current.srcObject = stream;
-          await liveVideoRef.current.play().catch(() => undefined);
-        }
+        setIsVideoRecording(true);
         const mimeType = getSupportedVideoMimeType();
         const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
         const chunks: Blob[] = [];
@@ -325,7 +337,6 @@ export default function ChainTab() {
         };
         recorder.start(250);
         videoRecorderRef.current = recorder;
-        setIsVideoRecording(true);
         setVideoSeconds(0);
         videoIntervalRef.current = setInterval(() => {
           setVideoSeconds(seconds => {
