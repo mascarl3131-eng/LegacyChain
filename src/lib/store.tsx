@@ -1,4 +1,7 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { supabase } from './supabase';
+import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import type { LangCode } from './i18n';
 import type { Message, HumanityMessage, Challenge, TreeNode, OriginRow } from './data';
 import { getDemoMsgs, getDemoHumanity, getChallenges, INITIAL_TREE } from './data';
@@ -10,6 +13,8 @@ interface User {
   name: string;
   first: string;
   last: string;
+  email?: string;
+  avatar?: string;
   fb: boolean;
 }
 
@@ -18,6 +23,7 @@ interface AppState {
   tab: TabName;
   lang: LangCode;
   user: User | null;
+  session: Session | null;
   premium: boolean;
   familyName: string;
   emo: string;
@@ -36,6 +42,7 @@ interface AppState {
   immersiveMsg: Message | null;
   showSubmitAnim: boolean;
   notif: { msg: string; color: string } | null;
+  loading: boolean;
 }
 
 interface AppActions {
@@ -64,15 +71,19 @@ interface AppActions {
   setShowSubmitAnim: (s: boolean) => void;
   showNotif: (msg: string, color?: string) => void;
   login: (name: string, fb: boolean) => void;
+  loginWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const StoreContext = createContext<(AppState & AppActions) | null>(null);
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [page, setPage] = useState<PageName>('onboarding');
+  const [page, setPage] = useState<PageName>('landing');
   const [tab, setTab] = useState<TabName>('chain');
   const [lang, setLangState] = useState<LangCode>('en');
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
   const [premium, setPremium] = useState(false);
   const [familyName, setFamilyName] = useState('Doe');
   const [emo, setEmo] = useState('hope');
@@ -95,6 +106,42 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [immersiveMsg, setImmersiveMsg] = useState<Message | null>(null);
   const [showSubmitAnim, setShowSubmitAnim] = useState(false);
   const [notif, setNotif] = useState<{ msg: string; color: string } | null>(null);
+
+  const syncUserFromSupabase = useCallback((sbUser: SupabaseUser) => {
+    const name = sbUser.user_metadata?.full_name || sbUser.email?.split('@')[0] || 'User';
+    const pts = name.trim().split(' ');
+    setUser({
+      name: name.trim(),
+      first: pts[0],
+      last: pts[pts.length - 1] || 'Doe',
+      email: sbUser.email,
+      avatar: sbUser.user_metadata?.avatar_url,
+      fb: false,
+    });
+    setFamilyName(pts[pts.length - 1] || 'Doe');
+  }, []);
+
+  // Sync Supabase session
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        syncUserFromSupabase(session.user);
+      }
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session?.user) {
+        syncUserFromSupabase(session.user);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [syncUserFromSupabase]);
 
   const setLang = useCallback((l: LangCode) => {
     setLangState(l);
@@ -121,17 +168,38 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setHMsgs(getDemoHumanity(lang));
   }, [lang]);
 
+  const loginWithGoogle = useCallback(async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: "https://legacy-chain.vercel.app",
+      },
+    });
+    if (error) {
+      showNotif('Erreur Google: ' + error.message, '#FF4444');
+    }
+  }, [showNotif]);
+
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+    setPage('landing');
+    showNotif('👋 Déconnecté', '#00FFD1');
+  }, [showNotif]);
+
   const value: AppState & AppActions = {
-    page, tab, lang, user, premium, familyName, emo, hEmo,
+    page, tab, lang, user, session, premium, familyName, emo, hEmo,
     msgs, hMsgs, challenges, bookData, chapter, pacte, originRows,
     treeNodes, sideMenuOpen, inviteOpen, upgradeOpen, immersiveMsg,
-    showSubmitAnim, notif,
+    showSubmitAnim, notif, loading,
     setPage, setTab, setLang, setUser, setPremium, setFamilyName,
     setEmo, setHEmo, addMsg: (m) => setMsgs(prev => [m, ...prev]),
     setMsgs, addHMsg: (m) => setHMsgs(prev => [m, ...prev]), setHMsgs,
     setChallenges, setBookData, setChapter, setPacte, setOriginRows,
     setTreeNodes, setSideMenuOpen, setInviteOpen, setUpgradeOpen,
     setImmersiveMsg, setShowSubmitAnim, showNotif, login,
+    loginWithGoogle, logout,
   };
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
