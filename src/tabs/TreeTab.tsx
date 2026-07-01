@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
-import { INITIAL_TREE, TREE_LINKS } from '@/lib/data';
+import { TREE_LINKS } from '@/lib/data';
 import type { TreeNode } from '@/lib/data';
 
 const GEN_COLORS = ['#C084FC', '#00FFD1', '#FFB347'];
@@ -26,9 +26,6 @@ export default function TreeTab() {
   const [editY, setEditY] = useState('');
   const svgRef = useRef<SVGSVGElement>(null);
   const [svgW, setSvgW] = useState(520);
-  const isDemoTree = treeNodes.length === 0;
-  const visibleNodes = isDemoTree ? INITIAL_TREE : treeNodes;
-  const visibleLinks = isDemoTree ? TREE_LINKS : [];
 
   useEffect(() => {
     const updateW = () => {
@@ -41,7 +38,7 @@ export default function TreeTab() {
   }, []);
 
   const H = 340;
-  const scaled = visibleNodes.map(n => ({
+  const scaled = treeNodes.map(n => ({
     ...n,
     x: n.x * (svgW / 600),
     y: n.y * (H / 340),
@@ -50,16 +47,15 @@ export default function TreeTab() {
   const addMember = () => {
     if (!fn.trim()) return;
     const gen = REL_TO_GEN[rel] ?? 2;
-    const realNodes = isDemoTree ? [] : treeNodes;
     const newNode: TreeNode = {
-      id: Math.max(0, ...realNodes.map(t => t.id)) + 1,
+      id: Math.max(0, ...treeNodes.map(t => t.id)) + 1,
       n: `${fn.trim()} ${ln.trim() || 'Doe'}`,
       b: Number.parseInt(by, 10) || CURRENT_YEAR,
       x: 50 + Math.random() * 480,
       y: [60, 180, 300][gen],
       gen,
     };
-    setTreeNodes([...realNodes, newNode]);
+    setTreeNodes([...treeNodes, newNode]);
     setFn(''); setLn(''); setBy(''); setShowAdd(false);
   };
 
@@ -130,7 +126,7 @@ export default function TreeTab() {
             <text key={g} x={6} y={[55, 165, 278][g] + 4} fontFamily="'DM Mono',monospace" fontSize={6} fill={GEN_COLORS[g]} opacity={0.4} letterSpacing={1}>{GEN_LABELS[g]}</text>
           ))}
 
-          {visibleLinks.map(([a, b], li) => {
+          {TREE_LINKS.map(([a, b], li) => {
             const A = scaled.find(n => n.id === a);
             const B = scaled.find(n => n.id === b);
             if (!A || !B) return null;
@@ -153,7 +149,7 @@ export default function TreeTab() {
             const firstName = m.n.split(' ')[0];
 
             return (
-              <g key={m.id} onClick={() => !isDemoTree && selectMember(treeNodes.find(node => node.id === m.id) || m)} style={{ cursor: isDemoTree ? 'default' : 'pointer', opacity: isDemoTree ? 0.55 : 1 }}>
+              <g key={m.id} onClick={() => selectMember(treeNodes.find(node => node.id === m.id) || m)} style={{ cursor: 'pointer' }}>
                 <circle cx={m.x} cy={m.y} r={r + 18} fill={col} opacity={hasMsg ? 0.15 : 0.05}>
                   {hasMsg && <><animate attributeName="r" values={`${r + 14};${r + 22};${r + 14}`} dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values=".7;.3;.7" dur="3s" repeatCount="indefinite" /></>}
                 </circle>

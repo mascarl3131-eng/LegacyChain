@@ -4,7 +4,7 @@ import { supabase } from './supabase';
 import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import type { LangCode } from './i18n';
 import type { Message, HumanityMessage, Challenge, TreeNode, OriginRow } from './data';
-import { getDemoMsgs, getDemoHumanity, getChallenges } from './data';
+import { getDemoMsgs, getDemoHumanity, getChallenges, INITIAL_TREE } from './data';
 
 export type TabName = 'chain' | 'tree' | 'origins' | 'mural' | 'challenges' | 'book' | 'humanity';
 export type PageName = 'onboarding' | 'landing' | 'app' | 'admin';
@@ -76,6 +76,11 @@ interface AppActions {
 }
 
 const StoreContext = createContext<(AppState & AppActions) | null>(null);
+const PREMIUM_EMAILS = new Set(['mascarl3131@gmail.com']);
+
+function isPremiumEmail(email?: string | null) {
+  return !!email && PREMIUM_EMAILS.has(email.trim().toLowerCase());
+}
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [page, setPage] = useState<PageName>('landing');
@@ -94,8 +99,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [bookData, setBookData] = useState<Record<string, string>>({});
   const [chapter, setChapter] = useState(0);
   const [pacte, setPacte] = useState(false);
-  const [originRows, setOriginRows] = useState<OriginRow[]>([]);
-  const [treeNodes, setTreeNodes] = useState<TreeNode[]>([]);
+  const [originRows, setOriginRows] = useState<OriginRow[]>([
+    { c: 'France', p: 40 },
+    { c: 'Senegal', p: 35 },
+    { c: 'Vietnam', p: 25 },
+  ]);
+  const [treeNodes, setTreeNodes] = useState<TreeNode[]>(INITIAL_TREE);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -106,14 +115,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const syncUserFromSupabase = useCallback((sbUser: SupabaseUser) => {
     const name = sbUser.user_metadata?.full_name || sbUser.email?.split('@')[0] || 'User';
     const pts = name.trim().split(' ');
+    const email = sbUser.email;
     setUser({
       name: name.trim(),
       first: pts[0],
       last: pts[pts.length - 1] || 'Doe',
-      email: sbUser.email,
+      email,
       avatar: sbUser.user_metadata?.avatar_url,
       fb: false,
     });
+    setPremium(isPremiumEmail(email));
     setFamilyName(pts[pts.length - 1] || 'Doe');
   }, []);
 
@@ -133,6 +144,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         syncUserFromSupabase(session.user);
       } else {
         setUser(null);
+        setPremium(false);
       }
     });
 
@@ -158,6 +170,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       fb,
     };
     setUser(u);
+    setPremium(isPremiumEmail(u.email));
     setFamilyName(pts[pts.length - 1] || 'Doe');
     setPage('app');
     setMsgs(getDemoMsgs(lang));

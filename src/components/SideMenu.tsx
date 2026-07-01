@@ -88,16 +88,15 @@ export default function SideMenu() {
           <button onClick={() => setSideMenuOpen(false)} style={{ background: 'transparent', border: 'none', color: 'rgba(239,246,255,0.4)', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
         </div>
 
+        {WORLD_TABS.map(t => <MenuItem key={t.id} {...t} />)}
+
+        <Divider />
         <SectionTitle>{t('familySection', lang)}</SectionTitle>
         {FAMILY_TABS.map(t => <MenuItem key={t.id} {...t} />)}
 
         <Divider />
         <SectionTitle>{t('legacySection', lang)}</SectionTitle>
         {LEGACY_TABS.map(t => <MenuItem key={t.id} {...t} />)}
-
-        <Divider />
-        <SectionTitle>{t('worldSection', lang)}</SectionTitle>
-        {WORLD_TABS.map(t => <MenuItem key={t.id} {...t} />)}
 
         <Divider />
         <SectionTitle>{t('settings', lang)}</SectionTitle>
