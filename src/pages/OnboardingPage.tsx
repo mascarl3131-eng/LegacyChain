@@ -179,8 +179,8 @@ export default function OnboardingPage() {
       </button>
 
       {/* Center Text */}
-      <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '1rem' }}>
-        <p style={{ color: 'rgba(239,246,255,0.5)', marginTop: '0.8rem', fontSize: '0.8rem', letterSpacing: '0.12em' }}>
+      <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '1rem', transform: 'translateY(4.5rem)' }}>
+        <p style={{ color: 'rgba(239,246,255,0.5)', marginTop: '1.4rem', fontSize: '0.8rem', lineHeight: 1.8, letterSpacing: '0.12em' }}>
           Every family deserves to travel through time
         </p>
       </div>

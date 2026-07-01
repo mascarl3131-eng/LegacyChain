@@ -6,6 +6,8 @@ import type { TreeNode } from '@/lib/data';
 
 const GEN_COLORS = ['#C084FC', '#00FFD1', '#FFB347'];
 const GEN_LABELS = ['GRANDPARENTS', 'PARENTS', 'CHILDREN'];
+const REL_TO_GEN: Record<string, number> = { grandparent: 0, parent: 1, partner: 1, sibling: 1, child: 2 };
+const CURRENT_YEAR = new Date().getFullYear();
 
 export default function TreeTab() {
   const { lang, msgs, treeNodes, setTreeNodes } = useStore();
@@ -15,6 +17,13 @@ export default function TreeTab() {
   const [ln, setLn] = useState('');
   const [by, setBy] = useState('');
   const [rel, setRel] = useState('child');
+  const [editFn, setEditFn] = useState('');
+  const [editLn, setEditLn] = useState('');
+  const [editBy, setEditBy] = useState('');
+  const [editAge, setEditAge] = useState('');
+  const [editGen, setEditGen] = useState('1');
+  const [editX, setEditX] = useState('');
+  const [editY, setEditY] = useState('');
   const svgRef = useRef<SVGSVGElement>(null);
   const [svgW, setSvgW] = useState(520);
 
@@ -37,16 +46,67 @@ export default function TreeTab() {
 
   const addMember = () => {
     if (!fn.trim()) return;
+    const gen = REL_TO_GEN[rel] ?? 2;
     const newNode: TreeNode = {
-      id: Math.max(...treeNodes.map(t => t.id)) + 1,
+      id: Math.max(0, ...treeNodes.map(t => t.id)) + 1,
       n: `${fn.trim()} ${ln.trim() || 'Doe'}`,
-      b: parseInt(by) || new Date().getFullYear(),
+      b: Number.parseInt(by, 10) || CURRENT_YEAR,
       x: 50 + Math.random() * 480,
-      y: 340,
-      gen: 2,
+      y: [60, 180, 300][gen],
+      gen,
     };
     setTreeNodes([...treeNodes, newNode]);
     setFn(''); setLn(''); setBy(''); setShowAdd(false);
+  };
+
+  const selectMember = (member: TreeNode) => {
+    const parts = member.n.trim().split(/\s+/);
+    setSelectedMem(member);
+    setEditFn(parts[0] || '');
+    setEditLn(parts.slice(1).join(' '));
+    setEditBy(String(member.b || ''));
+    setEditAge(member.b ? String(Math.max(0, CURRENT_YEAR - member.b)) : '');
+    setEditGen(String(member.gen));
+    setEditX(String(Math.round(member.x)));
+    setEditY(String(Math.round(member.y)));
+  };
+
+  const updateBirthFromAge = (age: string) => {
+    setEditAge(age);
+    const parsed = Number.parseInt(age, 10);
+    if (Number.isFinite(parsed) && parsed >= 0 && parsed < 130) {
+      setEditBy(String(CURRENT_YEAR - parsed));
+    }
+  };
+
+  const updateAgeFromBirth = (birthYear: string) => {
+    setEditBy(birthYear);
+    const parsed = Number.parseInt(birthYear, 10);
+    if (Number.isFinite(parsed) && parsed > 1850 && parsed <= CURRENT_YEAR) {
+      setEditAge(String(CURRENT_YEAR - parsed));
+    }
+  };
+
+  const saveSelectedMember = () => {
+    if (!selectedMem || !editFn.trim()) return;
+    const parsedX = Number.parseInt(editX, 10);
+    const parsedY = Number.parseInt(editY, 10);
+    const next: TreeNode = {
+      ...selectedMem,
+      n: `${editFn.trim()} ${editLn.trim()}`.trim(),
+      b: Number.parseInt(editBy, 10) || selectedMem.b,
+      gen: Math.min(2, Math.max(0, Number.parseInt(editGen, 10) || 0)),
+      x: Number.isFinite(parsedX) ? parsedX : selectedMem.x,
+      y: Number.isFinite(parsedY) ? parsedY : selectedMem.y,
+    };
+    setTreeNodes(treeNodes.map(node => node.id === selectedMem.id ? next : node));
+    setSelectedMem(next);
+  };
+
+  const deleteSelectedMember = () => {
+    if (!selectedMem) return;
+    setTreeNodes(treeNodes.filter(node => node.id !== selectedMem.id));
+    setSelectedMem(null);
   };
 
   const getNodeMsgs = (name: string) => msgs.filter(m => m.a === name.split(' ')[0]);
@@ -89,7 +149,7 @@ export default function TreeTab() {
             const firstName = m.n.split(' ')[0];
 
             return (
-              <g key={m.id} onClick={() => { setSelectedMem(m); }} style={{ cursor: 'pointer' }}>
+              <g key={m.id} onClick={() => selectMember(treeNodes.find(node => node.id === m.id) || m)} style={{ cursor: 'pointer' }}>
                 <circle cx={m.x} cy={m.y} r={r + 18} fill={col} opacity={hasMsg ? 0.15 : 0.05}>
                   {hasMsg && <><animate attributeName="r" values={`${r + 14};${r + 22};${r + 14}`} dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values=".7;.3;.7" dur="3s" repeatCount="indefinite" /></>}
                 </circle>
@@ -147,7 +207,44 @@ export default function TreeTab() {
       {selectedMem && (
         <div className="glass-card" style={{ marginTop: '0.9rem' }}>
           <div style={{ fontSize: '0.7rem', color: '#00FFD1', letterSpacing: '0.12em', marginBottom: '0.9rem' }}>
-            {selectedMem.n} · {getNodeMsgs(selectedMem.n).length} message{getNodeMsgs(selectedMem.n).length !== 1 ? 's' : ''}
+            EDIT MEMBER - {getNodeMsgs(selectedMem.n).length} message{getNodeMsgs(selectedMem.n).length !== 1 ? 's' : ''}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
+            <div style={{ marginBottom: '0.85rem' }}>
+              <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('firstName', lang)}</label>
+              <input type="text" className="form-input" value={editFn} onChange={e => setEditFn(e.target.value)} />
+            </div>
+            <div style={{ marginBottom: '0.85rem' }}>
+              <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('lastName', lang)}</label>
+              <input type="text" className="form-input" value={editLn} onChange={e => setEditLn(e.target.value)} />
+            </div>
+            <div style={{ marginBottom: '0.85rem' }}>
+              <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('birthYear', lang)}</label>
+              <input type="number" className="form-input" value={editBy} onChange={e => updateAgeFromBirth(e.target.value)} />
+            </div>
+            <div style={{ marginBottom: '0.85rem' }}>
+              <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>AGE</label>
+              <input type="number" className="form-input" min={0} max={130} value={editAge} onChange={e => updateBirthFromAge(e.target.value)} />
+            </div>
+            <div style={{ marginBottom: '0.85rem' }}>
+              <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>{t('relation', lang)}</label>
+              <select className="form-select" value={editGen} onChange={e => setEditGen(e.target.value)}>
+                <option value="0">{GEN_LABELS[0]}</option>
+                <option value="1">{GEN_LABELS[1]}</option>
+                <option value="2">{GEN_LABELS[2]}</option>
+              </select>
+            </div>
+            <div style={{ marginBottom: '0.85rem' }}>
+              <label style={{ display: 'block', fontSize: '0.62rem', color: 'rgba(239,246,255,0.42)', letterSpacing: '0.12em', marginBottom: '0.32rem' }}>POSITION</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem' }}>
+                <input type="number" className="form-input" aria-label="X position" min={0} max={600} value={editX} onChange={e => setEditX(e.target.value)} />
+                <input type="number" className="form-input" aria-label="Y position" min={0} max={340} value={editY} onChange={e => setEditY(e.target.value)} />
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.6rem', marginBottom: '1rem' }}>
+            <button className="btn-primary" onClick={saveSelectedMember}>SAVE MEMBER</button>
+            <button className="btn-sec" onClick={deleteSelectedMember} style={{ color: '#FF2D55', borderColor: 'rgba(255,45,85,0.35)' }}>DELETE</button>
           </div>
           <div>
             {getNodeMsgs(selectedMem.n).length ? getNodeMsgs(selectedMem.n).map(msg => (

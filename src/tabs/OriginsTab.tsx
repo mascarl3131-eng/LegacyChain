@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { COORD_MAP, CHART_COLORS, DNA_SERVICES } from '@/lib/data';
+import DnaImportPanel from '@/components/DnaImportPanel';
 
 export default function OriginsTab() {
   const { lang, user, originRows, setOriginRows, pacte, setPacte, showNotif } = useStore();
@@ -9,8 +10,8 @@ export default function OriginsTab() {
   const animRef = useRef<number>(0);
   const [tabActive, setTabActive] = useState(true);
 
-  const total = originRows.reduce((s, r) => s + r.p, 0);
-  const totalStatus = total === 100 ? 'ok' : total < 100 ? 'low' : 'over';
+  const total = Math.round(originRows.reduce((s, r) => s + r.p, 0) * 10) / 10;
+  const totalStatus = Math.abs(total - 100) < 0.1 ? 'ok' : total < 100 ? 'low' : 'over';
 
   useEffect(() => {
     const obs = new IntersectionObserver(([e]) => setTabActive(e.isIntersecting));
@@ -119,7 +120,7 @@ export default function OriginsTab() {
   const addRow = () => setOriginRows([...originRows, { c: '', p: 0 }]);
   const updateRow = (i: number, field: 'c' | 'p', val: string) => {
     const updated = [...originRows];
-    updated[i] = { ...updated[i], [field]: field === 'p' ? parseInt(val) || 0 : val };
+    updated[i] = { ...updated[i], [field]: field === 'p' ? Number.parseFloat(val.replace(',', '.')) || 0 : val };
     setOriginRows(updated);
   };
   const removeRow = (i: number) => setOriginRows(originRows.filter((_, j) => j !== i));
@@ -140,10 +141,18 @@ export default function OriginsTab() {
         <span>{t('dnaWarnText', lang)}</span>
       </div>
 
+      <DnaImportPanel
+        lang={lang}
+        onApply={rows => {
+          setOriginRows(rows);
+          showNotif(lang === 'fr' ? 'Origines ADN importees automatiquement' : 'DNA origins imported automatically', '#00FFD1');
+        }}
+      />
+
       {originRows.map((row, i) => (
         <div key={i} style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', marginBottom: '0.4rem' }}>
           <input type="text" className="form-input" style={{ flex: 1 }} placeholder="Country" value={row.c} onChange={e => updateRow(i, 'c', e.target.value)} />
-          <input type="number" className="form-input" style={{ width: 60 }} placeholder="%" value={row.p || ''} min={0} max={100} onChange={e => updateRow(i, 'p', e.target.value)} />
+          <input type="number" className="form-input" style={{ width: 60 }} placeholder="%" value={row.p || ''} min={0} max={100} step={0.1} onChange={e => updateRow(i, 'p', e.target.value)} />
           <span style={{ color: '#00FFD1', fontSize: '0.78rem', flexShrink: 0 }}>%</span>
           <button onClick={() => removeRow(i)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,45,85,0.45)', cursor: 'pointer', fontSize: '1rem', flexShrink: 0 }}>×</button>
         </div>

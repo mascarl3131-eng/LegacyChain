@@ -100,7 +100,7 @@ export default function LandingPage() {
         padding: '1.5rem',
       }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', maxWidth: 320, textAlign: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.95rem', maxWidth: 320, textAlign: 'center' }}>
         {/* Tagline */}
         <div style={{ fontSize: '0.56rem', letterSpacing: '0.3em', color: 'rgba(0,255,209,0.6)' }}>
           ✦ HÉRITAGE · CHAÎNE · ∞
@@ -112,10 +112,10 @@ export default function LandingPage() {
             fontFamily: "'Cinzel',serif",
             fontSize: 'clamp(0.95rem,3.5vw,1.9rem)',
             color: '#EFF6FF',
-            height: '2.2em',
-            lineHeight: '2.2em',
+            minHeight: '3.2em',
+            lineHeight: 1.45,
             overflow: 'hidden',
-            width: 260,
+            width: 'min(300px,88vw)',
             position: 'relative',
             flexShrink: 0,
           }}
@@ -126,13 +126,13 @@ export default function LandingPage() {
               position: 'absolute',
               inset: 0,
               textAlign: 'center',
-              whiteSpace: 'nowrap',
+              whiteSpace: 'normal',
               borderRight: '2px solid #00FFD1',
               animation: 'blink 1s infinite',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              paddingRight: 2,
+              padding: '0 0.25rem',
             }}
           >
             {phrases[twI]?.slice(0, twC) || ''}
@@ -140,7 +140,7 @@ export default function LandingPage() {
         </div>
 
         {/* Subtitle */}
-        <p style={{ fontSize: '0.7rem', color: 'rgba(239,246,255,0.4)', lineHeight: 1.85, width: 240, flexShrink: 0 }}>
+        <p style={{ fontSize: '0.7rem', color: 'rgba(239,246,255,0.4)', lineHeight: 1.95, width: 260, flexShrink: 0, marginTop: '0.1rem' }}>
           {t('landingSub', lang)}
         </p>
 
