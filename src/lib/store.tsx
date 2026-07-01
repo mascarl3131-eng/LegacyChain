@@ -4,7 +4,7 @@ import { supabase } from './supabase';
 import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import type { LangCode } from './i18n';
 import type { Message, HumanityMessage, Challenge, TreeNode, OriginRow } from './data';
-import { getDemoMsgs, getDemoHumanity, getChallenges, INITIAL_TREE } from './data';
+import { getDemoMsgs, getDemoHumanity, getChallenges } from './data';
 
 export type TabName = 'chain' | 'tree' | 'origins' | 'mural' | 'challenges' | 'book' | 'humanity';
 export type PageName = 'onboarding' | 'landing' | 'app' | 'admin';
@@ -94,12 +94,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [bookData, setBookData] = useState<Record<string, string>>({});
   const [chapter, setChapter] = useState(0);
   const [pacte, setPacte] = useState(false);
-  const [originRows, setOriginRows] = useState<OriginRow[]>([
-    { c: 'France', p: 40 },
-    { c: 'Senegal', p: 35 },
-    { c: 'Vietnam', p: 25 },
-  ]);
-  const [treeNodes, setTreeNodes] = useState<TreeNode[]>(INITIAL_TREE);
+  const [originRows, setOriginRows] = useState<OriginRow[]>([]);
+  const [treeNodes, setTreeNodes] = useState<TreeNode[]>([]);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
