@@ -3,6 +3,8 @@ import { BarChart3, Crown, ShieldCheck } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 
+const ADMIN_EMAILS = new Set(['mascarl3131@gmail.com']);
+
 export default function AdminPage() {
   const { setPage, msgs, hMsgs, premium, premiumPreview, setPremiumPreview, session, lang, loginWithGoogle } = useStore();
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -26,8 +28,10 @@ export default function AdminPage() {
     setPreviewLoading(false);
   };
 
+  const isAdmin = Boolean(session?.user.email && ADMIN_EMAILS.has(session.user.email.toLowerCase()));
+
   useEffect(() => {
-    if (!session?.access_token) return;
+    if (!session?.access_token || !isAdmin) return;
     fetch('/api/visit-stats', {
       headers: { Authorization: `Bearer ${session.access_token}` },
     })
@@ -37,7 +41,7 @@ export default function AdminPage() {
         setVisitStats(data);
       })
       .catch(error => setStatsError(error instanceof Error ? error.message : 'Stats unavailable'));
-  }, [session?.access_token]);
+  }, [isAdmin, session?.access_token]);
 
   const topEntries = (rows: Record<string, number> = {}) => Object.entries(rows).sort((a, b) => b[1] - a[1]).slice(0, 4);
 
@@ -52,6 +56,17 @@ export default function AdminPage() {
             <button type="button" className="btn-primary" onClick={() => void loginWithGoogle()}>{t('googleLogin', lang)}</button>
           </section>
         )}
+
+        {session && !isAdmin && (
+          <section className="glass-card" style={{ marginBottom: '1.5rem', borderColor: 'rgba(255,107,107,.28)' }}>
+            <div style={{ color: '#FF6B6B', fontSize: '.7rem', letterSpacing: '.12em', marginBottom: '.45rem' }}>{t('godModeUnauthorized', lang)}</div>
+            <div style={{ color: 'rgba(239,246,255,.42)', fontSize: '.58rem', lineHeight: 1.6, marginBottom: '.75rem' }}>{session.user.email}</div>
+            <button type="button" className="btn-sec" onClick={() => setPage('app')}>{t('close', lang)}</button>
+          </section>
+        )}
+
+        {isAdmin && (
+          <>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
           <div className="glass-card" style={{ textAlign: 'center', padding: '0.9rem' }}>
@@ -158,6 +173,8 @@ export default function AdminPage() {
         >
           {t('close', lang)}
         </button>
+          </>
+        )}
       </div>
     </div>
   );
