@@ -15,6 +15,16 @@ const normalizeDemoName = (name: string) => name
   .toLocaleLowerCase();
 const DEMO_TREE_NAMES = new Set(INITIAL_TREE.map(node => normalizeDemoName(node.n)));
 const isDemoNode = (node: TreeNode) => DEMO_TREE_NAMES.has(normalizeDemoName(node.n));
+const readLocalLinks = () => {
+  try {
+    const saved = localStorage.getItem('legacychain-tree-links');
+    if (!saved) return TREE_LINKS;
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed as [number, number][] : TREE_LINKS;
+  } catch {
+    return TREE_LINKS;
+  }
+};
 
 export default function TreeTab() {
   const { lang, msgs, treeNodes, setTreeNodes, session, activeFamilyId, showNotif } = useStore();
@@ -24,7 +34,7 @@ export default function TreeTab() {
   const touchPanRef = useRef({ active: false, x: 0, y: 0, scrollLeft: 0, scrollTop: 0, moved: false });
   const pinchRef = useRef({ active: false, startDistance: 0, startZoom: 1 });
   const suppressClickRef = useRef(false);
-  const [links, setLinks] = useState<[number, number][]>(TREE_LINKS);
+  const [links, setLinks] = useState<[number, number][]>(readLocalLinks);
   const [showAdd, setShowAdd] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [view, setView] = useState<'tree' | 'list'>('tree');
@@ -49,6 +59,7 @@ export default function TreeTab() {
   const hasDemoNodes = demoNodes.length > 0;
 
   const selectedMem = treeNodes.find(node => node.id === selectedId) || null;
+  const editableRelatives = selectedMem ? treeNodes.filter(node => node.id !== selectedMem.id) : [];
   const visibleNodes = useMemo(() => treeNodes.filter(node => {
     const matchesGeneration = generation === 'all' || node.gen === generation;
     const matchesQuery = node.n.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase());
@@ -146,6 +157,7 @@ export default function TreeTab() {
   };
 
   const persistTree = async (nextNodes: TreeNode[], nextLinks: [number, number][]) => {
+    localStorage.setItem('legacychain-tree-links', JSON.stringify(nextLinks));
     if (!session?.access_token || !activeFamilyId) return;
     try {
       const response = await fetch('/api/family-tree', {
@@ -204,6 +216,10 @@ export default function TreeTab() {
     if (selectedId && !treeNodes.some(node => node.id === selectedId)) setSelectedId(null);
     if (relativeTo && !treeNodes.some(node => node.id === relativeTo)) setRelativeTo(treeNodes[0]?.id || 0);
   }, [relativeTo, selectedId, treeNodes]);
+
+  useEffect(() => {
+    localStorage.setItem('legacychain-tree-links', JSON.stringify(links));
+  }, [links]);
 
   useEffect(() => {
     if (!selectedMem) return;
@@ -278,7 +294,8 @@ export default function TreeTab() {
 
   const saveMember = () => {
     if (!selectedMem || !editFn.trim()) return;
-    const { node, reference } = buildNodeDraft(selectedMem.id, editRel, editRelativeTo, editFn, editLn, editBy);
+    const referenceId = editableRelatives.some(node => node.id === editRelativeTo) ? editRelativeTo : 0;
+    const { node, reference } = buildNodeDraft(selectedMem.id, referenceId ? editRel : 'child', referenceId, editFn, editLn, editBy);
     const nextNodes = treeNodes.map(item => item.id === selectedMem.id ? node : item);
     const nextLinksBase = links.filter(([from, to]) => from !== selectedMem.id && to !== selectedMem.id);
     const nextLinks = reference
@@ -286,6 +303,7 @@ export default function TreeTab() {
       : nextLinksBase;
     setTreeNodes(nextNodes);
     setLinks(nextLinks);
+    setSelectedId(node.id);
     void persistTree(nextNodes, nextLinks);
     showNotif(lang === 'fr' ? 'Membre mis à jour' : 'Member updated', '#00FFD1');
   };
@@ -595,18 +613,41 @@ export default function TreeTab() {
             </div>
             <button type="button" onClick={() => setSelectedId(null)} style={{ border: 0, background: 'transparent', color: 'rgba(239,246,255,.4)', cursor: 'pointer' }}><X size={16} /></button>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '0.8rem' }}>
-            <input type="text" className="form-input" value={editFn} onChange={event => setEditFn(event.target.value)} placeholder={t('firstName', lang)} />
-            <input type="text" className="form-input" value={editLn} onChange={event => setEditLn(event.target.value)} placeholder={t('lastName', lang)} />
-            <input type="number" className="form-input" value={editBy} onChange={event => setEditBy(event.target.value)} placeholder={t('birthYear', lang)} min="1850" max={new Date().getFullYear()} />
-            <select className="form-select" value={editRel} onChange={event => setEditRel(event.target.value)}>
-              {['parent', 'child', 'sibling', 'grandparent', 'partner'].map(relation => <option key={relation} value={relation}>{t(relation, lang)}</option>)}
-            </select>
+          <div style={{ color: '#00FFD1', fontSize: '0.62rem', letterSpacing: '0.12em', marginBottom: '0.6rem' }}>
+            {lang === 'fr' ? 'MODIFIER LE MEMBRE' : 'EDIT MEMBER'}
           </div>
-          <label style={{ display: 'block', fontSize: '0.57rem', color: 'rgba(239,246,255,.35)', margin: '0 0 0.3rem' }}>{t('relativeTo', lang)}</label>
-          <select className="form-select" value={editRelativeTo} onChange={event => setEditRelativeTo(Number(event.target.value))}>
-            {treeNodes.filter(node => node.id !== selectedMem.id).map(node => <option key={node.id} value={node.id}>{node.n}</option>)}
-          </select>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '0.8rem' }}>
+            <label style={{ display: 'grid', gap: '0.28rem', color: 'rgba(239,246,255,.38)', fontSize: '0.52rem', letterSpacing: '0.08em' }}>
+              {t('firstName', lang)}
+              <input type="text" className="form-input" value={editFn} onChange={event => setEditFn(event.target.value)} />
+            </label>
+            <label style={{ display: 'grid', gap: '0.28rem', color: 'rgba(239,246,255,.38)', fontSize: '0.52rem', letterSpacing: '0.08em' }}>
+              {t('lastName', lang)}
+              <input type="text" className="form-input" value={editLn} onChange={event => setEditLn(event.target.value)} />
+            </label>
+            <label style={{ display: 'grid', gap: '0.28rem', color: 'rgba(239,246,255,.38)', fontSize: '0.52rem', letterSpacing: '0.08em' }}>
+              {t('birthYear', lang)}
+              <input type="number" className="form-input" value={editBy} onChange={event => setEditBy(event.target.value)} min="1850" max={new Date().getFullYear()} />
+            </label>
+            <label style={{ display: 'grid', gap: '0.28rem', color: 'rgba(239,246,255,.38)', fontSize: '0.52rem', letterSpacing: '0.08em' }}>
+              {t('relation', lang)}
+              <select className="form-select" value={editRel} onChange={event => setEditRel(event.target.value)} disabled={!editableRelatives.length}>
+                {['parent', 'child', 'sibling', 'grandparent', 'partner'].map(relation => <option key={relation} value={relation}>{t(relation, lang)}</option>)}
+              </select>
+            </label>
+          </div>
+          {editableRelatives.length ? (
+            <label style={{ display: 'grid', gap: '0.28rem', fontSize: '0.57rem', color: 'rgba(239,246,255,.35)', margin: '0 0 0.3rem' }}>
+              {t('relativeTo', lang)}
+              <select className="form-select" value={editRelativeTo} onChange={event => setEditRelativeTo(Number(event.target.value))}>
+                {editableRelatives.map(node => <option key={node.id} value={node.id}>{node.n}</option>)}
+              </select>
+            </label>
+          ) : (
+            <div style={{ padding: '0.55rem 0.65rem', borderRadius: 8, background: 'rgba(0,255,209,.035)', border: '1px solid rgba(0,255,209,.12)', color: 'rgba(239,246,255,.42)', fontSize: '0.58rem', lineHeight: 1.55 }}>
+              {lang === 'fr' ? 'Ajoutez un autre membre pour créer un lien familial.' : 'Add another member to create a family relationship.'}
+            </div>
+          )}
           <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap', margin: '0.8rem 0 0.2rem' }}>
             <button type="button" className="btn-primary" onClick={saveMember}>{t('saveMember', lang)}</button>
             <button type="button" className="btn-sec" onClick={deleteMember} style={{ borderColor: 'rgba(255,107,107,0.5)', color: '#FFB4B4' }}>{t('deleteMember', lang)}</button>

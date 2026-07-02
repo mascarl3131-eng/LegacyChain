@@ -9,6 +9,7 @@ import BottomTicker from '@/components/BottomTicker';
 import FamilyLegacyTab from '@/tabs/FamilyLegacyTab';
 import TreeTab from '@/tabs/TreeTab';
 import OriginsTab from '@/tabs/OriginsTab';
+import LifeJourneyTab from '@/tabs/LifeJourneyTab';
 import ChallengesTab from '@/tabs/ChallengesTab';
 import BookTab from '@/tabs/BookTab';
 import HumanityTab from '@/tabs/HumanityTab';
@@ -20,6 +21,7 @@ const TABS: Record<string, React.FC> = {
   chain: FamilyLegacyTab,
   tree: TreeTab,
   origins: OriginsTab,
+  journey: LifeJourneyTab,
   mural: FamilyLegacyTab,
   challenges: ChallengesTab,
   book: BookTab,
@@ -27,19 +29,19 @@ const TABS: Record<string, React.FC> = {
 };
 
 export default function AppPage() {
-  const { page, tab, user, session, lang, familyName, activeFamilyId, setActiveFamilyId, setMsgs, setHMsgs, showNotif } = useStore();
+  const { page, tab, user, session, lang, familyName, activeFamilyId, msgs, hMsgs, setActiveFamilyId, setMsgs, setHMsgs, showNotif } = useStore();
   const [bugReportOpen, setBugReportOpen] = useState(false);
 
   useEffect(() => {
     if (page === 'app' && user) {
-      if (!session) setMsgs(getDemoMsgs(lang));
-      setHMsgs(getDemoHumanity(lang));
+      if (!session && !msgs.length) setMsgs(getDemoMsgs(lang));
+      if (!hMsgs.length) setHMsgs(getDemoHumanity(lang));
       const timer = setTimeout(() => {
         showNotif(`${t('welcome', lang)}, ${user.first} ✦`, '#00FFD1');
       }, 800);
       return () => clearTimeout(timer);
     }
-  }, [lang, page, session, setHMsgs, setMsgs, showNotif, user]);
+  }, [hMsgs.length, lang, msgs.length, page, session, setHMsgs, setMsgs, showNotif, user]);
 
   useEffect(() => {
     if (page !== 'app' || !session) return;

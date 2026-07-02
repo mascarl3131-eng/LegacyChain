@@ -5,7 +5,6 @@ import DnaImportPanel from '@/components/DnaImportPanel';
 import DnaWorldMap from '@/components/DnaWorldMap';
 import DnaQuickGuide from '@/components/DnaQuickGuide';
 import { getCountryOptions } from '@/lib/countries';
-import LifeJourneyTab from '@/tabs/LifeJourneyTab';
 
 export default function OriginsTab() {
   const { lang, user, originRows, setOriginRows, pacte, setPacte, showNotif } = useStore();
@@ -91,10 +90,6 @@ export default function OriginsTab() {
             <span style={{ fontSize: '0.6rem', color: 'rgba(239,246,255,0.32)', letterSpacing: '0.08em' }}>{o.c}</span>
           </div>
         ))}
-      </div>
-
-      <div style={{ marginTop: '1.5rem' }}>
-        <LifeJourneyTab />
       </div>
 
       {/* DNA Services */}

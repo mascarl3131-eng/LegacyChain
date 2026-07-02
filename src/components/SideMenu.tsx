@@ -7,6 +7,7 @@ const FAMILY_TABS: { id: TabName; icon: string; labelKey: string }[] = [
   { id: 'chain', icon: '⬡', labelKey: 'navFamilyLegacy' },
   { id: 'tree', icon: '🌳', labelKey: 'navTree' },
   { id: 'origins', icon: '🧬', labelKey: 'navOrigins' },
+  { id: 'journey', icon: '◇', labelKey: 'lifeJourneyTab' },
   { id: 'book', icon: '📖', labelKey: 'navBook' },
   { id: 'challenges', icon: '🏆', labelKey: 'navChal' },
 ];

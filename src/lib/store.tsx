@@ -6,7 +6,7 @@ import { t } from './i18n';
 import type { Message, HumanityMessage, Challenge, TreeNode, OriginRow } from './data';
 import { getDemoMsgs, getDemoHumanity, getChallenges, INITIAL_TREE } from './data';
 
-export type TabName = 'chain' | 'tree' | 'origins' | 'mural' | 'challenges' | 'book' | 'humanity';
+export type TabName = 'chain' | 'tree' | 'origins' | 'journey' | 'mural' | 'challenges' | 'book' | 'humanity';
 export type PageName = 'onboarding' | 'landing' | 'app' | 'admin';
 
 const SUPPORTED_LANGS: LangCode[] = ['en', 'fr', 'es', 'pt', 'de', 'it', 'ar', 'zh', 'ja', 'ko', 'ru', 'hi', 'sw', 'nl'];
@@ -23,6 +23,24 @@ function getInitialLanguage(): LangCode {
     if (SUPPORTED_LANGS.includes(exact)) return exact;
   }
   return 'en';
+}
+
+function readLocalJson<T>(key: string, fallback: T): T {
+  try {
+    const saved = localStorage.getItem(key);
+    if (!saved) return fallback;
+    return JSON.parse(saved) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeLocalJson(key: string, value: unknown) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Local storage can fail in private browsing or full storage; cloud sync still works when signed in.
+  }
 }
 
 interface User {
@@ -114,22 +132,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [premiumLoading, setPremiumLoading] = useState(false);
   const [premiumCheckoutLoading, setPremiumCheckoutLoading] = useState(false);
   const [premiumCheckoutError, setPremiumCheckoutError] = useState<string | null>(null);
-  const [familyName, setFamilyName] = useState('Doe');
+  const [familyName, setFamilyName] = useState(() => readLocalJson('legacychain-family-name', 'Doe'));
   const [activeFamilyId, setActiveFamilyId] = useState<string | null>(null);
   const [emo, setEmo] = useState('hope');
   const [hEmo, setHEmo] = useState('hope');
-  const [msgs, setMsgs] = useState<Message[]>([]);
-  const [hMsgs, setHMsgs] = useState<HumanityMessage[]>([]);
-  const [challenges, setChallenges] = useState<Challenge[]>(getChallenges());
-  const [bookData, setBookData] = useState<Record<string, string>>({});
-  const [chapter, setChapter] = useState(0);
-  const [pacte, setPacte] = useState(false);
-  const [originRows, setOriginRows] = useState<OriginRow[]>([
+  const [msgs, setMsgs] = useState<Message[]>(() => readLocalJson('legacychain-msgs', [] as Message[]));
+  const [hMsgs, setHMsgs] = useState<HumanityMessage[]>(() => readLocalJson('legacychain-humanity-msgs', [] as HumanityMessage[]));
+  const [challenges, setChallenges] = useState<Challenge[]>(() => readLocalJson('legacychain-challenges', getChallenges()));
+  const [bookData, setBookData] = useState<Record<string, string>>(() => readLocalJson('legacychain-book', {}));
+  const [chapter, setChapter] = useState(() => readLocalJson('legacychain-book-chapter', 0));
+  const [pacte, setPacte] = useState(() => readLocalJson('legacychain-pacte', false));
+  const [originRows, setOriginRows] = useState<OriginRow[]>(() => readLocalJson('legacychain-origins', [
     { c: 'France', p: 40 },
     { c: 'Senegal', p: 35 },
     { c: 'Vietnam', p: 25 },
-  ]);
-  const [treeNodes, setTreeNodes] = useState<TreeNode[]>(INITIAL_TREE);
+  ]));
+  const [treeNodes, setTreeNodes] = useState<TreeNode[]>(() => readLocalJson('legacychain-tree-nodes', INITIAL_TREE));
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -241,6 +259,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = lang;
   }, [lang]);
+
+  useEffect(() => { writeLocalJson('legacychain-family-name', familyName); }, [familyName]);
+  useEffect(() => { writeLocalJson('legacychain-msgs', msgs); }, [msgs]);
+  useEffect(() => { writeLocalJson('legacychain-humanity-msgs', hMsgs); }, [hMsgs]);
+  useEffect(() => { writeLocalJson('legacychain-challenges', challenges); }, [challenges]);
+  useEffect(() => { writeLocalJson('legacychain-book', bookData); }, [bookData]);
+  useEffect(() => { writeLocalJson('legacychain-book-chapter', chapter); }, [chapter]);
+  useEffect(() => { writeLocalJson('legacychain-pacte', pacte); }, [pacte]);
+  useEffect(() => { writeLocalJson('legacychain-origins', originRows); }, [originRows]);
+  useEffect(() => { writeLocalJson('legacychain-tree-nodes', treeNodes); }, [treeNodes]);
 
   const showNotif = useCallback((msg: string, color: string = '#00FFD1') => {
     setNotif({ msg, color });
