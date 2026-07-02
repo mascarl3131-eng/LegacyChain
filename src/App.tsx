@@ -76,6 +76,30 @@ function App() {
     });
   }, [lang, session, showNotif]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const source = params.get('src') || params.get('utm_source') || '';
+    const payload = {
+      path: `${window.location.pathname}${window.location.search}`,
+      referrer: document.referrer,
+      source,
+    };
+
+    const body = JSON.stringify(payload);
+    if (navigator.sendBeacon) {
+      const blob = new Blob([body], { type: 'application/json' });
+      navigator.sendBeacon('/api/track-visit', blob);
+      return;
+    }
+
+    fetch('/api/track-visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+      keepalive: true,
+    }).catch(() => undefined);
+  }, []);
+
   if (loading) {
     return (
       <div style={{

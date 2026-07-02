@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Crown, ShieldCheck } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { BarChart3, Crown, ShieldCheck } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 
@@ -7,6 +7,16 @@ export default function AdminPage() {
   const { setPage, msgs, hMsgs, premium, premiumPreview, setPremiumPreview, session, lang } = useStore();
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState('');
+  const [visitStats, setVisitStats] = useState<{
+    total: number;
+    last24h: number;
+    last30d: number;
+    uniqueLast30d: number;
+    bySource: Record<string, number>;
+    byPath: Record<string, number>;
+    byCountry: Record<string, number>;
+  } | null>(null);
+  const [statsError, setStatsError] = useState('');
 
   const togglePremiumPreview = async () => {
     setPreviewLoading(true);
@@ -15,6 +25,21 @@ export default function AdminPage() {
     if (!ok) setPreviewError(t('godModeUnauthorized', lang));
     setPreviewLoading(false);
   };
+
+  useEffect(() => {
+    if (!session?.access_token) return;
+    fetch('/api/visit-stats', {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    })
+      .then(async response => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Stats unavailable');
+        setVisitStats(data);
+      })
+      .catch(error => setStatsError(error instanceof Error ? error.message : 'Stats unavailable'));
+  }, [session?.access_token]);
+
+  const topEntries = (rows: Record<string, number> = {}) => Object.entries(rows).sort((a, b) => b[1] - a[1]).slice(0, 4);
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(4,3,10,0.98)', overflowY: 'auto', padding: '1.5rem' }}>
@@ -52,6 +77,52 @@ export default function AdminPage() {
           </button>
           {premiumPreview && <div style={{ color: '#FFB347', fontSize: '.54rem', textAlign: 'center', marginTop: '.55rem' }}>{t('godModeActive', lang)}</div>}
           {previewError && <div style={{ color: '#FF6B6B', fontSize: '.54rem', marginTop: '.55rem' }}>{previewError}</div>}
+        </section>
+
+        <section className="glass-card" style={{ marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.55rem', marginBottom: '.85rem' }}>
+            <span style={{ width: 34, height: 34, borderRadius: 9, display: 'grid', placeItems: 'center', color: '#00FFD1', background: 'rgba(0,255,209,.08)', border: '1px solid rgba(0,255,209,.2)' }}><BarChart3 size={18} /></span>
+            <div>
+              <div style={{ color: '#00FFD1', fontSize: '.68rem', letterSpacing: '.12em' }}>VISITES</div>
+              <div style={{ color: 'rgba(239,246,255,.38)', fontSize: '.53rem', marginTop: '.2rem' }}>Compteur Supabase gratuit</div>
+            </div>
+          </div>
+          {visitStats ? (
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '.45rem', marginBottom: '.85rem' }}>
+                {[
+                  [visitStats.total, 'TOTAL', '#00FFD1'],
+                  [visitStats.last24h, '24H', '#FFB347'],
+                  [visitStats.last30d, '30J', '#C084FC'],
+                  [visitStats.uniqueLast30d, 'UNIQUES', '#7DD3FC'],
+                ].map(([value, label, color]) => (
+                  <div key={String(label)} style={{ textAlign: 'center', padding: '.55rem .35rem', borderRadius: 8, border: '1px solid rgba(239,246,255,.08)', background: 'rgba(239,246,255,.025)' }}>
+                    <strong style={{ display: 'block', color: String(color), fontSize: '.9rem' }}>{value}</strong>
+                    <span style={{ color: 'rgba(239,246,255,.36)', fontSize: '.46rem' }}>{label}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'grid', gap: '.55rem' }}>
+                {([
+                  ['Sources', visitStats.bySource],
+                  ['Pages', visitStats.byPath],
+                  ['Pays', visitStats.byCountry],
+                ] as [string, Record<string, number>][]).map(([label, rows]) => (
+                  <div key={String(label)}>
+                    <div style={{ color: 'rgba(239,246,255,.42)', fontSize: '.52rem', letterSpacing: '.1em', marginBottom: '.28rem' }}>{label}</div>
+                    {topEntries(rows).length ? topEntries(rows).map(([key, count]) => (
+                      <div key={key} style={{ display: 'flex', justifyContent: 'space-between', gap: '.8rem', color: 'rgba(239,246,255,.72)', fontSize: '.58rem', padding: '.2rem 0', borderBottom: '1px solid rgba(239,246,255,.06)' }}>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{key}</span>
+                        <strong style={{ color: '#00FFD1' }}>{count}</strong>
+                      </div>
+                    )) : <div style={{ color: 'rgba(239,246,255,.28)', fontSize: '.56rem' }}>Aucune donnée</div>}
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div style={{ color: statsError ? '#FF6B6B' : 'rgba(239,246,255,.42)', fontSize: '.6rem' }}>{statsError || 'Chargement des visites...'}</div>
+          )}
         </section>
 
         <div style={{ fontSize: '0.68rem', letterSpacing: '0.15em', color: '#00FFD1', marginBottom: '0.9rem' }}>{t('pendingReview', lang)}</div>
