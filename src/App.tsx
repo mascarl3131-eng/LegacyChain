@@ -77,6 +77,14 @@ function App() {
   }, [lang, session, showNotif]);
 
   useEffect(() => {
+    if (loading) return;
+    const params = new URLSearchParams(window.location.search);
+    if (window.location.pathname === '/admin' || params.get('admin') === '1') {
+      setPage('admin');
+    }
+  }, [loading, setPage]);
+
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const source = params.get('src') || params.get('utm_source') || '';
     const payload = {

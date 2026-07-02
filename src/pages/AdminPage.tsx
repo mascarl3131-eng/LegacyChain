@@ -4,7 +4,7 @@ import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 
 export default function AdminPage() {
-  const { setPage, msgs, hMsgs, premium, premiumPreview, setPremiumPreview, session, lang } = useStore();
+  const { setPage, msgs, hMsgs, premium, premiumPreview, setPremiumPreview, session, lang, loginWithGoogle } = useStore();
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState('');
   const [visitStats, setVisitStats] = useState<{
@@ -45,6 +45,13 @@ export default function AdminPage() {
     <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(4,3,10,0.98)', overflowY: 'auto', padding: '1.5rem' }}>
       <div style={{ maxWidth: 480, margin: '0 auto' }}>
         <div className="font-display" style={{ color: '#00FFD1', fontSize: '0.9rem', letterSpacing: '0.15em', marginBottom: '1.5rem' }}>⬡ {t('adminPanel', lang)}</div>
+
+        {!session && (
+          <section className="glass-card" style={{ marginBottom: '1.5rem', borderColor: 'rgba(255,179,71,.28)' }}>
+            <div style={{ color: '#FFB347', fontSize: '.7rem', letterSpacing: '.12em', marginBottom: '.5rem' }}>{t('godModeLoginRequired', lang)}</div>
+            <button type="button" className="btn-primary" onClick={() => void loginWithGoogle()}>{t('googleLogin', lang)}</button>
+          </section>
+        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
           <div className="glass-card" style={{ textAlign: 'center', padding: '0.9rem' }}>
