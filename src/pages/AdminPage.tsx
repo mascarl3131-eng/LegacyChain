@@ -32,7 +32,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!session?.access_token || !isAdmin) return;
-    fetch('/api/visit-stats', {
+    fetch('/api/admin-premium-preview?action=visitStats', {
       headers: { Authorization: `Bearer ${session.access_token}` },
     })
       .then(async response => {

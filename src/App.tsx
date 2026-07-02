@@ -88,6 +88,7 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     const source = params.get('src') || params.get('utm_source') || '';
     const payload = {
+      action: 'trackVisit',
       path: `${window.location.pathname}${window.location.search}`,
       referrer: document.referrer,
       source,
@@ -96,11 +97,11 @@ function App() {
     const body = JSON.stringify(payload);
     if (navigator.sendBeacon) {
       const blob = new Blob([body], { type: 'application/json' });
-      navigator.sendBeacon('/api/track-visit', blob);
+      navigator.sendBeacon('/api/admin-premium-preview', blob);
       return;
     }
 
-    fetch('/api/track-visit', {
+    fetch('/api/admin-premium-preview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body,
