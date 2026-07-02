@@ -2,13 +2,19 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Focus, List, Maximize2, MessageCircle, Network, Plus, Search, UserRound, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
-import { TREE_LINKS } from '@/lib/data';
+import { INITIAL_TREE, TREE_LINKS } from '@/lib/data';
 import type { TreeNode } from '@/lib/data';
 import MessageMedia from '@/components/MessageMedia';
 
 const GEN_COLORS = ['#C084FC', '#00FFD1', '#FFB347'];
 const GEN_Y = [70, 190, 310];
-const DEMO_TREE_NAMES = ['Robert Doe', 'Irène Doe', 'Jean Doe', 'Marie Doe', 'Sophie Doe', 'Lucas Doe'];
+const normalizeDemoName = (name: string) => name
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .replace('Ã¨', 'e')
+  .toLocaleLowerCase();
+const DEMO_TREE_NAMES = new Set(INITIAL_TREE.map(node => normalizeDemoName(node.n)));
+const isDemoNode = (node: TreeNode) => DEMO_TREE_NAMES.has(normalizeDemoName(node.n));
 
 export default function TreeTab() {
   const { lang, msgs, treeNodes, setTreeNodes, session, activeFamilyId, showNotif } = useStore();
@@ -37,7 +43,10 @@ export default function TreeTab() {
   const [editRel, setEditRel] = useState('child');
   const [editRelativeTo, setEditRelativeTo] = useState(0);
   const [cloudReady, setCloudReady] = useState(false);
-  const isDemoTree = treeNodes.length === DEMO_TREE_NAMES.length && treeNodes.every(node => DEMO_TREE_NAMES.includes(node.n));
+  const demoNodes = treeNodes.filter(isDemoNode);
+  const realNodes = treeNodes.filter(node => !isDemoNode(node));
+  const isDemoTree = treeNodes.length > 0 && realNodes.length === 0 && demoNodes.length === treeNodes.length;
+  const hasDemoNodes = demoNodes.length > 0;
 
   const selectedMem = treeNodes.find(node => node.id === selectedId) || null;
   const visibleNodes = useMemo(() => treeNodes.filter(node => {
@@ -209,17 +218,19 @@ export default function TreeTab() {
 
   const addMember = () => {
     if (!fn.trim()) return;
-    if (isDemoTree) {
+    if (hasDemoNodes) {
+      const id = Math.max(0, ...realNodes.map(node => node.id)) + 1;
       const newNode: TreeNode = {
-        id: 1,
+        id,
         n: `${fn.trim()} ${ln.trim() || ''}`.trim(),
         b: parseInt(by) || new Date().getFullYear(),
         x: 295,
         y: GEN_Y[1],
         gen: 1,
       };
-      const nextNodes = [newNode];
-      const nextLinks: [number, number][] = [];
+      const keptIds = new Set(realNodes.map(node => node.id));
+      const nextNodes = [...realNodes, newNode];
+      const nextLinks = links.filter(([from, to]) => keptIds.has(from) && keptIds.has(to));
       setTreeNodes(nextNodes);
       setLinks(nextLinks);
       void persistTree(nextNodes, nextLinks);
