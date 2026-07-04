@@ -173,10 +173,16 @@ export default function HumanityTab() {
   };
 
   const react = async (voice: Voice, reaction: string) => {
+    const current = liked[voice.id];
+    const nextReaction = current === reaction ? '' : reaction;
+    setLiked(state => ({ ...state, [voice.id]: nextReaction }));
+    setVoices(items => items.map(item => {
+      if (item.id !== voice.id) return item;
+      const delta = current && nextReaction ? 0 : nextReaction ? 1 : -1;
+      return { ...item, reaction_count: Math.max(0, item.reaction_count + delta) };
+    }));
     if (sampleMode) return;
     const visitorId = getVisitorId();
-    const current = liked[voice.id];
-    setLiked(state => ({ ...state, [voice.id]: current === reaction ? '' : reaction }));
     const response = await fetch('/api/humanity-reactions', {
       method: 'POST', headers: { 'Content-Type': 'application/json', ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
       body: JSON.stringify({ messageId: voice.id, visitorId, reaction }),
@@ -367,10 +373,10 @@ export default function HumanityTab() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '.5rem', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', gap: '.25rem' }}>
                   <button className="btn-sec" onClick={() => void react(voice, 'hope')} style={{ color: activeReaction === 'hope' ? '#FFB347' : undefined, padding: '.28rem .45rem' }} aria-label={t('supportVoice', lang)}><Sparkles size={12} /></button>
-                  <button className="btn-sec" onClick={() => void react(voice, 'love')} style={{ color: activeReaction === 'love' ? '#FF6B9D' : undefined, padding: '.28rem .45rem' }} aria-label={t('loveVoice', lang)}><Heart size={12} /></button>
+                  <button className="btn-sec" onClick={() => void react(voice, 'love')} style={{ color: activeReaction === 'love' ? '#E11D48' : undefined, borderColor: activeReaction === 'love' ? 'rgba(225,29,72,.45)' : undefined, background: activeReaction === 'love' ? 'rgba(225,29,72,.1)' : undefined, padding: '.28rem .45rem' }} aria-label={t('loveVoice', lang)}><Heart size={12} fill={activeReaction === 'love' ? '#E11D48' : 'none'} /></button>
                   <button className="btn-sec" onClick={() => void react(voice, 'support')} style={{ color: activeReaction === 'support' ? '#00FFD1' : undefined, padding: '.28rem .45rem' }} aria-label={t('supportVoice', lang)}><HandHeart size={12} /></button>
                 </div>
-                <div style={{ display: 'flex', gap: '.25rem' }}><span style={{ color: 'rgba(239,246,255,.35)', fontSize: '.55rem', alignSelf: 'center' }}><Heart size={11} style={{ display: 'inline' }} /> {voice.reaction_count}</span><button className="btn-sec" onClick={() => void share(voice)} aria-label={t('shareVoice', lang)}><Share2 size={12} /></button><a className="btn-sec" href={`https://translate.google.com/?sl=auto&tl=${lang}&text=${encodeURIComponent(voice.message)}&op=translate`} target="_blank" rel="noreferrer" aria-label={t('translateVoice', lang)}><Languages size={12} /></a><button className="btn-sec" onClick={() => void report(voice)} aria-label={t('reportVoice', lang)}><Flag size={12} /></button></div>
+                <div style={{ display: 'flex', gap: '.25rem' }}><span style={{ color: activeReaction === 'love' ? '#E11D48' : 'rgba(239,246,255,.35)', fontSize: '.55rem', alignSelf: 'center' }}><Heart size={11} fill={activeReaction === 'love' ? '#E11D48' : 'none'} style={{ display: 'inline' }} /> {voice.reaction_count}</span><button className="btn-sec" onClick={() => void share(voice)} aria-label={t('shareVoice', lang)}><Share2 size={12} /></button><a className="btn-sec" href={`https://translate.google.com/?sl=auto&tl=${lang}&text=${encodeURIComponent(voice.message)}&op=translate`} target="_blank" rel="noreferrer" aria-label={t('translateVoice', lang)}><Languages size={12} /></a><button className="btn-sec" onClick={() => void report(voice)} aria-label={t('reportVoice', lang)}><Flag size={12} /></button></div>
               </div>
             </article>
           );
