@@ -64,6 +64,8 @@ export default function TreeTab() {
   const realNodes = treeNodes.filter(node => !isDemoNode(node));
   const isDemoTree = treeNodes.length > 0 && realNodes.length === 0 && demoNodes.length === treeNodes.length;
   const hasDemoNodes = demoNodes.length > 0;
+  const latestTreeRef = useRef({ nodes: treeNodes, links, isDemoTree });
+  const seededCloudTreeRef = useRef<string | null>(null);
 
   const selectedMem = treeNodes.find(node => node.id === selectedId) || null;
   const editableRelatives = selectedMem ? treeNodes.filter(node => node.id !== selectedMem.id) : [];
@@ -229,6 +231,10 @@ export default function TreeTab() {
   };
 
   useEffect(() => {
+    latestTreeRef.current = { nodes: treeNodes, links, isDemoTree };
+  }, [isDemoTree, links, treeNodes]);
+
+  useEffect(() => {
     if (!session?.access_token || !activeFamilyId) return;
     let active = true;
     const loadTree = async () => {
@@ -238,10 +244,21 @@ export default function TreeTab() {
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !active) return;
-        if (Array.isArray(data.nodes) && data.nodes.length) {
-          setTreeNodes(data.nodes);
-          setLinks(Array.isArray(data.links) ? data.links : []);
-          setRelativeTo((current) => current || data.nodes[0]?.id || 0);
+        const remoteNodes = Array.isArray(data.nodes) ? data.nodes as TreeNode[] : [];
+        const remoteLinks = Array.isArray(data.links) ? data.links as [number, number][] : [];
+        const localTree = latestTreeRef.current;
+        const localHasRealTree = localTree.nodes.length > 0 && !localTree.isDemoTree;
+        const remoteIsDemoTree = remoteNodes.length > 0 && remoteNodes.every(isDemoNode);
+        const canSeedCloud = ['owner', 'admin'].includes(String(data.role || '')) && localHasRealTree;
+
+        if (remoteNodes.length && !(remoteIsDemoTree && canSeedCloud)) {
+          setTreeNodes(remoteNodes);
+          setLinks(remoteLinks);
+          setRelativeTo((current) => current || remoteNodes[0]?.id || 0);
+          seededCloudTreeRef.current = activeFamilyId;
+        } else if (canSeedCloud && seededCloudTreeRef.current !== activeFamilyId) {
+          seededCloudTreeRef.current = activeFamilyId;
+          await persistTree(localTree.nodes, localTree.links);
         }
         setCloudReady(true);
       } catch {

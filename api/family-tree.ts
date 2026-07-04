@@ -64,7 +64,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   if (req.method === 'GET') {
     const familyId = String(params(req).get('familyId') || '');
-    if (!familyId || !await membership(admin, familyId, user.id)) return res.status(403).json({ error: 'Family access required' });
+    const member = familyId ? await membership(admin, familyId, user.id) : null;
+    if (!familyId || !member) return res.status(403).json({ error: 'Family access required' });
 
     const { data, error } = await admin
       .from('family_trees')
@@ -78,6 +79,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return res.status(200).json({
       nodes,
       links,
+      role: member.role,
       updatedAt: data?.updated_at || null,
     });
   }
