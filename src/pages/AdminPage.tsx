@@ -147,21 +147,6 @@ export default function AdminPage() {
           )}
         </section>
 
-        <div style={{ fontSize: '0.68rem', letterSpacing: '0.15em', color: '#00FFD1', marginBottom: '0.9rem' }}>{t('pendingReview', lang)}</div>
-
-        {hMsgs.slice(0, 3).map((m, i) => (
-          <div key={i} className="glass-card" style={{ marginBottom: '0.65rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-              <span style={{ fontSize: '0.65rem', color: '#00FFD1' }}>{m.a}</span>
-              <span style={{ fontSize: '0.55rem', background: 'rgba(0,255,209,0.1)', color: '#00FFD1', padding: '0.1rem 0.4rem', borderRadius: 3 }}>{t('score', lang)}: {(m.id.length * 7 + i * 3) % 18}</span>
-            </div>
-            <div style={{ fontSize: '0.76rem', color: 'rgba(239,246,255,0.75)', marginBottom: '0.65rem' }}>{m.text}</div>
-            <div style={{ display: 'flex', gap: '0.4rem' }}>
-              <button style={{ flex: 1, padding: '0.45rem', background: 'rgba(0,255,209,0.07)', border: '1px solid rgba(0,255,209,0.18)', color: '#00FFD1', fontFamily: "'DM Mono',monospace", fontSize: '0.62rem', borderRadius: 6, cursor: 'pointer' }}>✅ {t('approve', lang)}</button>
-              <button style={{ flex: 1, padding: '0.45rem', background: 'rgba(255,45,85,0.07)', border: '1px solid rgba(255,45,85,0.18)', color: '#FF2D55', fontFamily: "'DM Mono',monospace", fontSize: '0.62rem', borderRadius: 6, cursor: 'pointer' }}>❌ {t('delete', lang)}</button>
-            </div>
-          </div>
-        ))}
 
         <button
           onClick={() => setPage('app')}
