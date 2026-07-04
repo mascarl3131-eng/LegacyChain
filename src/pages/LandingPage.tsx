@@ -3,7 +3,6 @@ import { Check, Crown } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t, TYPEWRITER_PHRASES } from '@/lib/i18n';
 import GetAppButton from '@/components/GetAppButton';
-import TextSizeControl from '@/components/TextSizeControl';
 
 const FEATURES = [
   { icon: '🌍', titleKey: 'hvTitle', descKey: 'featureHumanityDesc', color: '#00FFD1' },
@@ -17,7 +16,7 @@ const FEATURES = [
 ];
 
 export default function LandingPage() {
-  const { page, login, loginWithGoogle, lang, loading } = useStore();
+  const { page, login, loginWithGoogle, lang, loading, theme, setTheme } = useStore();
   const [twI, setTwI] = useState(0);
   const [twC, setTwC] = useState(0);
   const [twDel, setTwDel] = useState(false);
@@ -101,9 +100,6 @@ export default function LandingPage() {
         padding: '1.5rem',
       }}
     >
-      <div style={{ position: 'fixed', top: 14, right: 14, zIndex: 7 }}>
-        <TextSizeControl compact />
-      </div>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', maxWidth: 340, textAlign: 'center' }}>
         {/* Tagline */}
         <div style={{ fontSize: '0.56rem', letterSpacing: '0.3em', color: 'rgba(0,255,209,0.82)' }}>
@@ -209,6 +205,40 @@ export default function LandingPage() {
         </section>
 
         <div style={{ width: 'min(260px,80vw)', display: 'flex', flexDirection: 'column', gap: '0.55rem', flexShrink: 0 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.45rem' }}>
+            {([
+              ['paper', 'Papier', '#FFF8EA', '#2E261B'],
+              ['heritage', 'Heritage', '#10130F', '#E6C36A'],
+            ] as const).map(([id, label, bg, accent]) => {
+              const active = theme === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setTheme(id)}
+                  style={{
+                    minHeight: 46,
+                    borderRadius: 10,
+                    border: active ? '2px solid var(--menu-active)' : '1px solid var(--glass-border)',
+                    background: active ? 'var(--menu-bg-soft)' : 'var(--glass)',
+                    color: 'var(--text)',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--body-font)',
+                    fontSize: '.66rem',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '.4rem',
+                  }}
+                >
+                  <span style={{ width: 18, height: 18, borderRadius: '50%', background: bg, border: `3px solid ${accent}`, boxShadow: '0 0 0 1px rgba(0,0,0,.18)' }} />
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+
           <GetAppButton />
 
           {/* Google Login Button */}

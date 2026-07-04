@@ -7,10 +7,12 @@ import type { Message, HumanityMessage, Challenge, TreeNode, OriginRow } from '.
 import { getDemoMsgs, getDemoHumanity, getChallenges, INITIAL_TREE } from './data';
 
 export type TabName = 'chain' | 'tree' | 'origins' | 'journey' | 'mural' | 'challenges' | 'book' | 'humanity';
-export type PageName = 'onboarding' | 'landing' | 'app' | 'admin';
+export type PageName = 'onboarding' | 'landing' | 'theme' | 'app' | 'admin';
+export type ThemeName = 'heritage' | 'paper' | 'garden' | 'legacy';
 
 const SUPPORTED_LANGS: LangCode[] = ['en', 'fr', 'es', 'pt', 'de', 'it', 'ar', 'zh', 'ja', 'ko', 'ru', 'hi', 'sw', 'nl'];
 const FOUNDER_PREMIUM_EMAILS = new Set(['mascarl3131@gmail.com']);
+const SUPPORTED_THEMES: ThemeName[] = ['heritage', 'paper', 'garden', 'legacy'];
 
 function getInitialLanguage(): LangCode {
   const saved = localStorage.getItem('legacychain-language');
@@ -23,6 +25,11 @@ function getInitialLanguage(): LangCode {
     if (SUPPORTED_LANGS.includes(exact)) return exact;
   }
   return 'en';
+}
+
+function getInitialTheme(): ThemeName {
+  const saved = localStorage.getItem('legacychain-theme');
+  return saved && SUPPORTED_THEMES.includes(saved as ThemeName) ? saved as ThemeName : 'heritage';
 }
 
 function readLocalJson<T>(key: string, fallback: T): T {
@@ -56,6 +63,7 @@ interface AppState {
   page: PageName;
   tab: TabName;
   lang: LangCode;
+  theme: ThemeName;
   user: User | null;
   session: Session | null;
   premium: boolean;
@@ -88,6 +96,7 @@ interface AppActions {
   setPage: (p: PageName) => void;
   setTab: (t: TabName) => void;
   setLang: (l: LangCode) => void;
+  setTheme: (t: ThemeName) => void;
   setUser: (u: User | null) => void;
   purchasePremium: () => Promise<void>;
   refreshPremium: () => Promise<void>;
@@ -124,6 +133,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [page, setPage] = useState<PageName>('landing');
   const [tab, setTab] = useState<TabName>('humanity');
   const [lang, setLangState] = useState<LangCode>(getInitialLanguage);
+  const [theme, setThemeState] = useState<ThemeName>(getInitialTheme);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -255,10 +265,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.lang = l;
   }, []);
 
+  const setTheme = useCallback((nextTheme: ThemeName) => {
+    setThemeState(nextTheme);
+    localStorage.setItem('legacychain-theme', nextTheme);
+    document.documentElement.dataset.theme = nextTheme;
+  }, []);
+
   useEffect(() => {
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = lang;
   }, [lang]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   useEffect(() => { writeLocalJson('legacychain-family-name', familyName); }, [familyName]);
   useEffect(() => { writeLocalJson('legacychain-msgs', msgs); }, [msgs]);
@@ -393,7 +413,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     };
     setUser(u);
     setFamilyName(pts[pts.length - 1] || 'Doe');
-    setPage('app');
+    setPage('theme');
     setMsgs(getDemoMsgs(lang));
     setHMsgs(getDemoHumanity(lang));
   }, [lang]);
@@ -449,12 +469,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [showNotif]);
 
   const value: AppState & AppActions = {
-    page, tab, lang, user, session, premium: premium || premiumPreview, premiumPreview, premiumLoading, premiumCheckoutLoading,
+    page, tab, lang, theme, user, session, premium: premium || premiumPreview, premiumPreview, premiumLoading, premiumCheckoutLoading,
     premiumCheckoutError, familyName, activeFamilyId, emo, hEmo,
     msgs, hMsgs, challenges, bookData, chapter, pacte, originRows,
     treeNodes, sideMenuOpen, inviteOpen, upgradeOpen, immersiveMsg,
     showSubmitAnim, notif, loading,
-    setPage, setTab, setLang, setUser, purchasePremium, refreshPremium, setPremiumPreview, setFamilyName, setActiveFamilyId,
+    setPage, setTab, setLang, setTheme, setUser, purchasePremium, refreshPremium, setPremiumPreview, setFamilyName, setActiveFamilyId,
     setEmo, setHEmo, addMsg: (m) => setMsgs(prev => [m, ...prev]),
     setMsgs, addHMsg: (m) => setHMsgs(prev => [m, ...prev]), setHMsgs,
     setChallenges, setBookData, setChapter, setPacte, setOriginRows,

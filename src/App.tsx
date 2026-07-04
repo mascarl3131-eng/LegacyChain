@@ -4,6 +4,7 @@ import { supabase } from './lib/supabase';
 import { t } from './lib/i18n';
 import OnboardingPage from './pages/OnboardingPage';
 import LandingPage from './pages/LandingPage';
+import ThemeChoicePage from './pages/ThemeChoicePage';
 import AppPage from './pages/AppPage';
 import AdminPage from './pages/AdminPage';
 import Notification from './components/Notification';
@@ -38,7 +39,7 @@ function App() {
   useEffect(() => {
     if (!loading) {
       if (session && user && page === 'landing') {
-        setPage('app');
+        setPage('theme');
       }
     }
   }, [loading, session, user, page, setPage]);
@@ -69,7 +70,7 @@ function App() {
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || t('familyActionError', lang));
       if (data.familyId) setActiveFamilyId(data.familyId);
-      setPage('app');
+      setPage('theme');
       showNotif(t('familyJoinedSuccess', lang), '#00FFD1');
       window.history.replaceState({}, '', window.location.pathname);
     }).catch(reason => {
@@ -135,6 +136,7 @@ function App() {
       <NebulaBackground />
       {page === 'onboarding' && <OnboardingPage />}
       {page === 'landing' && <LandingPage />}
+      {page === 'theme' && <ThemeChoicePage />}
       {page === 'app' && <AppPage />}
       {page === 'admin' && <AdminPage />}
       <UpgradeModal />

@@ -284,10 +284,10 @@ export default function HumanityTab() {
   return (
     <div>
       <header style={{ textAlign: 'center', padding: '1.4rem .5rem 1.1rem' }}>
-        <div className="font-display" style={{ fontSize: 'clamp(1.25rem,6vw,2.2rem)', color: '#EFF6FF', letterSpacing: '.12em' }}>{t('hvTitle', lang)}</div>
-        <p style={{ fontSize: '.7rem', color: 'rgba(239,246,255,.38)', lineHeight: 1.7 }}>{t('hvSub', lang)}</p>
-        <div style={{ fontSize: '.62rem', color: 'rgba(239,246,255,.35)' }}><strong style={{ color: '#00FFD1' }}>{total}</strong> {t('recentVoices', lang)} · <strong style={{ color: '#00FFD1' }}>{facetCountries.length}</strong> {t('countries', lang)}</div>
-        {sampleMode && <div style={{ color: '#FFB347', fontSize: '.52rem', marginTop: '.45rem' }}>{t('sampleVoicesNotice', lang)}</div>}
+        <div className="font-display" style={{ fontSize: 'clamp(1.25rem,6vw,2.2rem)', color: 'var(--text)', letterSpacing: '.12em' }}>{t('hvTitle', lang)}</div>
+        <p style={{ fontSize: '.7rem', color: 'var(--text-soft)', lineHeight: 1.7 }}>{t('hvSub', lang)}</p>
+        <div style={{ fontSize: '.62rem', color: 'var(--text-soft)' }}><strong style={{ color: 'var(--teal)' }}>{total}</strong> {t('recentVoices', lang)} · <strong style={{ color: 'var(--teal)' }}>{facetCountries.length}</strong> {t('countries', lang)}</div>
+        {sampleMode && <div style={{ color: 'var(--amber)', fontSize: '.52rem', marginTop: '.45rem' }}>{t('sampleVoicesNotice', lang)}</div>}
       </header>
 
       <HumanityWorldMap counts={facetCountryCounts} selectedCountry={country} onSelect={value => { setViewMode('country'); selectCountry(value); }} />
