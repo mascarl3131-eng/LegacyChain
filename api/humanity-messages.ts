@@ -4,6 +4,12 @@ import { moderateText } from './_lib/moderation.js';
 
 const ALLOWED_EMOTIONS = new Set(['hope', 'love', 'wisdom', 'peace', 'warning', 'memory']);
 const ALLOWED_AUDIENCES = new Set(['future', 'descendants', 'humanity', 'whoever']);
+const ADMIN_EMAILS = new Set(
+  (process.env.ADMIN_EMAILS || 'mascarl3131@gmail.com')
+    .split(',')
+    .map(email => email.trim().toLowerCase())
+    .filter(Boolean),
+);
 
 function getParams(req: ApiRequest) {
   return new URL(req.url || '/', 'https://thechainlegacy.com').searchParams;
@@ -15,6 +21,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   if (req.method === 'GET') {
     const user = await getAuthenticatedUser(req);
+    const isAdmin = Boolean(user?.email && ADMIN_EMAILS.has(user.email.toLowerCase()));
     const params = getParams(req);
     const page = Math.max(1, Number(params.get('page') || 1));
     const perPage = Math.min(100, Math.max(1, Number(params.get('perPage') || 20)));
@@ -57,6 +64,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const messages = (data || []).map(({ author_id, ...message }) => ({
       ...message,
       can_edit: Boolean(user && author_id === user.id && message.unlock_year && message.unlock_year > currentYear),
+      can_delete: isAdmin,
     }));
     return res.status(200).json({ messages, total: count || 0, page, perPage, countries, years, countryCounts, yearCounts });
   }
@@ -141,6 +149,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method === 'DELETE') {
     const user = await getAuthenticatedUser(req);
     if (!user) return res.status(401).json({ error: 'Authentication required' });
+    const isAdmin = Boolean(user.email && ADMIN_EMAILS.has(user.email.toLowerCase()));
 
     const messageId = String(req.body?.messageId || '');
     if (!messageId) return res.status(400).json({ error: 'Invalid voice data' });
@@ -151,6 +160,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       .eq('id', messageId)
       .single();
     if (readError) return res.status(404).json({ error: 'Voice not found' });
+    if (isAdmin) {
+      const { error } = await admin.from('humanity_messages').delete().eq('id', messageId);
+      if (error) return res.status(500).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
     if (existing.author_id !== user.id) return res.status(403).json({ error: 'Only the creator can delete this sealed voice' });
     if (!existing.unlock_year || existing.unlock_year <= currentYear) return res.status(400).json({ error: 'Only sealed future voices can be deleted' });
 

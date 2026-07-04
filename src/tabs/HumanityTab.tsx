@@ -20,7 +20,7 @@ const EMO_GLOW: Record<string, string> = { hope: '#00FFD1', love: '#FF6B9D', wis
 
 type Voice = {
   id: string; display_name: string; show_profile: boolean; country: string; country_code?: string | null;
-  message: string; emotion: string; audience: string; language: string; reaction_count: number; unlock_year?: number | null; created_at: string; can_edit?: boolean;
+  message: string; emotion: string; audience: string; language: string; reaction_count: number; unlock_year?: number | null; created_at: string; can_edit?: boolean; can_delete?: boolean;
 };
 
 function getVisitorId() {
@@ -33,6 +33,7 @@ function getVisitorId() {
 
 export default function HumanityTab() {
   const { lang, session, user, hEmo, setHEmo, setShowSubmitAnim, showNotif } = useStore();
+  const isAdmin = session?.user.email?.toLowerCase() === 'mascarl3131@gmail.com';
   const [voices, setVoices] = useState<Voice[]>([]);
   const [total, setTotal] = useState(0);
   const [facetCountries, setFacetCountries] = useState<string[]>([]);
@@ -274,7 +275,7 @@ export default function HumanityTab() {
     setHMsg(''); setHName(''); setHCountryCode(''); setHUnlockYr(''); setFormError('');
     const sealedForFuture = Boolean(session && hUnlockYr && Number(hUnlockYr) > currentYear);
     if (visibleNow || sealedForFuture) {
-      setVoices(items => [{ ...data.message, can_edit: sealedForFuture }, ...items].slice(0, PER_PAGE));
+      setVoices(items => [{ ...data.message, can_edit: sealedForFuture, can_delete: isAdmin }, ...items].slice(0, PER_PAGE));
       setTotal(value => value + 1);
     }
     showNotif(t('voiceSealed', lang), '#00FFD1');
@@ -356,9 +357,9 @@ export default function HumanityTab() {
                 <p style={{ color: 'rgba(239,246,255,.8)', fontSize: '.76rem', lineHeight: 1.75 }}>{voice.message}</p>
               )}
               {voice.unlock_year && <div style={{ fontSize: '.56rem', color: 'rgba(239,246,255,.34)', marginTop: '-.2rem', marginBottom: '.55rem' }}>🔒 {t('sealedUntil', lang)} {voice.unlock_year}</div>}
-              {voice.can_edit && editingVoiceId !== voice.id && (
+              {(voice.can_edit || voice.can_delete) && editingVoiceId !== voice.id && (
                 <div style={{ display: 'flex', gap: '.35rem', marginBottom: '.55rem' }}>
-                  <button className="btn-sec" onClick={() => startEditVoice(voice)} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '.3rem', color: '#00FFD1' }}><Edit2 size={13} /> {t('editVoice', lang)}</button>
+                  {voice.can_edit && <button className="btn-sec" onClick={() => startEditVoice(voice)} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '.3rem', color: '#00FFD1' }}><Edit2 size={13} /> {t('editVoice', lang)}</button>}
                   <button className="btn-sec" onClick={() => void deleteVoice(voice)} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '.3rem', color: '#FFB4B4', borderColor: 'rgba(255,107,107,.35)' }}><Trash2 size={13} /> {t('deleteRecording', lang)}</button>
                 </div>
               )}
