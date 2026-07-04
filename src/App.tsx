@@ -12,7 +12,7 @@ import UpgradeModal from './components/UpgradeModal';
 import InviteModal from './components/InviteModal';
 
 function App() {
-  const { page, loading, session, user, setPage, showNotif, lang } = useStore();
+  const { page, loading, session, user, setPage, setActiveFamilyId, showNotif, lang } = useStore();
   const acceptedFamilyInvite = useRef<string | null>(null);
 
   // Handle OAuth callback hash from Supabase
@@ -68,6 +68,8 @@ function App() {
     }).then(async response => {
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || t('familyActionError', lang));
+      if (data.familyId) setActiveFamilyId(data.familyId);
+      setPage('app');
       showNotif(t('familyJoinedSuccess', lang), '#00FFD1');
       window.history.replaceState({}, '', window.location.pathname);
     }).catch(reason => {

@@ -7,7 +7,13 @@ import type { TreeNode } from '@/lib/data';
 import MessageMedia from '@/components/MessageMedia';
 
 const GEN_COLORS = ['#C084FC', '#00FFD1', '#FFB347'];
-const GEN_Y = [70, 190, 310];
+const CARD_WIDTH = 128;
+const CARD_HEIGHT = 68;
+const CARD_GAP = 66;
+const ROW_GAP = 122;
+const CANVAS_PAD_X = 72;
+const CANVAS_PAD_Y = 54;
+const DEFAULT_ROOT_GEN = 1;
 const normalizeDemoName = (name: string) => name
   .normalize('NFD')
   .replace(/[\u0300-\u036f]/g, '')
@@ -15,6 +21,7 @@ const normalizeDemoName = (name: string) => name
   .toLocaleLowerCase();
 const DEMO_TREE_NAMES = new Set(INITIAL_TREE.map(node => normalizeDemoName(node.n)));
 const isDemoNode = (node: TreeNode) => DEMO_TREE_NAMES.has(normalizeDemoName(node.n));
+const genColor = (gen: number) => GEN_COLORS[Math.abs(gen) % GEN_COLORS.length];
 const readLocalLinks = () => {
   try {
     const saved = localStorage.getItem('legacychain-tree-links');
@@ -66,7 +73,22 @@ export default function TreeTab() {
     return matchesGeneration && matchesQuery;
   }), [generation, query, treeNodes]);
   const visibleIds = new Set(visibleNodes.map(node => node.id));
+  const generationValues = useMemo(() => [...new Set(treeNodes.map(node => node.gen))].sort((a, b) => a - b), [treeNodes]);
+  const generationIndex = useMemo(() => new Map(generationValues.map((gen, index) => [gen, index])), [generationValues]);
   const layout = useMemo(() => {
+    const nodeMap = new Map(treeNodes.map(node => [node.id, node]));
+    const childrenByParent = new Map<number, number[]>();
+    const parentsByChild = new Map<number, number[]>();
+    links.forEach(([from, to]) => {
+      if (!nodeMap.has(from) || !nodeMap.has(to)) return;
+      const children = childrenByParent.get(from) || [];
+      children.push(to);
+      childrenByParent.set(from, children);
+      const parents = parentsByChild.get(to) || [];
+      parents.push(from);
+      parentsByChild.set(to, parents);
+    });
+
     const groups = new Map<number, TreeNode[]>();
     treeNodes.forEach(node => {
       const items = groups.get(node.gen) || [];
@@ -75,32 +97,55 @@ export default function TreeTab() {
     });
 
     const positions = new Map<number, { x: number; y: number }>();
-    let canvasWidth = 700;
+    const orderedGroups = new Map<number, TreeNode[]>();
+    let canvasWidth = 720;
 
-    [0, 1, 2].forEach(gen => {
-      const items = (groups.get(gen) || []).slice().sort((a, b) => a.b - b.b || a.n.localeCompare(b.n) || a.id - b.id);
-      const cardWidth = 120;
-      const gap = 52;
-      const totalWidth = items.length ? (items.length * cardWidth) + ((items.length - 1) * gap) : 0;
-      canvasWidth = Math.max(canvasWidth, totalWidth + 140);
-      const startX = Math.max(50, (canvasWidth - totalWidth) / 2);
+    generationValues.forEach(gen => {
+      const items = (groups.get(gen) || []).slice().sort((a, b) => {
+        const parentScoreA = (parentsByChild.get(a.id) || [])
+          .map(id => positions.get(id)?.x)
+          .filter((x): x is number => typeof x === 'number');
+        const parentScoreB = (parentsByChild.get(b.id) || [])
+          .map(id => positions.get(id)?.x)
+          .filter((x): x is number => typeof x === 'number');
+        const aAnchor = parentScoreA.length ? parentScoreA.reduce((sum, x) => sum + x, 0) / parentScoreA.length : Number.POSITIVE_INFINITY;
+        const bAnchor = parentScoreB.length ? parentScoreB.reduce((sum, x) => sum + x, 0) / parentScoreB.length : Number.POSITIVE_INFINITY;
+        return aAnchor - bAnchor || a.b - b.b || a.n.localeCompare(b.n) || a.id - b.id;
+      });
+      orderedGroups.set(gen, items);
+      canvasWidth = Math.max(canvasWidth, (items.length * CARD_WIDTH) + (Math.max(0, items.length - 1) * CARD_GAP) + CANVAS_PAD_X * 2);
+    });
+
+    generationValues.forEach(gen => {
+      const items = orderedGroups.get(gen) || [];
+      const totalWidth = items.length ? (items.length * CARD_WIDTH) + ((items.length - 1) * CARD_GAP) : 0;
+      const startX = Math.max(CANVAS_PAD_X, (canvasWidth - totalWidth) / 2);
+      const row = generationIndex.get(gen) || 0;
       items.forEach((node, index) => {
         positions.set(node.id, {
-          x: Math.round(startX + index * (cardWidth + gap)),
-          y: GEN_Y[gen] - 32,
+          x: Math.round(startX + index * (CARD_WIDTH + CARD_GAP)),
+          y: Math.round(CANVAS_PAD_Y + row * ROW_GAP),
         });
       });
     });
 
     return {
       positions,
-      canvasWidth: Math.max(700, canvasWidth),
-      canvasHeight: 390,
+      canvasWidth,
+      canvasHeight: Math.max(390, CANVAS_PAD_Y * 2 + generationValues.length * CARD_HEIGHT + Math.max(0, generationValues.length - 1) * (ROW_GAP - CARD_HEIGHT)),
     };
-  }, [treeNodes]);
+  }, [generationIndex, generationValues, links, treeNodes]);
 
   const getNodeMsgs = (name: string) => msgs.filter(message => message.a === name.split(' ')[0]);
-  const generationLabel = (gen: number) => t(['genGrandparents', 'genParents', 'genChildren'][gen], lang);
+  const generationLabel = (gen: number) => {
+    if (generationValues.length === 3) {
+      const sortedIndex = generationValues.indexOf(gen);
+      const key = ['genGrandparents', 'genParents', 'genChildren'][sortedIndex];
+      if (key) return t(key, lang);
+    }
+    const index = (generationIndex.get(gen) || 0) + 1;
+    return lang === 'fr' ? `Génération ${index}` : `Generation ${index}`;
+  };
 
   const getRelationMeta = (memberId: number) => {
     const outgoing = links.find(([from]) => from === memberId);
@@ -135,12 +180,12 @@ export default function TreeTab() {
   const buildNodeDraft = (memberId: number, relation: string, referenceId: number, firstName: string, lastName: string, birthYear: string) => {
     const current = treeNodes.find(node => node.id === memberId);
     const reference = treeNodes.find(node => node.id === referenceId && node.id !== memberId) || null;
-    let gen = current?.gen ?? 1;
+    let gen = current?.gen ?? DEFAULT_ROOT_GEN;
     if (reference) {
       gen = reference.gen;
-      if (relation === 'parent') gen = Math.max(0, reference.gen - 1);
-      if (relation === 'grandparent') gen = 0;
-      if (relation === 'child') gen = Math.min(2, reference.gen + 1);
+      if (relation === 'parent') gen = reference.gen - 1;
+      if (relation === 'grandparent') gen = reference.gen - 2;
+      if (relation === 'child') gen = reference.gen + 1;
       if (relation === 'sibling' || relation === 'partner') gen = reference.gen;
     }
     return {
@@ -150,7 +195,7 @@ export default function TreeTab() {
         n: `${firstName.trim()} ${lastName.trim()}`.trim(),
         b: parseInt(birthYear, 10) || current?.b || new Date().getFullYear(),
         x: current?.x || 0,
-        y: current?.y || GEN_Y[gen],
+        y: current?.y || 0,
         gen,
       } as TreeNode,
     };
@@ -241,8 +286,8 @@ export default function TreeTab() {
         n: `${fn.trim()} ${ln.trim() || ''}`.trim(),
         b: parseInt(by) || new Date().getFullYear(),
         x: 295,
-        y: GEN_Y[1],
-        gen: 1,
+        y: 0,
+        gen: DEFAULT_ROOT_GEN,
       };
       const keptIds = new Set(realNodes.map(node => node.id));
       const nextNodes = [...realNodes, newNode];
@@ -260,10 +305,10 @@ export default function TreeTab() {
     }
 
     const reference = treeNodes.find(node => node.id === relativeTo) || treeNodes[0];
-    let gen = reference?.gen ?? 1;
-    if (rel === 'parent') gen = Math.max(0, gen - 1);
-    if (rel === 'grandparent') gen = 0;
-    if (rel === 'child') gen = Math.min(2, gen + 1);
+    let gen = reference?.gen ?? DEFAULT_ROOT_GEN;
+    if (rel === 'parent') gen -= 1;
+    if (rel === 'grandparent') gen -= 2;
+    if (rel === 'child') gen += 1;
 
     const sameGeneration = treeNodes.filter(node => node.gen === gen);
     const id = Math.max(0, ...treeNodes.map(node => node.id)) + 1;
@@ -271,8 +316,8 @@ export default function TreeTab() {
       id,
       n: `${fn.trim()} ${ln.trim() || reference?.n.split(' ').slice(1).join(' ') || 'Doe'}`,
       b: parseInt(by) || new Date().getFullYear(),
-      x: 110 + sameGeneration.length * 165,
-      y: GEN_Y[gen],
+      x: 110 + sameGeneration.length * (CARD_WIDTH + CARD_GAP),
+      y: 0,
       gen,
     };
 
@@ -452,7 +497,7 @@ export default function TreeTab() {
         </div>
         <div style={{ color: 'rgba(239,246,255,0.35)', fontSize: '0.55rem', textAlign: 'right', lineHeight: 1.6 }}>
           <strong style={{ color: '#00FFD1', fontSize: '0.72rem' }}>{treeNodes.length}</strong> {t('membersCount', lang)}<br />
-          3 {t('generationsCount', lang)}
+          {generationValues.length} {t('generationsCount', lang)}
         </div>
       </div>
 
@@ -467,10 +512,11 @@ export default function TreeTab() {
       </div>
 
       <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.55rem', overflowX: 'auto', paddingBottom: 3 }}>
-        {(['all', 0, 1, 2] as const).map(item => {
+        {(['all', ...generationValues] as const).map(item => {
           const active = generation === item;
+          const color = item === 'all' ? '#00FFD1' : genColor(item);
           return (
-            <button key={item} className="btn-sec" onClick={() => setGeneration(item)} style={{ whiteSpace: 'nowrap', borderColor: active ? (item === 'all' ? '#00FFD1' : GEN_COLORS[item]) : undefined, color: active ? (item === 'all' ? '#00FFD1' : GEN_COLORS[item]) : undefined }}>
+            <button key={item} className="btn-sec" onClick={() => setGeneration(item)} style={{ whiteSpace: 'nowrap', borderColor: active ? color : undefined, color: active ? color : undefined }}>
               {item === 'all' ? t('allGenerations', lang) : generationLabel(item)}
             </button>
           );
@@ -517,26 +563,32 @@ export default function TreeTab() {
                   const fromPos = layout.positions.get(a.id);
                   const toPos = layout.positions.get(b.id);
                   if (!fromPos || !toPos) return null;
-                  const ax = fromPos.x + 60;
-                  const bx = toPos.x + 60;
-                  const ay = fromPos.y + 64;
+                  const ax = fromPos.x + CARD_WIDTH / 2;
+                  const bx = toPos.x + CARD_WIDTH / 2;
+                  const ay = fromPos.y + CARD_HEIGHT;
                   const by = toPos.y;
-                  return <path key={index} d={`M${ax},${ay} C${ax},${(ay + by) / 2} ${bx},${(ay + by) / 2} ${bx},${by}`} fill="none" stroke="rgba(0,255,209,0.28)" strokeWidth="1.4" />;
+                  if (a.gen === b.gen) {
+                    const left = fromPos.x <= toPos.x ? fromPos : toPos;
+                    const right = fromPos.x <= toPos.x ? toPos : fromPos;
+                    const y = left.y + CARD_HEIGHT / 2;
+                    return <line key={index} x1={left.x + CARD_WIDTH} y1={y} x2={right.x} y2={y} stroke="rgba(255,179,71,0.3)" strokeWidth="1.4" strokeLinecap="round" />;
+                  }
+                  return <line key={index} x1={ax} y1={ay} x2={bx} y2={by} stroke="rgba(0,255,209,0.28)" strokeWidth="1.4" strokeLinecap="round" />;
                 })}
                 </svg>
 
                 {visibleNodes.map(node => {
-                const color = GEN_COLORS[node.gen];
+                const color = genColor(node.gen);
                 const nodeMsgs = getNodeMsgs(node.n);
                 const active = selectedId === node.id;
-                const pos = layout.positions.get(node.id) || { x: node.x, y: node.y - 32 };
+                const pos = layout.positions.get(node.id) || { x: node.x, y: node.y };
                 return (
                   <button
                     type="button"
                     key={node.id}
                     onClick={() => setSelectedId(node.id)}
                     style={{
-                      position: 'absolute', left: pos.x, top: pos.y, width: 120, minHeight: 64,
+                      position: 'absolute', left: pos.x, top: pos.y, width: CARD_WIDTH, minHeight: CARD_HEIGHT,
                       borderRadius: 12, border: `1px solid ${active ? color : `${color}66`}`,
                       background: active ? `${color}18` : 'rgba(4,3,10,0.92)', color: '#EFF6FF',
                       boxShadow: active ? `0 0 20px ${color}22` : 'none', cursor: 'pointer', padding: '0.55rem',
@@ -563,7 +615,7 @@ export default function TreeTab() {
           {visibleNodes.map(node => (
             <button key={node.id} type="button" onClick={() => setSelectedId(node.id)} className="glass-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', cursor: 'pointer', color: '#EFF6FF' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <UserRound size={18} color={GEN_COLORS[node.gen]} />
+                <UserRound size={18} color={genColor(node.gen)} />
                 <span><strong style={{ display: 'block', fontSize: '0.7rem' }}>{node.n}</strong><small style={{ color: 'rgba(239,246,255,0.35)' }}>{generationLabel(node.gen)} · {node.b}</small></span>
               </span>
               <span style={{ fontSize: '0.56rem', color: '#00FFD1' }}>{getNodeMsgs(node.n).length} {t('messages', lang)}</span>
@@ -605,10 +657,10 @@ export default function TreeTab() {
       )}
 
       {selectedMem && (
-        <div className="glass-card" style={{ marginTop: '0.9rem', borderColor: `${GEN_COLORS[selectedMem.gen]}55` }}>
+        <div className="glass-card" style={{ marginTop: '0.9rem', borderColor: `${genColor(selectedMem.gen)}55` }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.7rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <span style={{ width: 38, height: 38, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${GEN_COLORS[selectedMem.gen]}18`, color: GEN_COLORS[selectedMem.gen] }}><UserRound size={19} /></span>
+              <span style={{ width: 38, height: 38, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${genColor(selectedMem.gen)}18`, color: genColor(selectedMem.gen) }}><UserRound size={19} /></span>
               <div><strong style={{ display: 'block', color: '#EFF6FF', fontSize: '0.75rem' }}>{selectedMem.n}</strong><small style={{ color: 'rgba(239,246,255,.35)' }}>{generationLabel(selectedMem.gen)} · {selectedMem.b}</small></div>
             </div>
             <button type="button" onClick={() => setSelectedId(null)} style={{ border: 0, background: 'transparent', color: 'rgba(239,246,255,.4)', cursor: 'pointer' }}><X size={16} /></button>

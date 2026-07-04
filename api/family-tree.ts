@@ -33,7 +33,7 @@ function asInt(value: unknown, fallback: number) {
 function sanitizeNodes(value: unknown): TreeNodeRow[] {
   if (!Array.isArray(value)) return [];
   return value
-    .slice(0, 120)
+    .slice(0, 500)
     .map((item, index) => {
       const row = item && typeof item === 'object' ? item as Record<string, unknown> : {};
       return {
@@ -42,7 +42,7 @@ function sanitizeNodes(value: unknown): TreeNodeRow[] {
         b: asInt(row.b, new Date().getFullYear()),
         x: asInt(row.x, 0),
         y: asInt(row.y, 0),
-        gen: Math.min(2, Math.max(0, asInt(row.gen, 1))),
+        gen: Math.min(30, Math.max(-30, asInt(row.gen, 1))),
       };
     })
     .filter(item => item.n);
@@ -52,7 +52,7 @@ function sanitizeLinks(value: unknown, nodes: TreeNodeRow[]): TreeLinkRow[] {
   if (!Array.isArray(value)) return [];
   const ids = new Set(nodes.map(node => node.id));
   return value
-    .slice(0, 240)
+    .slice(0, 1000)
     .map((item) => Array.isArray(item) ? [asInt(item[0], 0), asInt(item[1], 0)] as TreeLinkRow : [0, 0] as TreeLinkRow)
     .filter(([from, to]) => from > 0 && to > 0 && from !== to && ids.has(from) && ids.has(to));
 }

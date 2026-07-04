@@ -14,6 +14,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   const currentYear = new Date().getFullYear();
 
   if (req.method === 'GET') {
+    const user = await getAuthenticatedUser(req);
     const params = getParams(req);
     const page = Math.max(1, Number(params.get('page') || 1));
     const perPage = Math.min(100, Math.max(1, Number(params.get('perPage') || 20)));
@@ -27,10 +28,10 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
     let query = admin
       .from('humanity_messages')
-      .select('id,display_name,show_profile,country,country_code,message,emotion,audience,language,reaction_count,unlock_year,created_at', { count: 'exact' })
+      .select('id,author_id,display_name,show_profile,country,country_code,message,emotion,audience,language,reaction_count,unlock_year,created_at', { count: 'exact' })
       .eq('visibility', 'public')
       .eq('status', 'published')
-      .or(`unlock_year.is.null,unlock_year.lte.${currentYear}`);
+      .or(user ? `unlock_year.is.null,unlock_year.lte.${currentYear},author_id.eq.${user.id}` : `unlock_year.is.null,unlock_year.lte.${currentYear}`);
 
     if (country) query = query.eq('country', country);
     if (emotion && ALLOWED_EMOTIONS.has(emotion)) query = query.eq('emotion', emotion);
@@ -53,7 +54,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const countries = Object.keys(countryCounts);
     const yearCounts = Object.fromEntries((yearRows || []).map(item => [String(item.year), Number(item.message_count)]));
     const years = Object.keys(yearCounts).map(Number);
-    return res.status(200).json({ messages: data || [], total: count || 0, page, perPage, countries, years, countryCounts, yearCounts });
+    const messages = (data || []).map(({ author_id, ...message }) => ({
+      ...message,
+      can_edit: Boolean(user && author_id === user.id && message.unlock_year && message.unlock_year > currentYear),
+    }));
+    return res.status(200).json({ messages, total: count || 0, page, perPage, countries, years, countryCounts, yearCounts });
   }
 
   if (req.method === 'POST') {
@@ -101,6 +106,57 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       .single();
     if (error) return res.status(500).json({ error: error.message });
     return res.status(201).json({ message: data });
+  }
+
+  if (req.method === 'PATCH') {
+    const user = await getAuthenticatedUser(req);
+    if (!user) return res.status(401).json({ error: 'Authentication required' });
+
+    const messageId = String(req.body?.messageId || '');
+    const message = String(req.body?.message || '').trim();
+    if (!messageId || message.length < 3 || message.length > 500) return res.status(400).json({ error: 'Invalid voice data' });
+
+    const moderation = moderateText(message);
+    if (!moderation.allowed) return res.status(422).json({ error: 'Message rejected by safety moderation', reason: moderation.reason });
+
+    const { data: existing, error: readError } = await admin
+      .from('humanity_messages')
+      .select('id,author_id,unlock_year')
+      .eq('id', messageId)
+      .single();
+    if (readError) return res.status(404).json({ error: 'Voice not found' });
+    if (existing.author_id !== user.id) return res.status(403).json({ error: 'Only the creator can edit this sealed voice' });
+    if (!existing.unlock_year || existing.unlock_year <= currentYear) return res.status(400).json({ error: 'Only sealed future voices can be edited' });
+
+    const { data, error } = await admin
+      .from('humanity_messages')
+      .update({ message, updated_at: new Date().toISOString() })
+      .eq('id', messageId)
+      .select('id,display_name,show_profile,country,country_code,message,emotion,audience,language,reaction_count,unlock_year,created_at')
+      .single();
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(200).json({ message: { ...data, can_edit: true } });
+  }
+
+  if (req.method === 'DELETE') {
+    const user = await getAuthenticatedUser(req);
+    if (!user) return res.status(401).json({ error: 'Authentication required' });
+
+    const messageId = String(req.body?.messageId || '');
+    if (!messageId) return res.status(400).json({ error: 'Invalid voice data' });
+
+    const { data: existing, error: readError } = await admin
+      .from('humanity_messages')
+      .select('id,author_id,unlock_year')
+      .eq('id', messageId)
+      .single();
+    if (readError) return res.status(404).json({ error: 'Voice not found' });
+    if (existing.author_id !== user.id) return res.status(403).json({ error: 'Only the creator can delete this sealed voice' });
+    if (!existing.unlock_year || existing.unlock_year <= currentYear) return res.status(400).json({ error: 'Only sealed future voices can be deleted' });
+
+    const { error } = await admin.from('humanity_messages').delete().eq('id', messageId);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(200).json({ ok: true });
   }
 
   return res.status(405).json({ error: 'Method not allowed' });

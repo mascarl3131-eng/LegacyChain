@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, ExternalLink, Flag, HandHeart, Heart, Languages, Search, Share2, Sparkles } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Edit2, ExternalLink, Flag, HandHeart, Heart, Languages, Search, Share2, Sparkles, Trash2, X } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { FLAGS, BANNED_WORDS, getDemoHumanity } from '@/lib/data';
@@ -20,7 +20,7 @@ const EMO_GLOW: Record<string, string> = { hope: '#00FFD1', love: '#FF6B9D', wis
 
 type Voice = {
   id: string; display_name: string; show_profile: boolean; country: string; country_code?: string | null;
-  message: string; emotion: string; audience: string; language: string; reaction_count: number; unlock_year?: number | null; created_at: string;
+  message: string; emotion: string; audience: string; language: string; reaction_count: number; unlock_year?: number | null; created_at: string; can_edit?: boolean;
 };
 
 function getVisitorId() {
@@ -57,6 +57,8 @@ export default function HumanityTab() {
   const [hUnlockYr, setHUnlockYr] = useState('');
   const [showProfile, setShowProfile] = useState(false);
   const [formError, setFormError] = useState('');
+  const [editingVoiceId, setEditingVoiceId] = useState('');
+  const [editingVoiceText, setEditingVoiceText] = useState('');
   const countryOptions = useMemo(() => getCountryOptions(lang), [lang]);
   const currentYear = new Date().getFullYear();
 
@@ -89,7 +91,9 @@ export default function HumanityTab() {
         if (year) params.set('year', year);
         if (emotion) params.set('emotion', emotion);
         if (audience) params.set('audience', audience);
-        const response = await fetch(`/api/humanity-messages?${params}`);
+        const response = await fetch(`/api/humanity-messages?${params}`, {
+          headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
+        });
         if (!response.ok) throw new Error('Voices database unavailable');
         const data = await response.json();
         if (!active) return;
@@ -122,7 +126,7 @@ export default function HumanityTab() {
     };
     void loadVoices();
     return () => { active = false; };
-  }, [audience, country, debouncedQuery, emotion, lang, page, sort, year]);
+  }, [audience, country, debouncedQuery, emotion, lang, page, session?.access_token, sort, year]);
 
   const filtered = useMemo(() => {
     if (!sampleMode) return voices;
@@ -208,6 +212,45 @@ export default function HumanityTab() {
     if (response.ok) showNotif(t('reportSent', lang), '#FFB347');
   };
 
+  const startEditVoice = (voice: Voice) => {
+    setEditingVoiceId(voice.id);
+    setEditingVoiceText(voice.message);
+  };
+
+  const cancelEditVoice = () => {
+    setEditingVoiceId('');
+    setEditingVoiceText('');
+  };
+
+  const saveVoiceEdit = async (voice: Voice) => {
+    const text = editingVoiceText.trim();
+    if (!session?.access_token || !text) return;
+    const response = await fetch('/api/humanity-messages', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ messageId: voice.id, message: text }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) return showNotif(data.error || t('publishError', lang), '#FF6B6B');
+    setVoices(items => items.map(item => item.id === voice.id ? { ...item, ...data.message } : item));
+    cancelEditVoice();
+    showNotif(t('voiceUpdated', lang), '#00FFD1');
+  };
+
+  const deleteVoice = async (voice: Voice) => {
+    if (!session?.access_token || !window.confirm(t('confirmDeleteVoice', lang))) return;
+    const response = await fetch('/api/humanity-messages', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ messageId: voice.id }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) return showNotif(data.error || t('publishError', lang), '#FF6B6B');
+    setVoices(items => items.filter(item => item.id !== voice.id));
+    setTotal(value => Math.max(0, value - 1));
+    showNotif(t('voiceDeleted', lang), '#FFB347');
+  };
+
   const submit = async () => {
     const text = hMsg.trim();
     const selectedCountry = countryOptions.find(item => item.code === hCountryCode);
@@ -229,8 +272,9 @@ export default function HumanityTab() {
     setShowSubmitAnim(true);
     const visibleNow = !hUnlockYr || Number(hUnlockYr) <= currentYear;
     setHMsg(''); setHName(''); setHCountryCode(''); setHUnlockYr(''); setFormError('');
-    if (visibleNow) {
-      setVoices(items => [data.message, ...items].slice(0, PER_PAGE));
+    const sealedForFuture = Boolean(session && hUnlockYr && Number(hUnlockYr) > currentYear);
+    if (visibleNow || sealedForFuture) {
+      setVoices(items => [{ ...data.message, can_edit: sealedForFuture }, ...items].slice(0, PER_PAGE));
       setTotal(value => value + 1);
     }
     showNotif(t('voiceSealed', lang), '#00FFD1');
@@ -299,8 +343,25 @@ export default function HumanityTab() {
                 <div><div style={{ color: '#00FFD1', fontSize: '.61rem' }}>{voice.show_profile ? voice.display_name : `${flag} ${voice.country}`}</div><div style={{ color: 'rgba(239,246,255,.28)', fontSize: '.51rem', marginTop: 2 }}>{new Date(voice.created_at).toLocaleDateString(lang)} · {t(AUDIENCE_KEYS[voice.audience] || 'toFuture', lang)}</div></div>
                 <span style={{ color: EMO_GLOW[voice.emotion], fontSize: '.5rem' }}>{t(`e${voice.emotion[0].toUpperCase()}${voice.emotion.slice(1)}`, lang)}</span>
               </div>
-              <p style={{ color: 'rgba(239,246,255,.8)', fontSize: '.76rem', lineHeight: 1.75 }}>{voice.message}</p>
+              {editingVoiceId === voice.id ? (
+                <div style={{ margin: '.65rem 0' }}>
+                  <textarea className="form-textarea" value={editingVoiceText} onChange={event => setEditingVoiceText(event.target.value)} maxLength={500} />
+                  <div style={{ textAlign: 'right', color: 'rgba(239,246,255,.25)', fontSize: '.52rem' }}>{editingVoiceText.length}/500</div>
+                  <div style={{ display: 'flex', gap: '.35rem', marginTop: '.45rem' }}>
+                    <button className="btn-primary" onClick={() => void saveVoiceEdit(voice)} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '.3rem' }}><Check size={13} /> {t('saveVoice', lang)}</button>
+                    <button className="btn-sec" onClick={cancelEditVoice} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '.3rem' }}><X size={13} /> {t('cancelEdit', lang)}</button>
+                  </div>
+                </div>
+              ) : (
+                <p style={{ color: 'rgba(239,246,255,.8)', fontSize: '.76rem', lineHeight: 1.75 }}>{voice.message}</p>
+              )}
               {voice.unlock_year && <div style={{ fontSize: '.56rem', color: 'rgba(239,246,255,.34)', marginTop: '-.2rem', marginBottom: '.55rem' }}>🔒 {t('sealedUntil', lang)} {voice.unlock_year}</div>}
+              {voice.can_edit && editingVoiceId !== voice.id && (
+                <div style={{ display: 'flex', gap: '.35rem', marginBottom: '.55rem' }}>
+                  <button className="btn-sec" onClick={() => startEditVoice(voice)} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '.3rem', color: '#00FFD1' }}><Edit2 size={13} /> {t('editVoice', lang)}</button>
+                  <button className="btn-sec" onClick={() => void deleteVoice(voice)} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '.3rem', color: '#FFB4B4', borderColor: 'rgba(255,107,107,.35)' }}><Trash2 size={13} /> {t('deleteRecording', lang)}</button>
+                </div>
+              )}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '.5rem', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', gap: '.25rem' }}>
                   <button className="btn-sec" onClick={() => void react(voice, 'hope')} style={{ color: activeReaction === 'hope' ? '#FFB347' : undefined, padding: '.28rem .45rem' }} aria-label={t('supportVoice', lang)}><Sparkles size={12} /></button>
