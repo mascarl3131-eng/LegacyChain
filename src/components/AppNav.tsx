@@ -34,8 +34,8 @@ export default function AppNav() {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '0 1rem',
-        background: 'rgba(4,3,10,0.97)',
-        borderBottom: '1px solid rgba(0,255,209,0.13)',
+        background: 'rgba(23,26,20,0.97)',
+        borderBottom: '1px solid rgba(230,195,106,0.24)',
       }}
     >
       <button
@@ -43,14 +43,14 @@ export default function AppNav() {
         style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '0.4rem 0.3rem', display: 'flex', flexDirection: 'column', gap: 5 }}
         aria-label="Menu"
       >
-        <div style={{ width: 20, height: 2, background: '#00FFD1', borderRadius: 1 }} />
-        <div style={{ width: 20, height: 2, background: '#00FFD1', borderRadius: 1 }} />
-        <div style={{ width: 20, height: 2, background: '#00FFD1', borderRadius: 1 }} />
+        <div style={{ width: 20, height: 2, background: 'var(--menu-active)', borderRadius: 1 }} />
+        <div style={{ width: 20, height: 2, background: 'var(--menu-active)', borderRadius: 1 }} />
+        <div style={{ width: 20, height: 2, background: 'var(--menu-active)', borderRadius: 1 }} />
       </button>
 
       <div
         className="font-display"
-        style={{ fontSize: '0.82rem', color: '#00FFD1', letterSpacing: '0.15em', cursor: 'pointer', userSelect: 'none' }}
+        style={{ fontSize: '0.88rem', color: 'var(--menu-active)', letterSpacing: '0.05em', cursor: 'pointer', userSelect: 'none', fontWeight: 700 }}
         onMouseDown={handleLogoDown}
         onMouseUp={handleLogoUp}
         onMouseLeave={handleLogoUp}
@@ -72,14 +72,14 @@ export default function AppNav() {
             width: 28,
             height: 28,
             borderRadius: '50%',
-            background: session ? 'linear-gradient(135deg,#00FFD1,#C084FC)' : 'rgba(255,179,71,0.12)',
-            outline: session ? 'none' : '1px solid rgba(255,179,71,0.5)',
+            background: session ? 'linear-gradient(135deg,var(--menu-active),var(--menu-accent))' : 'rgba(230,195,106,0.14)',
+            outline: session ? 'none' : '1px solid rgba(230,195,106,0.5)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '0.68rem',
             fontWeight: 700,
-            color: session ? '#04030A' : '#FFB347',
+            color: session ? '#10130F' : 'var(--menu-active)',
             cursor: 'pointer',
           }}
         >
@@ -93,8 +93,8 @@ export default function AppNav() {
               width: 22,
               height: 22,
               borderRadius: 6,
-              background: 'linear-gradient(135deg,#FFD700,#B8860B)',
-              color: '#04030A',
+              background: 'linear-gradient(135deg,#F4D06F,#A67C32)',
+              color: '#10130F',
               fontSize: '0.6rem',
               fontWeight: 800,
               display: 'inline-flex',

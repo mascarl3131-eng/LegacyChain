@@ -4,39 +4,44 @@
 
 @layer base {
   :root {
-    --void: #04030A;
-    --void-light: #090716;
-    --teal: #00FFD1;
-    --amber: #FFB347;
-    --violet: #C084FC;
-    --rose: #FF6B9D;
-    --text: #EFF6FF;
-    --text-muted: rgba(224,235,255,0.84);
-    --text-soft: rgba(224,235,255,0.72);
-    --danger: #FF2D55;
-    --glass: rgba(0,255,209,0.05);
-    --glass-border: rgba(0,255,209,0.13);
-    --body-font: 'Space Grotesk', 'Segoe UI', sans-serif;
+    --void: #10130F;
+    --void-light: #171A14;
+    --teal: #8FD6B7;
+    --amber: #E6C36A;
+    --violet: #B9A7D8;
+    --rose: #D98BA3;
+    --text: #F7F1DF;
+    --text-muted: rgba(247,241,223,0.86);
+    --text-soft: rgba(247,241,223,0.72);
+    --danger: #E56B6F;
+    --glass: rgba(247,241,223,0.055);
+    --glass-border: rgba(230,195,106,0.18);
+    --body-font: 'Atkinson Hyperlegible', 'Segoe UI', Arial, sans-serif;
+    --display-font: 'Lora', Georgia, serif;
+    --menu-bg: #171A14;
+    --menu-bg-soft: rgba(247,241,223,0.055);
+    --menu-active: #E6C36A;
+    --menu-accent: #8FD6B7;
 
-    --background: 240 33% 2%;
-    --foreground: 213 100% 97%;
-    --card: 240 33% 2%;
-    --card-foreground: 213 100% 97%;
-    --popover: 245 40% 5%;
-    --popover-foreground: 213 100% 97%;
-    --primary: 166 100% 50%;
-    --primary-foreground: 240 33% 2%;
-    --secondary: 270 90% 75%;
-    --secondary-foreground: 240 33% 2%;
-    --muted: 245 40% 5%;
-    --muted-foreground: 213 30% 55%;
-    --accent: 33 100% 64%;
-    --accent-foreground: 240 33% 2%;
-    --destructive: 350 100% 59%;
-    --destructive-foreground: 213 100% 97%;
-    --border: 166 100% 50% / 0.13;
-    --input: 166 100% 50% / 0.13;
-    --ring: 166 100% 50%;
+    --background: 96 12% 7%;
+    --foreground: 45 55% 92%;
+    --card: 96 12% 7%;
+    --card-foreground: 45 55% 92%;
+    --popover: 88 13% 9%;
+    --popover-foreground: 45 55% 92%;
+    --primary: 41 70% 66%;
+    --primary-foreground: 96 12% 7%;
+    --secondary: 153 42% 70%;
+    --secondary-foreground: 96 12% 7%;
+    --muted: 88 13% 9%;
+    --muted-foreground: 45 28% 67%;
+    --accent: 153 42% 70%;
+    --accent-foreground: 96 12% 7%;
+    --destructive: 358 70% 66%;
+    --destructive-foreground: 45 55% 92%;
+    --border: 41 70% 66% / 0.18;
+    --input: 41 70% 66% / 0.18;
+    --ring: 41 70% 66%;
     --radius: 0.625rem;
   }
 
@@ -51,7 +56,10 @@
   }
 
   body {
-    background: var(--void);
+    background:
+      radial-gradient(circle at 18% 0%, rgba(230,195,106,0.08), transparent 28%),
+      radial-gradient(circle at 90% 10%, rgba(143,214,183,0.06), transparent 30%),
+      var(--void);
     color: var(--text);
     font-family: var(--body-font);
     margin: 0;
@@ -65,14 +73,14 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(0,255,209,0.15);
+    background: rgba(230,195,106,0.32);
     border-radius: 1px;
   }
 }
 
 @layer components {
   .font-display {
-    font-family: 'Cinzel', serif;
+    font-family: var(--display-font);
   }
 
   .font-body {
@@ -105,9 +113,9 @@
     background: transparent;
     border: 1px solid var(--teal);
     color: var(--teal);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.78rem;
-    letter-spacing: 0.18em;
+    font-family: var(--body-font);
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s;
@@ -123,9 +131,9 @@
     background: transparent;
     border: 1px solid rgba(255,179,71,0.35);
     color: var(--amber);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.75rem;
-    letter-spacing: 0.15em;
+    font-family: var(--body-font);
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
     border-radius: 10px;
     cursor: pointer;
     margin-top: 0.8rem;
@@ -145,7 +153,7 @@
     padding: 0.42rem 0.85rem;
     border-radius: 6px;
     cursor: pointer;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.03em;
     transition: all 0.2s;
   }
 
@@ -158,7 +166,7 @@
   .form-textarea,
   .form-select {
     width: 100%;
-    background: rgba(4,3,10,0.7);
+    background: rgba(16,19,15,0.78);
     border: 1px solid var(--glass-border);
     color: var(--text);
     font-family: var(--body-font);
@@ -295,8 +303,8 @@
     padding: 6px 5px env(safe-area-inset-bottom);
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    background: rgba(4,3,10,.98);
-    border-top: 1px solid rgba(0,255,209,.16);
+    background: rgba(23,26,20,.98);
+    border-top: 1px solid rgba(230,195,106,.22);
     backdrop-filter: blur(18px);
   }
 
@@ -304,7 +312,7 @@
     min-width: 0;
     border: 0;
     background: transparent;
-    color: rgba(239,246,255,.35);
+    color: rgba(247,241,223,.58);
     font-family: var(--body-font);
     font-size: .48rem;
     display: flex;
@@ -323,7 +331,7 @@
   }
 
   .mobile-tab-bar button.active {
-    color: #00FFD1;
+    color: var(--menu-active);
   }
 
   .install-app-prompt {
@@ -338,8 +346,8 @@
     gap: 10px;
     padding: 10px 12px;
     border-radius: 14px;
-    border: 1px solid rgba(0,255,209,.28);
-    background: rgba(9,7,22,.97);
+    border: 1px solid rgba(230,195,106,.3);
+    background: rgba(23,26,20,.97);
     box-shadow: 0 14px 45px rgba(0,0,0,.45);
   }
 
@@ -355,21 +363,21 @@
   }
 
   .install-app-prompt strong {
-    color: #EFF6FF;
+    color: var(--text);
     font-size: .64rem;
     margin-bottom: 3px;
   }
 
   .install-app-prompt span {
-    color: rgba(239,246,255,.42);
+    color: rgba(247,241,223,.68);
     font-size: .5rem;
     line-height: 1.45;
   }
 
   .install-action {
-    border: 1px solid #00FFD1;
-    background: rgba(0,255,209,.08);
-    color: #00FFD1;
+    border: 1px solid var(--menu-active);
+    background: rgba(230,195,106,.1);
+    color: var(--menu-active);
     border-radius: 8px;
     min-height: 38px;
     padding: 0 10px;
@@ -388,8 +396,8 @@
     height: 24px;
     border-radius: 50%;
     border: 1px solid rgba(239,246,255,.16);
-    background: #090716;
-    color: rgba(239,246,255,.45);
+    background: var(--menu-bg);
+    color: rgba(247,241,223,.68);
     display: grid;
     place-items: center;
   }
@@ -398,8 +406,8 @@
 @layer utilities {
   :root {
     --base-font-size: 17px;
-    --readable-muted: #eff6ff;
-    --readable-soft: #eff6ff;
+    --readable-muted: #f7f1df;
+    --readable-soft: #f7f1df;
   }
 
   :root[data-text-scale='normal'] {
@@ -425,7 +433,7 @@
 
   .font-display,
   .font-display * {
-    font-family: 'Cinzel', serif !important;
+    font-family: var(--display-font) !important;
   }
 
   button,
@@ -452,15 +460,15 @@
 
   .btn-sec {
     color: var(--readable-muted);
-    border-color: rgba(0,255,209,0.22);
+    border-color: rgba(230,195,106,0.28);
   }
 
   .form-input,
   .form-textarea,
   .form-select {
-    background: rgba(4,3,10,0.86);
-    border-color: rgba(0,255,209,0.28);
-    color: #f8fbff;
+    background: rgba(16,19,15,0.9);
+    border-color: rgba(230,195,106,0.32);
+    color: #fff8e8;
   }
 
   .form-input::placeholder,
@@ -470,8 +478,8 @@
   }
 
   .glass-card {
-    border-color: rgba(0,255,209,0.2);
-    background: rgba(0,255,209,0.065);
+    border-color: rgba(230,195,106,0.2);
+    background: rgba(247,241,223,0.06);
   }
 
   p,
@@ -502,7 +510,7 @@
   h4,
   h5,
   h6 {
-    color: #eff6ff;
+    color: #f7f1df;
   }
 
   .emo-btn.sel-hope,
