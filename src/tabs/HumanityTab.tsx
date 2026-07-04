@@ -338,6 +338,7 @@ export default function HumanityTab() {
         {loading ? <div className="glass-card" style={{ textAlign: 'center' }}>{t('loadingVoices', lang)}</div> : displayed.map(voice => {
           const activeReaction = liked[voice.id];
           const flag = voice.country_code ? countryFlag(voice.country_code) : FLAGS[voice.country] || '🌍';
+          const canDeleteVoice = Boolean(voice.can_delete || isAdmin);
           return (
             <article key={voice.id} className="glass-card" style={{ marginBottom: '.7rem', borderTopColor: EMO_GLOW[voice.emotion] }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: '.7rem' }}>
@@ -357,10 +358,10 @@ export default function HumanityTab() {
                 <p style={{ color: 'rgba(239,246,255,.8)', fontSize: '.76rem', lineHeight: 1.75 }}>{voice.message}</p>
               )}
               {voice.unlock_year && <div style={{ fontSize: '.56rem', color: 'rgba(239,246,255,.34)', marginTop: '-.2rem', marginBottom: '.55rem' }}>🔒 {t('sealedUntil', lang)} {voice.unlock_year}</div>}
-              {(voice.can_edit || voice.can_delete) && editingVoiceId !== voice.id && (
+              {(voice.can_edit || canDeleteVoice) && editingVoiceId !== voice.id && (
                 <div style={{ display: 'flex', gap: '.35rem', marginBottom: '.55rem' }}>
                   {voice.can_edit && <button className="btn-sec" onClick={() => startEditVoice(voice)} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '.3rem', color: '#00FFD1' }}><Edit2 size={13} /> {t('editVoice', lang)}</button>}
-                  <button className="btn-sec" onClick={() => void deleteVoice(voice)} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '.3rem', color: '#FFB4B4', borderColor: 'rgba(255,107,107,.35)' }}><Trash2 size={13} /> {t('deleteRecording', lang)}</button>
+                  {canDeleteVoice && <button className="btn-sec" onClick={() => void deleteVoice(voice)} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '.3rem', color: '#FFB4B4', borderColor: 'rgba(255,107,107,.35)' }}><Trash2 size={13} /> {t('deleteRecording', lang)}</button>}
                 </div>
               )}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '.5rem', flexWrap: 'wrap' }}>
