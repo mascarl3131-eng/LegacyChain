@@ -8,11 +8,11 @@ import { getDemoMsgs, getDemoHumanity, getChallenges, INITIAL_TREE } from './dat
 
 export type TabName = 'chain' | 'tree' | 'origins' | 'journey' | 'mural' | 'challenges' | 'book' | 'humanity';
 export type PageName = 'onboarding' | 'landing' | 'theme' | 'app' | 'admin';
-export type ThemeName = 'heritage' | 'paper' | 'garden' | 'legacy';
+export type ThemeName = 'heritage' | 'paper';
 
 const SUPPORTED_LANGS: LangCode[] = ['en', 'fr', 'es', 'pt', 'de', 'it', 'ar', 'zh', 'ja', 'ko', 'ru', 'hi', 'sw', 'nl'];
 const FOUNDER_PREMIUM_EMAILS = new Set(['mascarl3131@gmail.com']);
-const SUPPORTED_THEMES: ThemeName[] = ['heritage', 'paper', 'garden', 'legacy'];
+const SUPPORTED_THEMES: ThemeName[] = ['heritage', 'paper'];
 
 function getInitialLanguage(): LangCode {
   const saved = localStorage.getItem('legacychain-language');

@@ -97,83 +97,6 @@
     --ring: 25 38% 33%;
   }
 
-  :root[data-theme='garden'] {
-    --void: #202C24;
-    --void-light: #2E3B30;
-    --teal: #A3C9A8;
-    --amber: #F2CC8F;
-    --violet: #B8BEDD;
-    --rose: #E07A5F;
-    --text: #F4F1DE;
-    --text-muted: rgba(244,241,222,0.86);
-    --text-soft: rgba(244,241,222,0.7);
-    --danger: #E76F51;
-    --glass: rgba(244,241,222,0.07);
-    --glass-border: rgba(163,201,168,0.24);
-    --menu-bg: #2E3B30;
-    --menu-bg-soft: rgba(163,201,168,0.08);
-    --menu-active: #F2CC8F;
-    --menu-accent: #A3C9A8;
-    --menu-text: rgba(244,241,222,0.9);
-    --menu-muted: rgba(244,241,222,0.68);
-    --menu-border: rgba(163,201,168,0.24);
-    --body-glow-a: rgba(129,178,154,0.14);
-    --body-glow-b: rgba(242,204,143,0.08);
-    --nav-bg: rgba(46,59,48,0.97);
-    --nav-border: rgba(163,201,168,0.26);
-    --readable-muted: #F4F1DE;
-    --readable-soft: #F4F1DE;
-  }
-
-  :root[data-theme='legacy'] {
-    --void: #04030A;
-    --void-light: #090716;
-    --teal: #00FFD1;
-    --amber: #FFB347;
-    --violet: #C084FC;
-    --rose: #FF6B9D;
-    --text: #EFF6FF;
-    --text-muted: rgba(224,235,255,0.84);
-    --text-soft: rgba(224,235,255,0.72);
-    --danger: #FF2D55;
-    --glass: rgba(0,255,209,0.05);
-    --glass-border: rgba(0,255,209,0.13);
-    --body-font: 'Space Grotesk', 'Segoe UI', sans-serif;
-    --display-font: 'Cinzel', serif;
-    --menu-bg: #090716;
-    --menu-bg-soft: rgba(0,255,209,0.05);
-    --menu-active: #00FFD1;
-    --menu-accent: #C084FC;
-    --menu-text: rgba(224,235,255,0.86);
-    --menu-muted: rgba(224,235,255,0.72);
-    --menu-border: rgba(0,255,209,0.13);
-    --body-glow-a: rgba(0,255,209,0.06);
-    --body-glow-b: rgba(192,132,252,0.06);
-    --nav-bg: rgba(4,3,10,0.97);
-    --nav-border: rgba(0,255,209,0.13);
-    --readable-muted: #EFF6FF;
-    --readable-soft: #EFF6FF;
-    --background: 240 33% 2%;
-    --foreground: 213 100% 97%;
-    --card: 240 33% 2%;
-    --card-foreground: 213 100% 97%;
-    --popover: 245 40% 5%;
-    --popover-foreground: 213 100% 97%;
-    --primary: 166 100% 50%;
-    --primary-foreground: 240 33% 2%;
-    --secondary: 270 90% 75%;
-    --secondary-foreground: 240 33% 2%;
-    --muted: 245 40% 5%;
-    --muted-foreground: 213 30% 55%;
-    --accent: 33 100% 64%;
-    --accent-foreground: 240 33% 2%;
-    --destructive: 350 100% 59%;
-    --destructive-foreground: 213 100% 97%;
-    --border: 166 100% 50% / 0.13;
-    --input: 166 100% 50% / 0.13;
-    --ring: 166 100% 50%;
-  }
-
   * {
     @apply border-border;
     -webkit-tap-highlight-color: transparent;
@@ -646,23 +569,17 @@
     color: unset !important;
   }
 
-  :root[data-theme='paper'] .app-nav,
-  :root[data-theme='garden'] .app-nav,
-  :root[data-theme='legacy'] .app-nav {
+  :root[data-theme='paper'] .app-nav {
     background: var(--nav-bg) !important;
     border-bottom-color: var(--nav-border) !important;
   }
 
-  :root[data-theme='paper'] .mobile-tab-bar,
-  :root[data-theme='garden'] .mobile-tab-bar,
-  :root[data-theme='legacy'] .mobile-tab-bar {
+  :root[data-theme='paper'] .mobile-tab-bar {
     background: var(--nav-bg) !important;
     border-top-color: var(--nav-border) !important;
   }
 
-  :root[data-theme='paper'] .bottom-ticker,
-  :root[data-theme='garden'] .bottom-ticker,
-  :root[data-theme='legacy'] .bottom-ticker {
+  :root[data-theme='paper'] .bottom-ticker {
     background: var(--nav-bg) !important;
     border-top-color: var(--nav-border) !important;
   }
@@ -793,15 +710,5 @@
   :root[data-theme='paper'] ::placeholder {
     color: rgba(46,38,27,0.68) !important;
     opacity: 1;
-  }
-
-  :root[data-theme='garden'] .glass-card {
-    box-shadow: 0 14px 38px rgba(0,0,0,0.16);
-  }
-
-  :root[data-theme='legacy'] .font-display,
-  :root[data-theme='legacy'] .font-display * {
-    font-family: 'Cinzel', serif !important;
-    letter-spacing: 0.15em;
   }
 }
