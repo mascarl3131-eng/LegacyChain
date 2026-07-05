@@ -69,6 +69,17 @@ export default function TreeTab() {
 
   const selectedMem = treeNodes.find(node => node.id === selectedId) || null;
   const editableRelatives = selectedMem ? treeNodes.filter(node => node.id !== selectedMem.id) : [];
+
+  useEffect(() => {
+    if (!showAdd && !selectedId) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (showAdd) setShowAdd(false);
+      else setSelectedId(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedId, showAdd]);
   const visibleNodes = useMemo(() => treeNodes.filter(node => {
     const matchesGeneration = generation === 'all' || node.gen === generation;
     const matchesQuery = node.n.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase());
@@ -655,7 +666,7 @@ export default function TreeTab() {
 
       {showAdd && (
         <div className="glass-card" style={{ marginTop: '0.9rem', position: 'relative' }}>
-          <button type="button" onClick={() => setShowAdd(false)} style={{ position: 'absolute', right: 10, top: 10, border: 0, background: 'transparent', color: 'rgba(239,246,255,.4)', cursor: 'pointer' }}><X size={16} /></button>
+          <button type="button" aria-label={t('close', lang)} onClick={() => setShowAdd(false)} style={{ position: 'absolute', right: 10, top: 10, border: 0, background: 'transparent', color: 'rgba(239,246,255,.4)', cursor: 'pointer' }}><X size={16} /></button>
           <div style={{ color: '#00FFD1', fontSize: '0.68rem', letterSpacing: '0.12em', marginBottom: '0.8rem' }}>{t('addMember', lang).replace('+ ', '')}</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
             <input type="text" className="form-input" value={fn} onChange={event => setFn(event.target.value)} placeholder={t('firstName', lang)} />
@@ -680,7 +691,7 @@ export default function TreeTab() {
               <span style={{ width: 38, height: 38, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${genColor(selectedMem.gen)}18`, color: genColor(selectedMem.gen) }}><UserRound size={19} /></span>
               <div><strong style={{ display: 'block', color: '#EFF6FF', fontSize: '0.75rem' }}>{selectedMem.n}</strong><small style={{ color: 'rgba(239,246,255,.35)' }}>{generationLabel(selectedMem.gen)} · {selectedMem.b}</small></div>
             </div>
-            <button type="button" onClick={() => setSelectedId(null)} style={{ border: 0, background: 'transparent', color: 'rgba(239,246,255,.4)', cursor: 'pointer' }}><X size={16} /></button>
+            <button type="button" aria-label={t('close', lang)} onClick={() => setSelectedId(null)} style={{ border: 0, background: 'transparent', color: 'rgba(239,246,255,.4)', cursor: 'pointer' }}><X size={16} /></button>
           </div>
           <div style={{ color: '#00FFD1', fontSize: '0.62rem', letterSpacing: '0.12em', marginBottom: '0.6rem' }}>
             {lang === 'fr' ? 'MODIFIER LE MEMBRE' : 'EDIT MEMBER'}

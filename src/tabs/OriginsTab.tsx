@@ -92,7 +92,7 @@ export default function OriginsTab() {
           </select>
           <input type="number" className="form-input" style={{ width: 60 }} placeholder="%" value={row.p || ''} min={0} max={100} onChange={e => updateRow(i, 'p', e.target.value)} />
           <span style={{ color: '#00FFD1', fontSize: '0.78rem', flexShrink: 0 }}>%</span>
-          <button onClick={() => removeRow(i)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,45,85,0.45)', cursor: 'pointer', fontSize: '1rem', flexShrink: 0 }}>×</button>
+          <button type="button" aria-label={t('delete', lang)} onClick={() => removeRow(i)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,45,85,0.45)', cursor: 'pointer', fontSize: '1rem', flexShrink: 0 }}>×</button>
         </div>
       ))}
 

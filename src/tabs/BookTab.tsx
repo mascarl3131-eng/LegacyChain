@@ -80,19 +80,21 @@ export default function BookTab() {
       {/* Stepper */}
       <div style={{ display: 'flex', gap: '0.35rem', marginBottom: '1.3rem', flexWrap: 'wrap' }}>
         {chs.map((_, i) => (
-          <div
+          <button
+            type="button"
             key={i}
+            aria-label={`${t('chapterAbbr', lang)}${i + 1}`}
             onClick={() => setChapter(i)}
             style={{
               width: 24, height: 24, borderRadius: '50%', border: `1px solid ${i === chapter ? '#00FFD1' : i < chapter ? '#00FFD1' : 'rgba(0,255,209,0.13)'}`,
               color: i === chapter ? '#04030A' : i < chapter ? '#00FFD1' : 'rgba(239,246,255,0.25)',
               background: i === chapter ? '#00FFD1' : i < chapter ? 'rgba(0,255,209,0.09)' : 'transparent',
               fontFamily: "'DM Mono',monospace", fontSize: '0.62rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', flexShrink: 0,
+              cursor: 'pointer', flexShrink: 0, padding: 0,
             }}
           >
             {i + 1}
-          </div>
+          </button>
         ))}
       </div>
 

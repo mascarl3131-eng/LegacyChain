@@ -517,6 +517,8 @@ export default function ChainTab() {
           <div style={{ background: 'rgba(0,255,209,0.04)', border: '1px solid rgba(0,255,209,0.2)', borderRadius: 12, padding: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
               <button
+                type="button"
+                aria-label={isRecording ? t('recording', lang) : t('tapRecord', lang)}
                 onClick={toggleRecording}
                 style={{
                   width: 46, height: 46, borderRadius: '50%', border: `2px solid ${isRecording ? '#FF2D55' : '#00FFD1'}`,
@@ -573,6 +575,7 @@ export default function ChainTab() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: videoPreviewUrl ? '.55rem' : 0 }}>
               <button
                 type="button"
+                aria-label={isVideoRecording ? t('recording', lang) : t('tapVideo', lang)}
                 onClick={() => void toggleVideoRecording()}
                 style={{
                   width: 46, height: 46, borderRadius: '50%', border: `2px solid ${isVideoRecording ? '#FF6B6B' : '#FFB347'}`,

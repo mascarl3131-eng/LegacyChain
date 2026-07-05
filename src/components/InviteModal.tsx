@@ -21,6 +21,15 @@ export default function InviteModal() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    if (!inviteOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setInviteOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [inviteOpen, setInviteOpen]);
+
+  useEffect(() => {
     if (!inviteOpen || !session) return;
     let active = true;
     setLoading(true);
@@ -105,7 +114,7 @@ export default function InviteModal() {
         }}
       >
         <div style={{ width: 36, height: 3, background: 'rgba(239,246,255,0.15)', borderRadius: 2, margin: '0 auto 1rem' }} />
-        <button onClick={() => setInviteOpen(false)} style={{ position: 'absolute', top: '0.9rem', right: '1rem', background: 'transparent', border: 'none', color: 'rgba(239,246,255,0.32)', cursor: 'pointer', fontSize: '1.1rem' }}>×</button>
+        <button type="button" aria-label={t('close', lang)} onClick={() => setInviteOpen(false)} style={{ position: 'absolute', top: '0.9rem', right: '1rem', background: 'transparent', border: 'none', color: 'rgba(239,246,255,0.32)', cursor: 'pointer', fontSize: '1.1rem' }}>×</button>
         <h3 id="invite-family-title" className="font-display" style={{ color: '#00FFD1', fontSize: '0.9rem', marginBottom: '0.35rem', letterSpacing: '0.1em' }}>{t('inviteTitle', lang)}</h3>
         <p style={{ fontSize: '0.65rem', color: 'rgba(239,246,255,0.42)', marginBottom: '1rem', lineHeight: 1.7 }}>{t('familyIdExplanation', lang)}</p>
 

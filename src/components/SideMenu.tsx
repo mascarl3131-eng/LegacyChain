@@ -64,7 +64,7 @@ export default function SideMenu() {
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1.2rem 1.2rem', borderBottom: '1px solid var(--menu-border)', marginBottom: '0.5rem' }}>
           <span className="font-display" style={{ fontSize: '0.9rem', color: 'var(--menu-active)', letterSpacing: '0.05em', fontWeight: 700 }}>⬡ LEGACYCHAIN</span>
-          <button onClick={() => setSideMenuOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--menu-muted)', fontSize: '1.35rem', cursor: 'pointer' }}>×</button>
+          <button type="button" aria-label={t('close', lang)} onClick={() => setSideMenuOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--menu-muted)', fontSize: '1.35rem', cursor: 'pointer' }}>×</button>
         </div>
 
         <SectionTitle>{t('legacySection', lang)}</SectionTitle>
@@ -105,7 +105,7 @@ export default function SideMenu() {
         <div style={{ padding: '0.55rem 1.2rem' }}>
           <GetAppButton variant="menu" />
         </div>
-        <div onClick={() => { setInviteOpen(true); setSideMenuOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.82rem 1.2rem', fontSize: '0.86rem', color: 'var(--menu-text)', cursor: 'pointer', letterSpacing: '0.01em' }}>+ {t('inviteBtn', lang)}</div>
+        <button type="button" onClick={() => { setInviteOpen(true); setSideMenuOpen(false); }} style={{ width: '100%', border: 'none', background: 'transparent', display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.82rem 1.2rem', fontFamily: 'var(--body-font)', fontSize: '0.86rem', color: 'var(--menu-text)', cursor: 'pointer', letterSpacing: '0.01em', textAlign: 'left' }}>+ {t('inviteBtn', lang)}</button>
 
         <div style={{ padding: '0.6rem 1.2rem' }}>
           <select value={lang} onChange={(e) => setLang(e.target.value as typeof lang)} style={{ width: '100%', background: 'var(--menu-bg-soft)', border: '1px solid var(--menu-border)', color: 'var(--menu-text)', fontFamily: 'var(--body-font)', fontSize: '0.78rem', padding: '0.52rem 0.7rem', borderRadius: 6, outline: 'none', cursor: 'pointer' }}>

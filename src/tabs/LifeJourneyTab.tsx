@@ -198,7 +198,7 @@ export default function LifeJourneyTab() {
                 <input style={inputStyle} placeholder={t('dateTo', lang)} value={entry.to} onChange={event => updateItem(entry.id, { to: event.target.value })} />
               </div>
               <input style={inputStyle} placeholder={t('memoryNote', lang)} value={entry.note} onChange={event => updateItem(entry.id, { note: event.target.value })} />
-              <button type="button" className="btn-sec" onClick={() => setItems(prev => prev.filter(item => item.id !== entry.id))} style={{ marginTop: '.5rem', color: '#FF6B9D' }}><Trash2 size={13} /></button>
+              <button type="button" className="btn-sec" aria-label={t('delete', lang)} onClick={() => setItems(prev => prev.filter(item => item.id !== entry.id))} style={{ marginTop: '.5rem', color: '#FF6B9D' }}><Trash2 size={13} /></button>
             </article>
           ))}
         </div>
