@@ -29,6 +29,11 @@ function getInitialLanguage(): LangCode {
 
 function getInitialTheme(): ThemeName {
   const saved = localStorage.getItem('legacychain-theme');
+  const confirmed = localStorage.getItem('legacychain-theme-confirmed') === '1';
+  if (saved === 'paper' && !confirmed) {
+    localStorage.setItem('legacychain-theme', 'heritage');
+    return 'heritage';
+  }
   return saved && SUPPORTED_THEMES.includes(saved as ThemeName) ? saved as ThemeName : 'heritage';
 }
 
@@ -268,6 +273,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const setTheme = useCallback((nextTheme: ThemeName) => {
     setThemeState(nextTheme);
     localStorage.setItem('legacychain-theme', nextTheme);
+    localStorage.setItem('legacychain-theme-confirmed', '1');
     document.documentElement.dataset.theme = nextTheme;
   }, []);
 

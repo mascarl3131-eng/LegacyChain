@@ -227,8 +227,8 @@ export default function LandingPage() {
         <div style={{ width: 'min(260px,80vw)', display: 'flex', flexDirection: 'column', gap: '0.55rem', flexShrink: 0 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.45rem' }}>
             {([
-              ['paper', 'Papier', '#FFF8EA', '#2E261B'],
               ['heritage', 'Heritage', '#10130F', '#E6C36A'],
+              ['paper', 'Papier', '#FFF8EA', '#2E261B'],
             ] as const).map(([id, label, bg, accent]) => {
               const active = theme === id;
               return (
