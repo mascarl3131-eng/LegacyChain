@@ -21,6 +21,7 @@ export default function OnboardingPage() {
 
     const word = OB_WORDS[lang] || 'FAMILY';
     const fs = Math.min(64, canvas.width / word.length * 0.8);
+    const wordY = canvas.height * 0.43;
 
     interface Letter {
       ch: string;
@@ -39,7 +40,7 @@ export default function OnboardingPage() {
       vy: (Math.random() - 0.5) * 10,
       a: 0,
       x: canvas.width / 2,
-      y: canvas.height / 2,
+      y: wordY,
     }));
 
     let fr = 0;
@@ -58,24 +59,24 @@ export default function OnboardingPage() {
           l.vx *= 0.93;
           l.vy *= 0.93;
           l.x += (l.ox - l.x) * 0.1 + l.vx;
-          l.y += (canvas!.height / 2 - l.y) * 0.1 + l.vy;
+          l.y += (wordY - l.y) * 0.1 + l.vy;
           ctx!.fillStyle = `rgba(0,255,209,${l.a})`;
           ctx!.fillText(l.ch, l.x, l.y);
         });
       } else if (fr < 180) {
         letters.forEach(l => {
           ctx!.fillStyle = 'rgba(0,255,209,0.88)';
-          ctx!.fillText(l.ch, l.ox, canvas!.height / 2);
+          ctx!.fillText(l.ch, l.ox, wordY);
         });
       } else {
         if (fr === 181) {
           ctx!.fillStyle = `rgba(0,255,209,${Math.min(1, (fr - 180) / 35)})`;
           ctx!.font = `bold ${Math.min(60, canvas!.width * 0.14)}px serif`;
-          ctx!.fillText('⬡', canvas!.width / 2, canvas!.height / 2);
+          ctx!.fillText('⬡', canvas!.width / 2, wordY);
         } else {
           ctx!.fillStyle = `rgba(0,255,209,${Math.min(1, (fr - 180) / 35)})`;
           ctx!.font = `bold ${Math.min(60, canvas!.width * 0.14)}px serif`;
-          ctx!.fillText('⬡', canvas!.width / 2, canvas!.height / 2);
+          ctx!.fillText('⬡', canvas!.width / 2, wordY);
         }
       }
 
@@ -179,7 +180,7 @@ export default function OnboardingPage() {
       </button>
 
       {/* Center Text */}
-      <div style={{ position: 'absolute', zIndex: 2, left: '1rem', right: '1rem', top: 'calc(50% + clamp(3.4rem, 16vw, 5rem))', textAlign: 'center', pointerEvents: 'none' }}>
+      <div style={{ position: 'absolute', zIndex: 2, left: '1rem', right: '1rem', top: '57%', textAlign: 'center', pointerEvents: 'none' }}>
         <p style={{ color: 'rgba(224,235,255,0.92)', textShadow: '0 0 10px rgba(4,3,10,0.65)', margin: 0, fontSize: '0.84rem', lineHeight: 1.55, letterSpacing: '0.08em' }}>
           {t('obSub', lang)}
         </p>
