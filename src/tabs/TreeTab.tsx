@@ -476,15 +476,12 @@ export default function TreeTab() {
       const touch = event.touches[0];
       const dx = touch.clientX - touchPanRef.current.x;
       const dy = touch.clientY - touchPanRef.current.y;
-      if (Math.abs(dy) > Math.abs(dx) + 8) {
-        touchPanRef.current.active = false;
-        return;
-      }
       if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
         touchPanRef.current.moved = true;
         suppressClickRef.current = true;
       }
       scroller.scrollLeft = touchPanRef.current.scrollLeft - dx;
+      scroller.scrollTop = touchPanRef.current.scrollTop - dy;
       event.preventDefault();
       return;
     }
@@ -581,7 +578,7 @@ export default function TreeTab() {
               overflow: 'auto',
               cursor: isPanning ? 'grabbing' : 'grab',
               userSelect: isPanning ? 'none' : undefined,
-              touchAction: 'pan-y pinch-zoom',
+              touchAction: 'none',
             }}
           >
             <div style={{ width: layout.canvasWidth * zoom, height: layout.canvasHeight * zoom, position: 'relative' }}>
