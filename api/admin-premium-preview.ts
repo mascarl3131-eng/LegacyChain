@@ -9,6 +9,11 @@ const ADMIN_EMAILS = new Set(
     .filter(Boolean),
 );
 
+type CountResult = { count: number | null; error: { message: string } | null };
+type CountQuery = PromiseLike<CountResult> & {
+  eq(column: string, value: string): CountQuery;
+};
+
 function headerValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value || '';
 }
@@ -32,6 +37,41 @@ function dayKey(value: string) {
 function addCount(map: Record<string, number>, key: string | null | undefined) {
   const clean = key || 'direct';
   map[clean] = (map[clean] || 0) + 1;
+}
+
+async function tableCount(
+  table: string,
+  applyFilters?: (query: CountQuery) => CountQuery,
+) {
+  const admin = getAdminSupabase();
+  let query = admin.from(table).select('id', { count: 'exact', head: true }) as unknown as CountQuery;
+  if (applyFilters) query = applyFilters(query);
+  const { count, error } = await query;
+  if (error) throw error;
+  return count || 0;
+}
+
+async function landingStats(req: ApiRequest, res: ApiResponse) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
+  try {
+    const [families, familyMessages, humanityMessages, capsules] = await Promise.all([
+      tableCount('families'),
+      tableCount('family_messages'),
+      tableCount('humanity_messages', query => query.eq('visibility', 'public').eq('status', 'published')),
+      tableCount('family_messages', query => query.eq('message_type', 'capsule')),
+    ]);
+
+    res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=120');
+    return res.status(200).json({
+      families,
+      messages: familyMessages + humanityMessages,
+      capsules,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unable to load landing stats';
+    return res.status(500).json({ error: message });
+  }
 }
 
 async function trackVisit(req: ApiRequest, res: ApiResponse) {
@@ -101,6 +141,7 @@ async function visitStats(req: ApiRequest, res: ApiResponse) {
 export default async function handler(req: ApiRequest, res: ApiResponse) {
   const action = new URL(req.url || '/', 'https://legacychain.local').searchParams.get('action');
 
+  if (req.method === 'GET' && action === 'landingStats') return landingStats(req, res);
   if (req.method === 'POST' && req.body?.action === 'trackVisit') return trackVisit(req, res);
   if (req.method === 'GET' && action === 'visitStats') return visitStats(req, res);
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });

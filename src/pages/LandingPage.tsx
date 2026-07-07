@@ -74,7 +74,7 @@ export default function LandingPage() {
 
     const loadStats = async () => {
       try {
-        const response = await fetch('/api/landing-stats');
+        const response = await fetch('/api/admin-premium-preview?action=landingStats');
         const data = await response.json().catch(() => ({}));
         if (!active || !response.ok) return;
         setCounters({
