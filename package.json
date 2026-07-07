@@ -1,14 +1,37 @@
 {
-  "name": "my-app",
+  "name": "legacychain",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "LegacyChain desktop app",
+  "author": "LegacyChain",
+  "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:exe": "npm run build && electron-builder --win portable",
     "check:i18n": "node scripts/check-i18n.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
+  },
+  "build": {
+    "appId": "com.legacychain.app",
+    "productName": "LegacyChain",
+    "directories": {
+      "output": "../../LegacyChainRelease"
+    },
+    "files": [
+      "electron/**/*",
+      "dist/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "artifactName": "LegacyChain-${version}.exe"
+    }
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -71,6 +94,8 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.23",
+    "electron": "^43.0.0",
+    "electron-builder": "^26.15.3",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
