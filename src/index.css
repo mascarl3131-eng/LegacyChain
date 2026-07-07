@@ -326,6 +326,12 @@
     bottom: calc(64px + env(safe-area-inset-bottom)) !important;
   }
 
+  .landing-page {
+    justify-content: flex-start !important;
+    padding-top: calc(1.25rem + env(safe-area-inset-top)) !important;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom)) !important;
+  }
+
   .bottom-ticker {
     display: none !important;
   }

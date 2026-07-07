@@ -123,7 +123,7 @@ export default function SideMenu() {
         <Divider />
         <SectionTitle>{t('legalDocuments', lang)}</SectionTitle>
         <div style={{ display: 'grid', gap: '.5rem', padding: '.45rem 1.2rem 0' }}>
-          {LEGAL_LINKS.map(([labelKey, href]) => <a key={href} href={href} style={{ color: 'rgba(239,246,255,.72)', fontSize: '.64rem', textDecoration: 'none', lineHeight: 1.35 }}>{t(labelKey, lang)}</a>)}
+          {LEGAL_LINKS.map(([labelKey, href]) => <a key={href} href={href} style={{ color: 'var(--menu-text)', fontSize: '.64rem', textDecoration: 'none', lineHeight: 1.35 }}>{t(labelKey, lang)}</a>)}
         </div>
       </div>
     </>

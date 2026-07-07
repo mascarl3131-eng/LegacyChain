@@ -22,6 +22,7 @@ export default function LandingPage() {
   const [twDel, setTwDel] = useState(false);
   const [counters, setCounters] = useState({ fam: 0, msg: 0, cap: 0 });
   const typewriterRef = useRef<HTMLSpanElement>(null);
+  const landingRef = useRef<HTMLDivElement>(null);
 
   const phrases = TYPEWRITER_PHRASES[lang] || TYPEWRITER_PHRASES.en;
 
@@ -57,26 +58,42 @@ export default function LandingPage() {
     return () => clearTimeout(timeout);
   }, [page, twI, twC, twDel, phrases]);
 
-  // Counter animation
+  useEffect(() => {
+    if (page !== 'landing') return;
+    requestAnimationFrame(() => {
+      landingRef.current?.scrollTo({ top: 0, left: 0 });
+      window.scrollTo({ top: 0, left: 0 });
+    });
+  }, [page]);
+
+  // Live landing counters
   useEffect(() => {
     if (page !== 'landing') return;
 
-    const targets = { fam: 12847, msg: 94320, cap: 3201 };
-    const steps = 70;
-    let frame = 0;
+    let active = true;
 
-    const iv = setInterval(() => {
-      frame++;
-      const progress = frame / steps;
-      setCounters({
-        fam: Math.min(Math.floor(targets.fam * progress), targets.fam),
-        msg: Math.min(Math.floor(targets.msg * progress), targets.msg),
-        cap: Math.min(Math.floor(targets.cap * progress), targets.cap),
-      });
-      if (frame >= steps) clearInterval(iv);
-    }, 16);
+    const loadStats = async () => {
+      try {
+        const response = await fetch('/api/landing-stats');
+        const data = await response.json().catch(() => ({}));
+        if (!active || !response.ok) return;
+        setCounters({
+          fam: Number(data.families) || 0,
+          msg: Number(data.messages) || 0,
+          cap: Number(data.capsules) || 0,
+        });
+      } catch {
+        // Keep the last visible numbers if stats are temporarily unavailable.
+      }
+    };
 
-    return () => clearInterval(iv);
+    void loadStats();
+    const iv = window.setInterval(() => void loadStats(), 60000);
+
+    return () => {
+      active = false;
+      window.clearInterval(iv);
+    };
   }, [page]);
 
   const handleGuestLogin = () => {
@@ -88,7 +105,8 @@ export default function LandingPage() {
 
   return (
     <div
-      className="app-scroll-region landing-page"
+      ref={landingRef}
+      className="landing-page"
       style={{
         position: 'fixed',
         inset: 0,
@@ -96,9 +114,10 @@ export default function LandingPage() {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         overflowY: 'auto',
-        padding: '1.5rem',
+        WebkitOverflowScrolling: 'touch',
+        padding: 'calc(1.25rem + env(safe-area-inset-top)) 1.5rem calc(1.25rem + env(safe-area-inset-bottom))',
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', maxWidth: 340, textAlign: 'center' }}>
@@ -192,11 +211,11 @@ export default function LandingPage() {
         <section style={{ width: 'min(320px,90vw)', padding: '.85rem', borderRadius: 12, textAlign: 'left', background: 'linear-gradient(135deg,rgba(255,179,71,.08),rgba(192,132,252,.055))', border: '1px solid rgba(255,179,71,.25)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '.7rem', marginBottom: '.55rem' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '.45rem', color: '#FFB347', fontSize: '.65rem', letterSpacing: '.11em' }}><Crown size={16} /> {t('premiumLandingTitle', lang)}</span>
-            <strong style={{ color: '#EFF6FF', fontSize: '.8rem' }}>$10</strong>
+            <strong style={{ color: '#EFF6FF', fontSize: '.8rem' }}>€10</strong>
           </div>
           <p style={{ margin: '0 0 .65rem', color: 'rgba(224,235,255,.84)', fontSize: '.58rem', lineHeight: 1.65 }}>{t('premiumLandingDesc', lang)}</p>
           <div style={{ display: 'grid', gap: '.35rem' }}>
-            {['f2', 'f3', 'f4', 'f6', 'f8'].map(key => (
+            {['f2', 'f3', 'fDna', 'f4', 'f8'].map(key => (
               <span key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: '.4rem', color: 'rgba(224,235,255,.9)', fontSize: '.56rem', lineHeight: 1.45 }}>
                 <Check size={12} color="#00FFD1" style={{ flexShrink: 0, marginTop: 1 }} /> {t(key, lang)}
               </span>
