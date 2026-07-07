@@ -60,6 +60,7 @@ function App() {
     if (!session) return;
     const params = new URLSearchParams(window.location.search);
     const token = params.get('familyInvite');
+    const joinedFromWhatsApp = params.get('joinSource') === 'whatsapp';
     if (!token || acceptedFamilyInvite.current === token) return;
     acceptedFamilyInvite.current = token;
     fetch('/api/families', {
@@ -71,13 +72,13 @@ function App() {
       if (!response.ok) throw new Error(data.error || t('familyActionError', lang));
       if (data.familyId) setActiveFamilyId(data.familyId);
       setPage('theme');
-      showNotif(t('familyJoinedSuccess', lang), '#00FFD1');
+      showNotif(t(joinedFromWhatsApp ? 'familyJoinedWhatsAppSuccess' : 'familyJoinedSuccess', lang), '#00FFD1');
       window.history.replaceState({}, '', window.location.pathname);
     }).catch(reason => {
       acceptedFamilyInvite.current = null;
       showNotif(reason.message, '#FF6B6B');
     });
-  }, [lang, session, showNotif]);
+  }, [lang, session, setActiveFamilyId, setPage, showNotif]);
 
   useEffect(() => {
     if (loading) return;

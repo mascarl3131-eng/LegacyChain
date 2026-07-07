@@ -83,6 +83,13 @@ export default function InviteModal() {
     } finally { setLoading(false); }
   };
 
+  const whatsappInviteLink = () => {
+    if (!link) return '';
+    const url = new URL(link);
+    url.searchParams.set('joinSource', 'whatsapp');
+    return url.toString();
+  };
+
   return (
     <div
       onClick={() => setInviteOpen(false)}
@@ -156,7 +163,7 @@ export default function InviteModal() {
           <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{link}</span>
           <button onClick={() => navigator.clipboard.writeText(link).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }).catch(() => {})} className="btn-sec" style={{ flexShrink: 0, padding: '0.25rem 0.52rem' }}>{copied ? <Check size={13} /> : <Copy size={13} />}</button>
         </div>}
-        {link && <button onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`${t('inviteTitle', lang)} ${link}`)}`, '_blank')} style={{ width: '100%', background: 'rgba(37,211,102,0.07)', border: '1px solid rgba(37,211,102,0.18)', color: '#25d366', fontFamily: "'DM Mono',monospace", fontSize: '0.72rem', padding: '0.6rem', borderRadius: 8, cursor: 'pointer', marginBottom: '0.5rem' }}>WhatsApp</button>}
+        {link && <button onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`${t('inviteTitle', lang)} ${whatsappInviteLink()}`)}`, '_blank')} style={{ width: '100%', background: 'rgba(37,211,102,0.07)', border: '1px solid rgba(37,211,102,0.18)', color: '#25d366', fontFamily: "'DM Mono',monospace", fontSize: '0.72rem', padding: '0.6rem', borderRadius: 8, cursor: 'pointer', marginBottom: '0.5rem' }}>WhatsApp</button>}
         {error && <div style={{ color: '#FF6B6B', fontSize: '.56rem', marginTop: '.55rem' }}>{error}</div>}
       </div>
     </div>
