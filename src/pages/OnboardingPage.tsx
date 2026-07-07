@@ -179,8 +179,8 @@ export default function OnboardingPage() {
       </button>
 
       {/* Center Text */}
-      <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '1rem' }}>
-        <p style={{ color: 'rgba(224,235,255,0.92)', textShadow: '0 0 10px rgba(4,3,10,0.65)', marginTop: '0.8rem', fontSize: '0.84rem', letterSpacing: '0.08em' }}>
+      <div style={{ position: 'absolute', zIndex: 2, left: '1rem', right: '1rem', top: 'calc(50% + clamp(3.4rem, 16vw, 5rem))', textAlign: 'center', pointerEvents: 'none' }}>
+        <p style={{ color: 'rgba(224,235,255,0.92)', textShadow: '0 0 10px rgba(4,3,10,0.65)', margin: 0, fontSize: '0.84rem', lineHeight: 1.55, letterSpacing: '0.08em' }}>
           {t('obSub', lang)}
         </p>
       </div>
