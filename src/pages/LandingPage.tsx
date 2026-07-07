@@ -117,7 +117,7 @@ export default function LandingPage() {
         justifyContent: 'flex-start',
         overflowY: 'auto',
         WebkitOverflowScrolling: 'touch',
-        padding: 'calc(1.25rem + env(safe-area-inset-top)) 1.5rem calc(1.25rem + env(safe-area-inset-bottom))',
+        padding: 'calc(2.75rem + env(safe-area-inset-top)) 1.5rem calc(1.25rem + env(safe-area-inset-bottom))',
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', maxWidth: 340, textAlign: 'center' }}>
