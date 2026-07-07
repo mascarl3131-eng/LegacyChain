@@ -21,7 +21,7 @@ export default function OnboardingPage() {
 
     const word = OB_WORDS[lang] || 'FAMILY';
     const fs = Math.min(64, canvas.width / word.length * 0.8);
-    const wordY = canvas.height * 0.43;
+    const wordY = canvas.height * 0.36;
 
     interface Letter {
       ch: string;
@@ -180,7 +180,7 @@ export default function OnboardingPage() {
       </button>
 
       {/* Center Text */}
-      <div style={{ position: 'absolute', zIndex: 2, left: '1rem', right: '1rem', top: '57%', textAlign: 'center', pointerEvents: 'none' }}>
+      <div style={{ position: 'absolute', zIndex: 2, left: '1rem', right: '1rem', top: '58%', textAlign: 'center', pointerEvents: 'none' }}>
         <p style={{ color: 'rgba(224,235,255,0.92)', textShadow: '0 0 10px rgba(4,3,10,0.65)', margin: 0, fontSize: '0.84rem', lineHeight: 1.55, letterSpacing: '0.08em' }}>
           {t('obSub', lang)}
         </p>
