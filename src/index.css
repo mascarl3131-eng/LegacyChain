@@ -297,6 +297,10 @@
   display: none;
 }
 
+.tree-canvas-scroller {
+  min-height: 390px;
+}
+
 @media (max-width: 640px) {
   html, body, #root {
     height: 100%;
@@ -328,6 +332,12 @@
 
   .desktop-zoom-controls {
     display: none !important;
+  }
+
+  .tree-canvas-scroller {
+    height: clamp(260px, 38dvh, 330px);
+    min-height: 260px;
+    overscroll-behavior: contain;
   }
 
   .btn-primary,
