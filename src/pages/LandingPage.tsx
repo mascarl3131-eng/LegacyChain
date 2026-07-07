@@ -8,7 +8,7 @@ const FEATURES = [
   { icon: '🌍', titleKey: 'hvTitle', descKey: 'featureHumanityDesc', color: '#00FFD1' },
   { icon: '⬡', titleKey: 'chainTitle', descKey: 'featureChainDesc', color: '#00FFD1' },
   { icon: '🌳', titleKey: 'treeTitle', descKey: 'featureTreeDesc', color: '#00FFD1' },
-  { icon: '🧬', titleKey: 'originsTitle', descKey: 'featureOriginsDesc', color: '#00FFD1' },
+  { icon: '🧬', titleKey: 'originsTitle', descKey: 'featureOriginsDesc', color: '#00FFD1', premium: true },
   { icon: '🎨', titleKey: 'navMural', descKey: 'featureMuralDesc', color: '#C084FC', premium: true },
   { icon: '🏆', titleKey: 'navChal', descKey: 'featureChallengesDesc', color: '#00FFD1' },
   { icon: '📖', titleKey: 'bookTitle', descKey: 'featureBookDesc', color: '#C084FC', premium: true },
@@ -88,6 +88,7 @@ export default function LandingPage() {
 
   return (
     <div
+      className="app-scroll-region landing-page"
       style={{
         position: 'fixed',
         inset: 0,

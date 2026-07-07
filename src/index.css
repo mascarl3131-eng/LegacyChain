@@ -633,6 +633,8 @@
   :root[data-theme='paper'] .app-scroll-region [style*='rgba(239, 246, 255'],
   :root[data-theme='paper'] .app-scroll-region [style*='rgba(224,235,255'],
   :root[data-theme='paper'] .app-scroll-region [style*='rgba(224, 235, 255'],
+  :root[data-theme='paper'] .app-scroll-region [style*='rgba(247,241,223'],
+  :root[data-theme='paper'] .app-scroll-region [style*='rgba(247, 241, 223'],
   :root[data-theme='paper'] .app-scroll-region [style*='rgb(239, 246, 255)'],
   :root[data-theme='paper'] .app-scroll-region [style*='#EFF6FF'],
   :root[data-theme='paper'] .app-scroll-region [style*='#eff6ff'] {
@@ -710,5 +712,30 @@
   :root[data-theme='paper'] ::placeholder {
     color: rgba(46,38,27,0.68) !important;
     opacity: 1;
+  }
+
+  :root[data-theme='paper'] .landing-page {
+    background:
+      radial-gradient(circle at 18% 0%, rgba(157,107,40,0.12), transparent 28%),
+      radial-gradient(circle at 90% 10%, rgba(82,121,111,0.1), transparent 30%),
+      #F5ECD8;
+  }
+
+  :root[data-theme='paper'] .landing-page a {
+    color: #2E261B !important;
+  }
+
+  :root[data-theme='paper'] .landing-page button[style*='background: #fff'],
+  :root[data-theme='paper'] .landing-page button[style*='background: rgb(255, 255, 255)'] {
+    background: #FFF8EA !important;
+    border-color: rgba(111,78,55,0.28) !important;
+    color: #2E261B !important;
+  }
+
+  :root[data-theme='paper'] .landing-page button[style*='rgba(0,255,209'],
+  :root[data-theme='paper'] .landing-page button[style*='rgba(0, 255, 209'] {
+    background: rgba(82,121,111,0.08) !important;
+    border-color: rgba(82,121,111,0.35) !important;
+    color: #2E261B !important;
   }
 }

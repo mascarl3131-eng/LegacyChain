@@ -9,7 +9,7 @@ import DnaQuickGuide from '@/components/DnaQuickGuide';
 import { getCountryOptions } from '@/lib/countries';
 
 export default function OriginsTab() {
-  const { lang, user, originRows, setOriginRows, pacte, setPacte, showNotif } = useStore();
+  const { lang, premium, user, originRows, setOriginRows, pacte, setPacte, setUpgradeOpen, showNotif } = useStore();
   const countryOptions = getCountryOptions(lang);
 
   const total = originRows.reduce((s, r) => s + r.p, 0);
@@ -37,6 +37,19 @@ export default function OriginsTab() {
     setPacte(true);
     showNotif(t('guardianSuccess', lang), '#00FFD1');
   };
+
+  if (!premium) {
+    return (
+      <div>
+        <div className="font-display" style={{ fontSize: '0.95rem', color: '#00FFD1', letterSpacing: '0.15em', marginBottom: '0.3rem' }}>{t('originsTitle', lang)}</div>
+        <div style={{ fontSize: '0.68rem', color: 'rgba(239,246,255,0.35)', letterSpacing: '0.1em', marginBottom: '1.5rem' }}>{t('originsSub', lang)}</div>
+        <div className="glass-card" style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: '0.72rem', color: 'rgba(255,179,71,0.7)', marginBottom: '0.75rem', lineHeight: 1.65 }}>🧬 {t('dnaPremiumDesc', lang)}</p>
+          <button className="btn-amber" style={{ marginTop: 0 }} onClick={() => setUpgradeOpen(true)}>✦ {t('unlockBtn', lang)}</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
