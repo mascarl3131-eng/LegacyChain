@@ -634,6 +634,17 @@
     color: #2E261B;
   }
 
+  :root[data-theme='paper'] p,
+  :root[data-theme='paper'] label,
+  :root[data-theme='paper'] small,
+  :root[data-theme='paper'] li,
+  :root[data-theme='paper'] td,
+  :root[data-theme='paper'] th,
+  :root[data-theme='paper'] span,
+  :root[data-theme='paper'] div {
+    color: inherit;
+  }
+
   :root[data-theme='paper'] h1,
   :root[data-theme='paper'] h2,
   :root[data-theme='paper'] h3,
@@ -641,7 +652,23 @@
   :root[data-theme='paper'] h5,
   :root[data-theme='paper'] h6,
   :root[data-theme='paper'] .font-display,
-  :root[data-theme='paper'] .app-scroll-region strong {
+  :root[data-theme='paper'] strong {
+    color: #2E261B !important;
+  }
+
+  :root[data-theme='paper'] [style*='rgba(239,246,255'],
+  :root[data-theme='paper'] [style*='rgba(239, 246, 255'],
+  :root[data-theme='paper'] [style*='rgba(224,235,255'],
+  :root[data-theme='paper'] [style*='rgba(224, 235, 255'],
+  :root[data-theme='paper'] [style*='rgba(247,241,223'],
+  :root[data-theme='paper'] [style*='rgba(247, 241, 223'],
+  :root[data-theme='paper'] [style*='rgb(239, 246, 255)'],
+  :root[data-theme='paper'] [style*='#EFF6FF'],
+  :root[data-theme='paper'] [style*='#eff6ff'],
+  :root[data-theme='paper'] [style*='#F7F1DF'],
+  :root[data-theme='paper'] [style*='#f7f1df'],
+  :root[data-theme='paper'] [style*='#fff8e8'],
+  :root[data-theme='paper'] [style*='#FFF8E8'] {
     color: #2E261B !important;
   }
 
@@ -739,6 +766,13 @@
 
   :root[data-theme='paper'] .landing-page a {
     color: #2E261B !important;
+  }
+
+  :root[data-theme='paper'] .landing-page,
+  :root[data-theme='paper'] .landing-page p,
+  :root[data-theme='paper'] .landing-page span,
+  :root[data-theme='paper'] .landing-page div {
+    color: #2E261B;
   }
 
   :root[data-theme='paper'] .landing-page button[style*='background: #fff'],

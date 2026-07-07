@@ -131,7 +131,7 @@ export default function LandingPage() {
           style={{
             fontFamily: "'Cinzel',serif",
             fontSize: 'clamp(0.95rem,3.5vw,1.9rem)',
-            color: '#EFF6FF',
+            color: 'var(--text)',
             height: '2.2em',
             lineHeight: '2.2em',
             overflow: 'hidden',
@@ -160,7 +160,7 @@ export default function LandingPage() {
         </div>
 
         {/* Subtitle */}
-        <p style={{ fontSize: '0.72rem', color: 'rgba(224,235,255,0.86)', lineHeight: 1.85, width: 260, flexShrink: 0 }}>
+        <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.85, width: 260, flexShrink: 0 }}>
           {t('landingSub', lang)}
         </p>
 
@@ -180,7 +180,7 @@ export default function LandingPage() {
               <div style={{ fontSize: '0.58rem', color: f.color, letterSpacing: '0.1em', marginBottom: '0.25rem' }}>
                 {f.icon} {t(f.titleKey, lang)} {f.premium && '✦'}
               </div>
-              <div style={{ fontSize: '0.6rem', color: 'rgba(224,235,255,0.82)', lineHeight: 1.5 }}>
+              <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
                 {t(f.descKey, lang)}
               </div>
             </div>
@@ -199,7 +199,7 @@ export default function LandingPage() {
             borderRadius: 10,
             border: '1px solid rgba(0,255,209,0.18)',
             background: 'rgba(0,255,209,0.04)',
-            color: 'rgba(224,235,255,0.9)',
+            color: 'var(--text-muted)',
             fontSize: '0.58rem',
             lineHeight: 1.65,
             textAlign: 'left',
@@ -211,12 +211,12 @@ export default function LandingPage() {
         <section style={{ width: 'min(320px,90vw)', padding: '.85rem', borderRadius: 12, textAlign: 'left', background: 'linear-gradient(135deg,rgba(255,179,71,.08),rgba(192,132,252,.055))', border: '1px solid rgba(255,179,71,.25)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '.7rem', marginBottom: '.55rem' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '.45rem', color: '#FFB347', fontSize: '.65rem', letterSpacing: '.11em' }}><Crown size={16} /> {t('premiumLandingTitle', lang)}</span>
-            <strong style={{ color: '#EFF6FF', fontSize: '.8rem' }}>€10</strong>
+            <strong style={{ color: 'var(--text)', fontSize: '.8rem' }}>€10</strong>
           </div>
-          <p style={{ margin: '0 0 .65rem', color: 'rgba(224,235,255,.84)', fontSize: '.58rem', lineHeight: 1.65 }}>{t('premiumLandingDesc', lang)}</p>
+          <p style={{ margin: '0 0 .65rem', color: 'var(--text-muted)', fontSize: '.58rem', lineHeight: 1.65 }}>{t('premiumLandingDesc', lang)}</p>
           <div style={{ display: 'grid', gap: '.35rem' }}>
             {['f2', 'f3', 'fDna', 'f4', 'f8'].map(key => (
-              <span key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: '.4rem', color: 'rgba(224,235,255,.9)', fontSize: '.56rem', lineHeight: 1.45 }}>
+              <span key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: '.4rem', color: 'var(--text-muted)', fontSize: '.56rem', lineHeight: 1.45 }}>
                 <Check size={12} color="#00FFD1" style={{ flexShrink: 0, marginTop: 1 }} /> {t(key, lang)}
               </span>
             ))}
@@ -291,7 +291,7 @@ export default function LandingPage() {
             <span>{t('googleLogin', lang)}</span>
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'rgba(224,235,255,0.7)', fontSize: '0.54rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text-soft)', fontSize: '0.54rem' }}>
             <span style={{ height: 1, flex: 1, background: 'rgba(239,246,255,0.12)' }} />
             <span>{t('orLabel', lang)}</span>
             <span style={{ height: 1, flex: 1, background: 'rgba(239,246,255,0.12)' }} />
@@ -305,7 +305,7 @@ export default function LandingPage() {
               padding: '0.75rem',
               background: 'rgba(0,255,209,0.025)',
               border: '1px solid rgba(0,255,209,0.25)',
-              color: '#EFF6FF',
+              color: 'var(--text)',
               fontFamily: "var(--body-font)",
               fontSize: '0.7rem',
               cursor: 'pointer',
@@ -317,7 +317,7 @@ export default function LandingPage() {
         </div>
 
         {/* Counters */}
-        <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.6rem', color: 'rgba(224,235,255,0.82)', flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.6rem', color: 'var(--text-muted)', flexShrink: 0 }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '0.88rem', color: '#00FFD1', fontWeight: 500 }}>{counters.fam.toLocaleString()}</div>
             <span>{t('families', lang)}</span>
