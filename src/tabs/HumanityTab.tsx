@@ -296,6 +296,33 @@ export default function HumanityTab() {
         {sampleMode && <div style={{ color: 'var(--amber)', fontSize: '.52rem', marginTop: '.45rem' }}>{t('sampleVoicesNotice', lang)}</div>}
       </header>
 
+      <section className="glass-card">
+        <div style={{ color: '#00FFD1', fontSize: '.7rem', letterSpacing: '.15em', marginBottom: '.8rem' }}>{t('leaveVoice', lang)}</div>
+        <select className="form-select" value={hCountryCode} onChange={event => setHCountryCode(event.target.value)} style={{ marginBottom: '.55rem' }}>
+          <option value="">{t('selectCountry', lang)}</option>
+          {countryOptions.map(item => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}
+        </select>
+        <input className="form-input" value={hName} onChange={event => setHName(event.target.value)} placeholder={`${t('yourName', lang)} (${t('optional', lang)})`} style={{ marginBottom: '.55rem' }} />
+        <select className="form-select" value={hAudience} onChange={event => setHAudience(event.target.value)} style={{ marginBottom: '.55rem' }}>{AUDIENCES.map(item => <option key={item} value={item}>{t(AUDIENCE_KEYS[item], lang)}</option>)}</select>
+        <textarea className="form-textarea" value={hMsg} onChange={event => setHMsg(event.target.value)} maxLength={500} placeholder={t('yourMsg', lang)} />
+        <div style={{ textAlign: 'right', color: 'rgba(239,246,255,.25)', fontSize: '.52rem' }}>{hMsg.length}/500</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.3rem', margin: '.55rem 0' }}>{EMOTIONS.map(item => <button key={item} className={`emo-btn sel-${item === hEmo ? item : ''}`} onClick={() => setHEmo(item)}>{t(`e${item[0].toUpperCase()}${item.slice(1)}`, lang)}</button>)}</div>
+        <div style={{ marginBottom: '.55rem' }}>
+          <label style={{ display: 'block', fontSize: '.62rem', color: 'rgba(239,246,255,.42)', letterSpacing: '.12em', marginBottom: '.32rem' }}>
+            {t('unlockYr', lang)} <span style={{ opacity: 0.4 }}>({t('optional', lang)})</span>
+          </label>
+          <UnlockYearPicker lang={lang} value={hUnlockYr} onChange={setHUnlockYr} />
+        </div>
+        <div className="glass-card" style={{ padding: '.65rem .75rem', marginBottom: '.55rem', borderColor: 'rgba(0,255,209,.16)', background: 'rgba(0,255,209,.04)' }}>
+          <div style={{ color: '#00FFD1', fontSize: '.58rem', letterSpacing: '.1em', marginBottom: '.2rem' }}>{t('publicVoice', lang)}</div>
+          <div style={{ color: 'rgba(239,246,255,.42)', fontSize: '.56rem', lineHeight: 1.55 }}>{t('featureHumanityDesc', lang)}</div>
+        </div>
+        {session && <label style={{ display: 'flex', alignItems: 'center', gap: '.45rem', color: 'rgba(239,246,255,.45)', fontSize: '.58rem', marginBottom: '.6rem' }}><input type="checkbox" checked={showProfile} onChange={event => setShowProfile(event.target.checked)} /> {t('showPublicProfile', lang)} ({user?.first})</label>}
+        {formError && <div style={{ color: '#FF6B6B', fontSize: '.58rem', marginBottom: '.5rem' }}>{formError}</div>}
+        <button className="btn-primary" onClick={() => void submit()} disabled={sampleMode}>{sampleMode ? t('databaseSetupRequired', lang) : t('sealVoice', lang)}</button>
+        <div style={{ color: 'rgba(239,246,255,.2)', textAlign: 'center', fontSize: '.5rem', marginTop: '.45rem' }}>{t('aiReview', lang)} <ExternalLink size={9} style={{ display: 'inline' }} /></div>
+      </section>
+
       <HumanityWorldMap counts={facetCountryCounts} selectedCountry={country} onSelect={value => { setViewMode('country'); selectCountry(value); }} />
 
       <div className="glass-card" style={{ marginTop: '.75rem', padding: '.8rem' }}>
@@ -389,32 +416,6 @@ export default function HumanityTab() {
         <button className="btn-sec" disabled={page >= pageCount} onClick={() => setPage(value => value + 1)}><ChevronRight size={14} /></button>
       </div>
 
-      <section className="glass-card">
-        <div style={{ color: '#00FFD1', fontSize: '.7rem', letterSpacing: '.15em', marginBottom: '.8rem' }}>{t('leaveVoice', lang)}</div>
-        <select className="form-select" value={hCountryCode} onChange={event => setHCountryCode(event.target.value)} style={{ marginBottom: '.55rem' }}>
-          <option value="">{t('selectCountry', lang)}</option>
-          {countryOptions.map(item => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}
-        </select>
-        <input className="form-input" value={hName} onChange={event => setHName(event.target.value)} placeholder={`${t('yourName', lang)} (${t('optional', lang)})`} style={{ marginBottom: '.55rem' }} />
-        <select className="form-select" value={hAudience} onChange={event => setHAudience(event.target.value)} style={{ marginBottom: '.55rem' }}>{AUDIENCES.map(item => <option key={item} value={item}>{t(AUDIENCE_KEYS[item], lang)}</option>)}</select>
-        <textarea className="form-textarea" value={hMsg} onChange={event => setHMsg(event.target.value)} maxLength={500} placeholder={t('yourMsg', lang)} />
-        <div style={{ textAlign: 'right', color: 'rgba(239,246,255,.25)', fontSize: '.52rem' }}>{hMsg.length}/500</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.3rem', margin: '.55rem 0' }}>{EMOTIONS.map(item => <button key={item} className={`emo-btn sel-${item === hEmo ? item : ''}`} onClick={() => setHEmo(item)}>{t(`e${item[0].toUpperCase()}${item.slice(1)}`, lang)}</button>)}</div>
-        <div style={{ marginBottom: '.55rem' }}>
-          <label style={{ display: 'block', fontSize: '.62rem', color: 'rgba(239,246,255,.42)', letterSpacing: '.12em', marginBottom: '.32rem' }}>
-            {t('unlockYr', lang)} <span style={{ opacity: 0.4 }}>({t('optional', lang)})</span>
-          </label>
-          <UnlockYearPicker lang={lang} value={hUnlockYr} onChange={setHUnlockYr} />
-        </div>
-        <div className="glass-card" style={{ padding: '.65rem .75rem', marginBottom: '.55rem', borderColor: 'rgba(0,255,209,.16)', background: 'rgba(0,255,209,.04)' }}>
-          <div style={{ color: '#00FFD1', fontSize: '.58rem', letterSpacing: '.1em', marginBottom: '.2rem' }}>{t('publicVoice', lang)}</div>
-          <div style={{ color: 'rgba(239,246,255,.42)', fontSize: '.56rem', lineHeight: 1.55 }}>{t('featureHumanityDesc', lang)}</div>
-        </div>
-        {session && <label style={{ display: 'flex', alignItems: 'center', gap: '.45rem', color: 'rgba(239,246,255,.45)', fontSize: '.58rem', marginBottom: '.6rem' }}><input type="checkbox" checked={showProfile} onChange={event => setShowProfile(event.target.checked)} /> {t('showPublicProfile', lang)} ({user?.first})</label>}
-        {formError && <div style={{ color: '#FF6B6B', fontSize: '.58rem', marginBottom: '.5rem' }}>{formError}</div>}
-        <button className="btn-primary" onClick={() => void submit()} disabled={sampleMode}>{sampleMode ? t('databaseSetupRequired', lang) : t('sealVoice', lang)}</button>
-        <div style={{ color: 'rgba(239,246,255,.2)', textAlign: 'center', fontSize: '.5rem', marginTop: '.45rem' }}>{t('aiReview', lang)} <ExternalLink size={9} style={{ display: 'inline' }} /></div>
-      </section>
     </div>
   );
 }
