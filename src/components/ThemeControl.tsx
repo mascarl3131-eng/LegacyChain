@@ -3,7 +3,7 @@ import { useStore, type ThemeName } from '@/lib/store';
 
 const THEME_OPTIONS: { id: ThemeName; label: string; desc: string; colors: string[] }[] = [
   { id: 'heritage', label: 'Heritage', desc: 'Chaud, premium, lisible', colors: ['#F7F1DF', '#E6C36A', '#8FD6B7'] },
-  { id: 'paper', label: 'Papier', desc: 'Clair, doux, senior', colors: ['#FFF8EA', '#6F4E37', '#52796F'] },
+  { id: 'paper', label: 'Papier', desc: 'Clair, doux, senior', colors: ['#FFF8EA', '#6F4E37', '#174C7A'] },
 ];
 
 export default function ThemeControl() {

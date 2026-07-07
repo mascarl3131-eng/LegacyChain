@@ -5,6 +5,23 @@ import { moderateText } from './_lib/moderation.js';
 const EMOTIONS = new Set(['hope', 'love', 'wisdom', 'memory', 'warning']);
 const TYPES = new Set(['standard', 'birth', 'capsule']);
 
+type DbError = { message: string; details?: string; hint?: string; code?: string };
+type FamilyMessageRow = {
+  id: string;
+  author_id: string;
+  author_name: string;
+  message: string;
+  emotion: string;
+  message_type: string;
+  unlock_year: number | null;
+  baby_name: string | null;
+  adulthood_year: number | null;
+  photo_path: string | null;
+  audio_path: string | null;
+  video_path?: string | null;
+  created_at: string;
+};
+
 function params(req: ApiRequest) {
   return new URL(req.url || '/', 'https://thechainlegacy.com').searchParams;
 }
@@ -37,9 +54,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const familyId = String(params(req).get('familyId') || '');
     if (!familyId || !await membership(admin, familyId, user.id)) return res.status(403).json({ error: 'Family access required' });
 
-    let { data, error }: { data: any[] | null; error: any } = await admin
+    let { data, error }: { data: FamilyMessageRow[] | null; error: DbError | null } = await admin
       .from('family_messages')
-      .select('id,author_name,message,emotion,message_type,unlock_year,baby_name,adulthood_year,photo_path,audio_path,video_path,created_at')
+      .select('id,author_id,author_name,message,emotion,message_type,unlock_year,baby_name,adulthood_year,photo_path,audio_path,video_path,created_at')
       .eq('family_id', familyId)
       .or(`unlock_year.is.null,unlock_year.lte.${currentYear}`)
       .order('created_at', { ascending: false })
@@ -47,7 +64,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     if (error && isMissingVideoPathError(error)) {
       const fallback = await admin
         .from('family_messages')
-        .select('id,author_name,message,emotion,message_type,unlock_year,baby_name,adulthood_year,photo_path,audio_path,created_at')
+        .select('id,author_id,author_name,message,emotion,message_type,unlock_year,baby_name,adulthood_year,photo_path,audio_path,created_at')
         .eq('family_id', familyId)
         .or(`unlock_year.is.null,unlock_year.lte.${currentYear}`)
         .order('created_at', { ascending: false })
@@ -82,6 +99,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           : row.audio_path && rowAudioKind === 'video'
             ? urls.get(row.audio_path) || null
             : null,
+        canEdit: row.author_id === user.id,
       };
     }));
     return res.status(200).json({ messages });
@@ -133,9 +151,17 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     };
     let { data, error } = await admin.from('family_messages').insert(insertPayload).select('id,created_at').single();
     if (error && videoPath && isMissingVideoPathError(error) && !audioPath) {
-      const { video_path: _videoPath, ...fallbackPayload } = insertPayload;
       const fallback = await admin.from('family_messages').insert({
-        ...fallbackPayload,
+        family_id: insertPayload.family_id,
+        author_id: insertPayload.author_id,
+        author_name: insertPayload.author_name,
+        message: insertPayload.message,
+        emotion: insertPayload.emotion,
+        message_type: insertPayload.message_type,
+        unlock_year: insertPayload.unlock_year,
+        baby_name: insertPayload.baby_name,
+        adulthood_year: insertPayload.adulthood_year,
+        photo_path: insertPayload.photo_path,
         audio_path: videoPath,
       }).select('id,created_at').single();
       data = fallback.data;
@@ -143,6 +169,32 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     }
     if (error) return res.status(500).json({ error: error.message });
     return res.status(201).json({ id: data.id, createdAt: data.created_at });
+  }
+
+  if (req.method === 'PATCH') {
+    const body = req.body || {};
+    const messageId = String(body.messageId || '');
+    const message = String(body.message || '').trim();
+    if (!messageId || message.length < 1 || message.length > 500) return res.status(400).json({ error: 'Invalid family message' });
+
+    const moderation = moderateText(message);
+    if (!moderation.allowed) return res.status(422).json({ error: 'Message rejected by safety moderation', reason: moderation.reason });
+
+    const { data: existing, error: readError } = await admin
+      .from('family_messages')
+      .select('id,family_id,author_id')
+      .eq('id', messageId)
+      .single();
+    if (readError) return res.status(404).json({ error: 'Family message not found' });
+    if (!await membership(admin, existing.family_id, user.id)) return res.status(403).json({ error: 'Family access required' });
+    if (existing.author_id !== user.id) return res.status(403).json({ error: 'Only the message owner can edit this message' });
+
+    const { error } = await admin
+      .from('family_messages')
+      .update({ message, updated_at: new Date().toISOString() })
+      .eq('id', messageId);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(200).json({ ok: true });
   }
 
   return res.status(405).json({ error: 'Method not allowed' });

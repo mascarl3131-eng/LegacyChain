@@ -2,7 +2,7 @@ import { Check } from 'lucide-react';
 import { useStore, type ThemeName } from '@/lib/store';
 
 const OPTIONS: { id: ThemeName; title: string; subtitle: string; colors: string[] }[] = [
-  { id: 'paper', title: 'Papier', subtitle: 'Clair, simple, tres lisible', colors: ['#FFF8EA', '#2E261B', '#52796F'] },
+  { id: 'paper', title: 'Papier', subtitle: 'Clair, simple, tres lisible', colors: ['#FFF8EA', '#2E261B', '#174C7A'] },
   { id: 'heritage', title: 'Heritage', subtitle: 'Sombre, chaud, premium', colors: ['#10130F', '#F7F1DF', '#E6C36A'] },
 ];
 

@@ -63,7 +63,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const years = Object.keys(yearCounts).map(Number);
     const messages = (data || []).map(({ author_id, ...message }) => ({
       ...message,
-      can_edit: Boolean(user && author_id === user.id && message.unlock_year && message.unlock_year > currentYear),
+      can_edit: Boolean(user && author_id === user.id),
       can_delete: isAdmin,
     }));
     return res.status(200).json({ messages, total: count || 0, page, perPage, countries, years, countryCounts, yearCounts });
@@ -119,6 +119,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method === 'PATCH') {
     const user = await getAuthenticatedUser(req);
     if (!user) return res.status(401).json({ error: 'Authentication required' });
+    const isAdmin = Boolean(user.email && ADMIN_EMAILS.has(user.email.toLowerCase()));
 
     const messageId = String(req.body?.messageId || '');
     const message = String(req.body?.message || '').trim();
@@ -133,8 +134,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       .eq('id', messageId)
       .single();
     if (readError) return res.status(404).json({ error: 'Voice not found' });
-    if (existing.author_id !== user.id) return res.status(403).json({ error: 'Only the creator can edit this sealed voice' });
-    if (!existing.unlock_year || existing.unlock_year <= currentYear) return res.status(400).json({ error: 'Only sealed future voices can be edited' });
+    if (existing.author_id !== user.id) return res.status(403).json({ error: 'Only the message owner can edit this voice' });
 
     const { data, error } = await admin
       .from('humanity_messages')
@@ -143,7 +143,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       .select('id,display_name,show_profile,country,country_code,message,emotion,audience,language,reaction_count,unlock_year,created_at')
       .single();
     if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json({ message: { ...data, can_edit: true } });
+    return res.status(200).json({ message: { ...data, can_edit: true, can_delete: isAdmin } });
   }
 
   if (req.method === 'DELETE') {

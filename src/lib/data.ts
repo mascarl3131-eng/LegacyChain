@@ -13,6 +13,7 @@ export interface Message {
   audioUrl?: string | null;
   photo?: string | null;
   videoUrl?: string | null;
+  canEdit?: boolean;
 }
 
 export interface HumanityMessage {

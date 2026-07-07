@@ -55,7 +55,7 @@
   :root[data-theme='paper'] {
     --void: #F5ECD8;
     --void-light: #FFF8EA;
-    --teal: #52796F;
+    --teal: #174C7A;
     --amber: #9D6B28;
     --violet: #766C9B;
     --rose: #A85757;
@@ -68,7 +68,7 @@
     --menu-bg: #FFF8EA;
     --menu-bg-soft: rgba(111,78,55,0.06);
     --menu-active: #6F4E37;
-    --menu-accent: #52796F;
+    --menu-accent: #174C7A;
     --menu-text: #2E261B;
     --menu-muted: rgba(46,38,27,0.64);
     --menu-border: rgba(111,78,55,0.18);
@@ -627,6 +627,12 @@
     color: #2E261B !important;
   }
 
+  :root[data-theme='paper'] .emo-btn.sel-hope {
+    background: rgba(23,76,122,0.08) !important;
+    border-color: #174C7A !important;
+    color: #174C7A !important;
+  }
+
   :root[data-theme='paper'] button,
   :root[data-theme='paper'] input,
   :root[data-theme='paper'] textarea,
@@ -684,19 +690,26 @@
     color: #2E261B !important;
   }
 
-  :root[data-theme='paper'] .app-scroll-region [style*='#00FFD1'],
-  :root[data-theme='paper'] .app-scroll-region [style*='#00ffd1'],
-  :root[data-theme='paper'] .app-scroll-region [style*='rgb(0, 255, 209)'] {
-    color: #52796F !important;
-    border-color: #52796F !important;
+  :root[data-theme='paper'] [style*='#00FFD1'],
+  :root[data-theme='paper'] [style*='#00ffd1'],
+  :root[data-theme='paper'] [style*='rgb(0, 255, 209)'] {
+    color: #174C7A !important;
+    border-color: #174C7A !important;
   }
 
-  :root[data-theme='paper'] .app-scroll-region [style*='background: rgb(0, 255, 209)'],
-  :root[data-theme='paper'] .app-scroll-region [style*='background-color: rgb(0, 255, 209)'],
-  :root[data-theme='paper'] .app-scroll-region [style*='background: #00FFD1'],
-  :root[data-theme='paper'] .app-scroll-region [style*='background-color: #00FFD1'] {
-    background-color: #52796F !important;
+  :root[data-theme='paper'] [style*='background: rgb(0, 255, 209)'],
+  :root[data-theme='paper'] [style*='background-color: rgb(0, 255, 209)'],
+  :root[data-theme='paper'] [style*='background: #00FFD1'],
+  :root[data-theme='paper'] [style*='background-color: #00FFD1'] {
+    background-color: #174C7A !important;
     color: #FFF8EA !important;
+  }
+
+  :root[data-theme='paper'] [style*='background: rgba(0,255,209'],
+  :root[data-theme='paper'] [style*='background: rgba(0, 255, 209'],
+  :root[data-theme='paper'] [style*='background-color: rgba(0,255,209'],
+  :root[data-theme='paper'] [style*='background-color: rgba(0, 255, 209'] {
+    background: rgba(23,76,122,0.08) !important;
   }
 
   :root[data-theme='paper'] .app-scroll-region [style*='#FFB347'],
@@ -728,8 +741,8 @@
     border-color: rgba(111,78,55,0.2) !important;
   }
 
-  :root[data-theme='paper'] .app-scroll-region [style*='rgba(0,255,209'],
-  :root[data-theme='paper'] .app-scroll-region [style*='rgba(0, 255, 209'],
+  :root[data-theme='paper'] [style*='rgba(0,255,209'],
+  :root[data-theme='paper'] [style*='rgba(0, 255, 209'],
   :root[data-theme='paper'] .app-scroll-region [style*='rgba(255,179,71'],
   :root[data-theme='paper'] .app-scroll-region [style*='rgba(255, 179, 71'],
   :root[data-theme='paper'] .app-scroll-region [style*='rgba(192,132,252'],
@@ -737,9 +750,10 @@
     border-color: rgba(111,78,55,0.22) !important;
   }
 
-  :root[data-theme='paper'] .app-scroll-region [style*='rgba(0,255,209'],
-  :root[data-theme='paper'] .app-scroll-region [style*='rgba(0, 255, 209'] {
-    color: #52796F !important;
+  :root[data-theme='paper'] [style*='rgba(0,255,209'],
+  :root[data-theme='paper'] [style*='rgba(0, 255, 209'] {
+    color: #174C7A !important;
+    border-color: rgba(23,76,122,0.32) !important;
   }
 
   :root[data-theme='paper'] .app-scroll-region [style*='rgba(255,179,71'],
@@ -784,8 +798,8 @@
 
   :root[data-theme='paper'] .landing-page button[style*='rgba(0,255,209'],
   :root[data-theme='paper'] .landing-page button[style*='rgba(0, 255, 209'] {
-    background: rgba(82,121,111,0.08) !important;
-    border-color: rgba(82,121,111,0.35) !important;
+    background: rgba(23,76,122,0.08) !important;
+    border-color: rgba(23,76,122,0.35) !important;
     color: #2E261B !important;
   }
 }

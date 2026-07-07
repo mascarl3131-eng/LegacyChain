@@ -279,9 +279,9 @@ export default function HumanityTab() {
     setShowSubmitAnim(true);
     const visibleNow = !hUnlockYr || Number(hUnlockYr) <= currentYear;
     setHMsg(''); setHName(''); setHCountryCode(''); setHUnlockYr(''); setFormError('');
-    const sealedForFuture = Boolean(session && hUnlockYr && Number(hUnlockYr) > currentYear);
-    if (visibleNow || sealedForFuture) {
-      setVoices(items => [{ ...data.message, can_edit: sealedForFuture, can_delete: isAdmin }, ...items].slice(0, PER_PAGE));
+    const ownerCanEdit = Boolean(session);
+    if (visibleNow || ownerCanEdit) {
+      setVoices(items => [{ ...data.message, can_edit: ownerCanEdit, can_delete: isAdmin }, ...items].slice(0, PER_PAGE));
       setTotal(value => value + 1);
     }
     showNotif(t('voiceSealed', lang), '#00FFD1');

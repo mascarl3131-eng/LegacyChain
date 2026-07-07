@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Camera, Mic, RotateCcw, Trash2, Video } from 'lucide-react';
+import { Camera, Check, Edit2, Mic, RotateCcw, Trash2, Video, X } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
@@ -57,6 +57,8 @@ export default function ChainTab() {
   const [isRecording, setIsRecording] = useState(false);
   const [recSeconds, setRecSeconds] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [editingMessageId, setEditingMessageId] = useState('');
+  const [editingMessageText, setEditingMessageText] = useState('');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const videoRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingAudioContextRef = useRef<AudioContext | null>(null);
@@ -138,6 +140,7 @@ export default function ChainTab() {
       audioUrl: audioBlob ? audioPreviewUrl || URL.createObjectURL(audioBlob) : null,
       photo: photoData,
       videoUrl: videoBlob ? videoPreviewUrl || URL.createObjectURL(videoBlob) : null,
+      canEdit: true,
     };
 
     if (session && activeFamilyId) {
@@ -386,6 +389,53 @@ export default function ChainTab() {
     setMsgText(`[↩ ${msg.a}, ${new Date().getFullYear() - msg.y}y later] `);
   };
 
+  const startEditMessage = (message: typeof msgs[0]) => {
+    setEditingMessageId(message.id);
+    setEditingMessageText(message.text);
+  };
+
+  const cancelEditMessage = () => {
+    setEditingMessageId('');
+    setEditingMessageText('');
+  };
+
+  const saveMessageEdit = async (message: typeof msgs[0]) => {
+    const text = editingMessageText.trim();
+    if (!text) return;
+    if (isBanned(text)) {
+      showNotif(t('modBanned', lang), '#FF6B6B');
+      return;
+    }
+
+    if (session && activeFamilyId) {
+      const response = await fetch('/api/family-messages', {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageId: message.id, message: text }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        showNotif(result.error || t('familyCloudError', lang), '#FF6B6B');
+        return;
+      }
+
+      const refresh = await fetch(`/api/family-messages?familyId=${encodeURIComponent(activeFamilyId)}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const refreshed = await refresh.json().catch(() => ({}));
+      if (!refresh.ok) {
+        showNotif(refreshed.error || t('familyCloudError', lang), '#FF6B6B');
+        return;
+      }
+      setMsgs(refreshed.messages || []);
+    } else if (message.canEdit) {
+      setMsgs(msgs.map(item => item.id === message.id ? { ...item, text } : item));
+    }
+
+    cancelEditMessage();
+    showNotif(t('messageUpdated', lang), '#00FFD1');
+  };
+
   return (
     <div>
       <div className="font-display" style={{ fontSize: '0.95rem', color: '#00FFD1', letterSpacing: '0.15em', marginBottom: '0.3rem' }}>
@@ -430,11 +480,29 @@ export default function ChainTab() {
                 <span style={{ fontSize: '0.7rem', color: '#00FFD1', letterSpacing: '0.08em' }}>{m.a}</span>
                 <span style={{ fontSize: '0.62rem', color: 'rgba(239,246,255,0.28)' }}>{m.y}</span>
               </div>
-              <div style={{ fontSize: '0.82rem', lineHeight: 1.75, color: 'rgba(239,246,255,0.8)' }}>{m.text}</div>
+              {editingMessageId === m.id ? (
+                <div style={{ margin: '.65rem 0' }}>
+                  <textarea className="form-textarea" value={editingMessageText} onChange={event => setEditingMessageText(event.target.value)} maxLength={500} rows={4} />
+                  <div style={{ textAlign: 'right', fontSize: '0.6rem', color: 'rgba(239,246,255,0.25)', marginTop: '0.2rem' }}>
+                    {editingMessageText.length}/500
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.45rem', marginTop: '.45rem' }}>
+                    <button type="button" className="btn-primary" onClick={() => void saveMessageEdit(m)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '.35rem' }}>
+                      <Check size={13} /> {t('saveMessage', lang)}
+                    </button>
+                    <button type="button" className="btn-sec" onClick={cancelEditMessage} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '.35rem' }}>
+                      <X size={13} /> {t('cancelEdit', lang)}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ fontSize: '0.82rem', lineHeight: 1.75, color: 'rgba(239,246,255,0.8)' }}>{m.text}</div>
+              )}
               <MessageMedia message={m} lang={lang} compact />
               {m.lock && <div style={{ fontSize: '0.6rem', color: 'rgba(239,246,255,0.25)', marginTop: '0.28rem' }}>🔒 {t('sealedUntil', lang)} {m.lock}</div>}
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.65rem', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '0.57rem', letterSpacing: '0.1em', padding: '0.15rem 0.5rem', borderRadius: 3, background: 'rgba(0,255,209,0.05)', border: '1px solid rgba(0,255,209,0.13)', color: 'rgba(239,246,255,0.38)', textTransform: 'uppercase' }}>{t(`e${m.e.charAt(0).toUpperCase() + m.e.slice(1)}`, lang)}</span>
+                {m.canEdit && editingMessageId !== m.id && <button className="btn-sec" style={{ fontSize: '0.58rem', padding: '0.22rem 0.5rem', color: '#00FFD1' }} onClick={() => startEditMessage(m)}><Edit2 size={12} /> {t('editMessage', lang)}</button>}
                 <button className="btn-sec" style={{ fontSize: '0.58rem', padding: '0.22rem 0.5rem' }} onClick={() => setImmersiveMsg(m)}>👁 {t('read', lang)}</button>
                 <button className="btn-sec" style={{ fontSize: '0.58rem', padding: '0.22rem 0.5rem' }} onClick={() => replyTo(m)}>↩ {t('reply', lang)}</button>
               </div>
