@@ -3,6 +3,7 @@ import { getAdminSupabase, getAuthenticatedUser } from './_lib/server.js';
 
 type TreeNodeRow = {
   id: number;
+  userId?: string;
   n: string;
   b: number;
   x?: number;
@@ -30,14 +31,21 @@ function asInt(value: unknown, fallback: number) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function sanitizeNodes(value: unknown): TreeNodeRow[] {
+function asUuid(value: unknown) {
+  const text = asText(value, 80);
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(text) ? text : undefined;
+}
+
+function sanitizeNodes(value: unknown, allowedUserIds?: Set<string>): TreeNodeRow[] {
   if (!Array.isArray(value)) return [];
   return value
     .slice(0, 500)
     .map((item, index) => {
       const row = item && typeof item === 'object' ? item as Record<string, unknown> : {};
+      const userId = asUuid(row.userId);
       return {
         id: Math.max(1, asInt(row.id, index + 1)),
+        userId: userId && (!allowedUserIds || allowedUserIds.has(userId)) ? userId : undefined,
         n: asText(row.n, 120),
         b: asInt(row.b, new Date().getFullYear()),
         x: asInt(row.x, 0),
@@ -89,7 +97,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const familyId = String(body.familyId || '');
     if (!familyId || !await membership(admin, familyId, user.id)) return res.status(403).json({ error: 'Family access required' });
 
-    const nodes = sanitizeNodes(body.nodes);
+    const { data: familyMembers, error: membersError } = await admin
+      .from('family_members')
+      .select('user_id')
+      .eq('family_id', familyId);
+    if (membersError) return res.status(500).json({ error: membersError.message });
+    const allowedUserIds = new Set((familyMembers || []).map(row => String(row.user_id)));
+    const nodes = sanitizeNodes(body.nodes, allowedUserIds);
     const links = sanitizeLinks(body.links, nodes);
 
     const { error } = await admin

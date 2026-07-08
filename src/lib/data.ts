@@ -2,6 +2,7 @@ import type { LangCode } from './i18n';
 
 export interface Message {
   id: string;
+  authorId?: string;
   a: string;
   y: number;
   text: string;
@@ -35,6 +36,7 @@ export interface Challenge {
 
 export interface TreeNode {
   id: number;
+  userId?: string;
   n: string;
   b: number;
   x: number;

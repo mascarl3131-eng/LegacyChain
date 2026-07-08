@@ -20,6 +20,14 @@ const normalizeDemoName = (name: string) => name
   .replace('Ã¨', 'e')
   .toLocaleLowerCase();
 const DEMO_TREE_NAMES = new Set(INITIAL_TREE.map(node => normalizeDemoName(node.n)));
+const normalizePersonName = (name: string) => name
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .replace(/[^\p{L}\p{N}\s'-]/gu, ' ')
+  .trim()
+  .replace(/\s+/g, ' ')
+  .toLocaleLowerCase();
+const firstNameOf = (name: string) => normalizePersonName(name).split(' ')[0] || '';
 const isDemoNode = (node: TreeNode) => DEMO_TREE_NAMES.has(normalizeDemoName(node.n));
 const genColor = (gen: number) => GEN_COLORS[Math.abs(gen) % GEN_COLORS.length];
 const readLocalLinks = () => {
@@ -149,7 +157,17 @@ export default function TreeTab() {
     };
   }, [generationIndex, generationValues, links, treeNodes]);
 
-  const getNodeMsgs = (name: string) => msgs.filter(message => message.a === name.split(' ')[0]);
+  const getNodeMsgs = (node: TreeNode) => {
+    const nodeName = normalizePersonName(node.n);
+    const nodeFirst = firstNameOf(node.n);
+
+    return msgs.filter(message => {
+      if (node.userId && message.authorId) return message.authorId === node.userId;
+      const authorName = normalizePersonName(message.a);
+      const authorFirst = firstNameOf(message.a);
+      return authorName === nodeName || (!!nodeFirst && authorFirst === nodeFirst);
+    });
+  };
   const generationLabel = (gen: number) => {
     if (generationValues.length === 3) {
       const sortedIndex = generationValues.indexOf(gen);
@@ -210,6 +228,7 @@ export default function TreeTab() {
         x: current?.x || 0,
         y: current?.y || 0,
         gen,
+        userId: current?.userId,
       } as TreeNode,
     };
   };
@@ -379,6 +398,35 @@ export default function TreeTab() {
     setSelectedId(node.id);
     void persistTree(nextNodes, nextLinks);
     showNotif(lang === 'fr' ? 'Membre mis à jour' : 'Member updated', '#00FFD1');
+  };
+
+  const linkSelectedToCurrentUser = () => {
+    if (!selectedMem || !session?.user.id) return;
+    const nextNodes = treeNodes.map(node => {
+      if (node.id === selectedMem.id) return { ...node, userId: session.user.id };
+      if (node.userId === session.user.id) {
+        const nextNode = { ...node };
+        delete nextNode.userId;
+        return nextNode;
+      }
+      return node;
+    });
+    setTreeNodes(nextNodes);
+    void persistTree(nextNodes, links);
+    showNotif(lang === 'fr' ? 'Membre lie a votre compte' : 'Member linked to your account', '#00FFD1');
+  };
+
+  const unlinkSelectedFromCurrentUser = () => {
+    if (!selectedMem || !session?.user.id || selectedMem.userId !== session.user.id) return;
+    const nextNodes = treeNodes.map(node => {
+      if (node.id !== selectedMem.id) return node;
+      const nextNode = { ...node };
+      delete nextNode.userId;
+      return nextNode;
+    });
+    setTreeNodes(nextNodes);
+    void persistTree(nextNodes, links);
+    showNotif(lang === 'fr' ? 'Membre dissocie de votre compte' : 'Member unlinked from your account', '#FFB347');
   };
 
   const deleteMember = () => {
@@ -606,11 +654,11 @@ export default function TreeTab() {
                 </svg>
 
                 {visibleNodes.map(node => {
-                const color = genColor(node.gen);
-                const nodeMsgs = getNodeMsgs(node.n);
-                const active = selectedId === node.id;
-                const pos = layout.positions.get(node.id) || { x: node.x, y: node.y };
-                return (
+                  const color = genColor(node.gen);
+                  const nodeMsgs = getNodeMsgs(node);
+                  const active = selectedId === node.id;
+                  const pos = layout.positions.get(node.id) || { x: node.x, y: node.y };
+                  return (
                   <button
                     type="button"
                     key={node.id}
@@ -646,7 +694,7 @@ export default function TreeTab() {
                 <UserRound size={18} color={genColor(node.gen)} />
                 <span><strong style={{ display: 'block', fontSize: '0.7rem' }}>{node.n}</strong><small style={{ color: 'rgba(239,246,255,0.35)' }}>{generationLabel(node.gen)} · {node.b}</small></span>
               </span>
-              <span style={{ fontSize: '0.56rem', color: '#00FFD1' }}>{getNodeMsgs(node.n).length} {t('messages', lang)}</span>
+              <span style={{ fontSize: '0.56rem', color: '#00FFD1' }}>{getNodeMsgs(node).length} {t('messages', lang)}</span>
             </button>
           ))}
         </div>
@@ -728,11 +776,31 @@ export default function TreeTab() {
               {lang === 'fr' ? 'Ajoutez un autre membre pour créer un lien familial.' : 'Add another member to create a family relationship.'}
             </div>
           )}
+          {session?.user.id && (
+            <div style={{ marginTop: '0.75rem', padding: '0.6rem 0.7rem', borderRadius: 8, background: 'rgba(239,246,255,.035)', border: '1px solid rgba(239,246,255,.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+              <span style={{ color: 'rgba(239,246,255,.48)', fontSize: '0.56rem', lineHeight: 1.45 }}>
+                {selectedMem.userId === session.user.id
+                  ? (lang === 'fr' ? 'Ce membre est lie a votre compte.' : 'This member is linked to your account.')
+                  : selectedMem.userId
+                    ? (lang === 'fr' ? 'Ce membre est deja lie a un autre compte.' : 'This member is already linked to another account.')
+                    : (lang === 'fr' ? 'Associer ce membre a votre compte.' : 'Link this member to your account.')}
+              </span>
+              {selectedMem.userId === session.user.id ? (
+                <button type="button" className="btn-sec" onClick={unlinkSelectedFromCurrentUser}>
+                  {lang === 'fr' ? 'Dissocier' : 'Unlink'}
+                </button>
+              ) : !selectedMem.userId ? (
+                <button type="button" className="btn-sec" onClick={linkSelectedToCurrentUser}>
+                  {lang === 'fr' ? 'Lier a mon compte' : 'Link to me'}
+                </button>
+              ) : null}
+            </div>
+          )}
           <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap', margin: '0.8rem 0 0.2rem' }}>
             <button type="button" className="btn-primary" onClick={saveMember}>{t('saveMember', lang)}</button>
             <button type="button" className="btn-sec" onClick={deleteMember} style={{ borderColor: 'rgba(255,107,107,0.5)', color: '#FFB4B4' }}>{t('deleteMember', lang)}</button>
           </div>
-          {getNodeMsgs(selectedMem.n).length ? getNodeMsgs(selectedMem.n).map(message => (
+          {getNodeMsgs(selectedMem).length ? getNodeMsgs(selectedMem).map(message => (
             <div key={message.id} style={{ padding: '0.7rem 0', borderTop: '1px solid rgba(0,255,209,0.13)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.56rem', color: '#00FFD1', marginBottom: '0.3rem' }}><MessageCircle size={12} /> {message.y}</div>
               <div style={{ fontSize: '0.65rem', lineHeight: 1.65, color: 'rgba(239,246,255,0.72)' }}>{message.text}</div>

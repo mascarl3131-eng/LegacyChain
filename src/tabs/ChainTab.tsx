@@ -129,6 +129,7 @@ export default function ChainTab() {
 
     const newMsg = {
       id: Date.now().toString(),
+      authorId: session?.user.id,
       a: user?.first || t('anonymous', lang),
       y: new Date().getFullYear(),
       text: txt,

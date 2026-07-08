@@ -84,6 +84,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       const urls = new Map((signed.data || []).map(item => [item.path, item.signedUrl]));
       return {
         id: row.id,
+        authorId: row.author_id,
         a: row.author_name,
         y: new Date(row.created_at).getFullYear(),
         text: row.message,
