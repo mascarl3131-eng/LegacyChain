@@ -1,5 +1,7 @@
 {
   "rewrites": [
+    { "source": "/api/create-checkout-session", "destination": "/api/checkout-session?action=create" },
+    { "source": "/api/verify-checkout-session", "destination": "/api/checkout-session?action=verify" },
     { "source": "/admin", "destination": "/" },
     { "source": "/((?!api/.*).*)", "destination": "/" }
   ]
