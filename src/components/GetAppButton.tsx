@@ -7,6 +7,13 @@ type GetAppButtonProps = {
   variant?: 'landing' | 'menu';
 };
 
+const WINDOWS_EXE_URL = 'https://github.com/mascarl3131-eng/LegacyChain/releases/download/v1.0.0/LegacyChain-1.0.0.exe';
+
+function isWindowsDevice() {
+  if (typeof navigator === 'undefined') return false;
+  return /windows/i.test(navigator.userAgent);
+}
+
 export default function GetAppButton({ variant = 'landing' }: GetAppButtonProps) {
   const { lang } = useStore();
   const { isIos, isStandalone, showHelp, install } = useInstallApp();
@@ -19,7 +26,13 @@ export default function GetAppButton({ variant = 'landing' }: GetAppButtonProps)
     <div style={{ width: '100%' }}>
       <button
         type="button"
-        onClick={() => void install()}
+        onClick={() => {
+          if (isWindowsDevice()) {
+            window.location.href = WINDOWS_EXE_URL;
+            return;
+          }
+          void install();
+        }}
         style={{
           width: '100%',
           display: 'flex',
