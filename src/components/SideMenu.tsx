@@ -44,6 +44,11 @@ export default function SideMenu() {
     setSideMenuOpen(false);
   };
 
+  const refreshApp = () => {
+    setSideMenuOpen(false);
+    window.location.reload();
+  };
+
   const renderMenuItem = ({ id, icon, labelKey }: { id: TabName; icon: string; labelKey: string }) => (
     <button type="button" key={id} onClick={() => handleTab(id)} style={{ width: '100%', border: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1.2rem', fontFamily: 'var(--body-font)', fontSize: '0.88rem', color: tab === id ? 'var(--menu-active)' : 'var(--menu-text)', cursor: 'pointer', textAlign: 'left', letterSpacing: '0.01em', transition: 'all 0.2s', borderLeft: tab === id ? '4px solid var(--menu-active)' : '4px solid transparent', background: tab === id ? 'var(--menu-bg-soft)' : 'transparent', fontWeight: tab === id ? 700 : 400 }}>
       {icon} {t(labelKey, lang)}
@@ -106,6 +111,7 @@ export default function SideMenu() {
           <GetAppButton variant="menu" />
         </div>
         <button type="button" onClick={() => { setInviteOpen(true); setSideMenuOpen(false); }} style={{ width: '100%', border: 'none', background: 'transparent', display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.82rem 1.2rem', fontFamily: 'var(--body-font)', fontSize: '0.86rem', color: 'var(--menu-text)', cursor: 'pointer', letterSpacing: '0.01em', textAlign: 'left' }}>+ {t('inviteBtn', lang)}</button>
+        <button type="button" onClick={refreshApp} style={{ width: '100%', border: 'none', background: 'transparent', display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.82rem 1.2rem', fontFamily: 'var(--body-font)', fontSize: '0.86rem', color: 'var(--menu-text)', cursor: 'pointer', letterSpacing: '0.01em', textAlign: 'left' }}>↻ {t('refreshApp', lang)}</button>
 
         <div style={{ padding: '0.6rem 1.2rem' }}>
           <select value={lang} onChange={(e) => setLang(e.target.value as typeof lang)} style={{ width: '100%', background: 'var(--menu-bg-soft)', border: '1px solid var(--menu-border)', color: 'var(--menu-text)', fontFamily: 'var(--body-font)', fontSize: '0.78rem', padding: '0.52rem 0.7rem', borderRadius: 6, outline: 'none', cursor: 'pointer' }}>
