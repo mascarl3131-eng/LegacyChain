@@ -53,7 +53,9 @@ export default function AppPage() {
       const familiesData = await familiesResponse.json().catch(() => ({}));
       if (!familiesResponse.ok) throw new Error(familiesData.error || 'Family loading failed');
 
-      let familyId = activeFamilyId || familiesData.families?.[0]?.family?.id;
+      const families = Array.isArray(familiesData.families) ? familiesData.families : [];
+      const activeFamilyIsAvailable = activeFamilyId && families.some((item: { family?: { id?: string } }) => item.family?.id === activeFamilyId);
+      let familyId = activeFamilyIsAvailable ? activeFamilyId : families[0]?.family?.id;
       if (!familyId) {
         const createResponse = await fetch('/api/families', {
           method: 'POST',
@@ -73,11 +75,16 @@ export default function AppPage() {
       if (active) setMsgs(messagesData.messages || []);
     };
 
-    loadCloudFamily().catch(error => {
+    const runLoad = () => loadCloudFamily().catch(error => {
       console.error('Family cloud loading:', error);
       if (active) showNotif(t('familyCloudError', lang), '#FF6B6B');
     });
-    return () => { active = false; };
+    void runLoad();
+    const timer = window.setInterval(() => void runLoad(), 5000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
   }, [activeFamilyId, familyName, lang, page, session, setActiveFamilyId, setMsgs, showNotif, user?.last]);
 
   if (page !== 'app') return null;

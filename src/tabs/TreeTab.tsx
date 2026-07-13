@@ -42,7 +42,7 @@ const readLocalLinks = () => {
 };
 
 export default function TreeTab() {
-  const { lang, msgs, treeNodes, setTreeNodes, session, activeFamilyId, showNotif } = useStore();
+  const { lang, user, msgs, treeNodes, setTreeNodes, session, activeFamilyId, showNotif } = useStore();
   const viewportRef = useRef<HTMLDivElement>(null);
   const canvasScrollerRef = useRef<HTMLDivElement>(null);
   const panRef = useRef({ active: false, pointerId: -1, x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
@@ -168,6 +168,29 @@ export default function TreeTab() {
       return authorName === nodeName || (!!nodeFirst && authorFirst === nodeFirst);
     });
   };
+
+  const linkCurrentUserByName = (nodes: TreeNode[]) => {
+    if (!session?.user.id) return nodes;
+    if (nodes.some(node => node.userId === session.user.id)) return nodes;
+
+    const names = [
+      user?.name,
+      [user?.first, user?.last].filter(Boolean).join(' '),
+      session.user.user_metadata?.full_name,
+      session.user.email?.split('@')[0],
+    ].filter(Boolean).map(value => normalizePersonName(String(value)));
+    const firstNames = new Set(names.map(name => name.split(' ')[0]).filter(Boolean));
+    const fullNames = new Set(names.filter(Boolean));
+    const candidates = nodes.filter(node => {
+      if (node.userId || isDemoNode(node)) return false;
+      const nodeName = normalizePersonName(node.n);
+      const nodeFirst = nodeName.split(' ')[0] || '';
+      return fullNames.has(nodeName) || (!!nodeFirst && firstNames.has(nodeFirst));
+    });
+
+    if (candidates.length !== 1) return nodes;
+    return nodes.map(node => node.id === candidates[0].id ? { ...node, userId: session.user.id } : node);
+  };
   const generationLabel = (gen: number) => {
     if (generationValues.length === 3) {
       const sortedIndex = generationValues.indexOf(gen);
@@ -282,10 +305,12 @@ export default function TreeTab() {
         const canSeedCloud = ['owner', 'admin'].includes(String(data.role || '')) && localHasRealTree;
 
         if (remoteNodes.length && !(remoteIsDemoTree && canSeedCloud)) {
-          setTreeNodes(remoteNodes);
+          const linkedNodes = linkCurrentUserByName(remoteNodes);
+          setTreeNodes(linkedNodes);
           setLinks(remoteLinks);
           setRelativeTo((current) => current || remoteNodes[0]?.id || 0);
           seededCloudTreeRef.current = activeFamilyId;
+          if (linkedNodes !== remoteNodes) await persistTree(linkedNodes, remoteLinks);
         } else if (canSeedCloud && seededCloudTreeRef.current !== activeFamilyId) {
           seededCloudTreeRef.current = activeFamilyId;
           await persistTree(localTree.nodes, localTree.links);

@@ -37,6 +37,11 @@ function getInitialTheme(): ThemeName {
   return saved && SUPPORTED_THEMES.includes(saved as ThemeName) ? saved as ThemeName : 'heritage';
 }
 
+function getInitialActiveFamilyId() {
+  const saved = localStorage.getItem('legacychain-active-family-id');
+  return saved && /^[0-9a-f-]{20,}$/i.test(saved) ? saved : null;
+}
+
 function readLocalJson<T>(key: string, fallback: T): T {
   try {
     const saved = localStorage.getItem(key);
@@ -148,7 +153,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [premiumCheckoutLoading, setPremiumCheckoutLoading] = useState(false);
   const [premiumCheckoutError, setPremiumCheckoutError] = useState<string | null>(null);
   const [familyName, setFamilyName] = useState(() => readLocalJson('legacychain-family-name', 'Doe'));
-  const [activeFamilyId, setActiveFamilyId] = useState<string | null>(null);
+  const [activeFamilyId, setActiveFamilyIdState] = useState<string | null>(getInitialActiveFamilyId);
   const [emo, setEmo] = useState('hope');
   const [hEmo, setHEmo] = useState('hope');
   const [msgs, setMsgs] = useState<Message[]>(() => readLocalJson('legacychain-msgs', [] as Message[]));
@@ -241,7 +246,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!session?.access_token) {
-      setActiveFamilyId(null);
+      setActiveFamilyIdState(null);
+      localStorage.removeItem('legacychain-active-family-id');
       return;
     }
     let active = true;
@@ -254,7 +260,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           ? activeFamilyId
           : families[0]?.family?.id || null;
         if (preferred) {
-          setActiveFamilyId(preferred);
+          setActiveFamilyIdState(preferred);
+          localStorage.setItem('legacychain-active-family-id', preferred);
           const family = families.find((item: { family?: { id?: string; name?: string } }) => item.family?.id === preferred)?.family;
           if (family?.name) setFamilyName(family.name);
         }
@@ -299,6 +306,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const showNotif = useCallback((msg: string, color: string = '#00FFD1') => {
     setNotif({ msg, color });
     setTimeout(() => setNotif(null), 2800);
+  }, []);
+
+  const setActiveFamilyId = useCallback((id: string | null) => {
+    setActiveFamilyIdState(id);
+    if (id) localStorage.setItem('legacychain-active-family-id', id);
+    else localStorage.removeItem('legacychain-active-family-id');
   }, []);
 
   const refreshPremium = useCallback(async () => {
