@@ -104,6 +104,7 @@ export default function InviteModal() {
       }}
     >
       <div
+        className="invite-family-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="invite-family-title"
@@ -121,7 +122,7 @@ export default function InviteModal() {
         }}
       >
         <div style={{ width: 36, height: 3, background: 'rgba(239,246,255,0.15)', borderRadius: 2, margin: '0 auto 1rem' }} />
-        <button type="button" aria-label={t('close', lang)} onClick={() => setInviteOpen(false)} style={{ position: 'absolute', top: '0.9rem', right: '1rem', background: 'transparent', border: 'none', color: 'rgba(239,246,255,0.32)', cursor: 'pointer', fontSize: '1.1rem' }}>×</button>
+        <button className="invite-family-close" type="button" aria-label={t('close', lang)} onClick={() => setInviteOpen(false)} style={{ position: 'absolute', top: '0.9rem', right: '1rem', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}>×</button>
         <h3 id="invite-family-title" className="font-display" style={{ color: '#00FFD1', fontSize: '0.9rem', marginBottom: '0.35rem', letterSpacing: '0.1em' }}>{t('inviteTitle', lang)}</h3>
         <p style={{ fontSize: '0.65rem', color: 'rgba(239,246,255,0.42)', marginBottom: '1rem', lineHeight: 1.7 }}>{t('familyIdExplanation', lang)}</p>
 

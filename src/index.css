@@ -627,6 +627,42 @@
     color: #2E261B !important;
   }
 
+  /* This modal keeps a dark surface even when the paper theme is active. */
+  .invite-family-modal {
+    color: #f7f1df !important;
+  }
+
+  .invite-family-modal h3 {
+    color: #4dffdf !important;
+    text-shadow: 0 0 18px rgba(0, 255, 209, 0.2);
+  }
+
+  .invite-family-modal p {
+    color: rgba(247, 241, 223, 0.82) !important;
+  }
+
+  .invite-family-modal label {
+    color: rgba(247, 241, 223, 0.88) !important;
+  }
+
+  .invite-family-modal .btn-primary {
+    background: rgba(0, 255, 209, 0.12) !important;
+    border-color: rgba(77, 255, 223, 0.82) !important;
+    color: #70ffe5 !important;
+  }
+
+  .invite-family-modal .btn-primary:hover {
+    background: rgba(0, 255, 209, 0.2) !important;
+  }
+
+  .invite-family-close {
+    color: rgba(247, 241, 223, 0.78) !important;
+  }
+
+  .invite-family-close:hover {
+    color: #ffffff !important;
+  }
+
   :root[data-theme='paper'] .emo-btn.sel-hope {
     background: rgba(23,76,122,0.08) !important;
     border-color: #174C7A !important;
