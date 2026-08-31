@@ -32,6 +32,7 @@ export default function UpgradeModal() {
       }}
     >
       <div
+        className="dark-surface"
         onClick={(e) => e.stopPropagation()}
         style={{
           background: '#0c0a1c',

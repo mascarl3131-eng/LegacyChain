@@ -46,7 +46,7 @@ export default function AdminPage() {
   const topEntries = (rows: Record<string, number> = {}) => Object.entries(rows).sort((a, b) => b[1] - a[1]).slice(0, 4);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(4,3,10,0.98)', overflowY: 'auto', padding: '1.5rem' }}>
+    <div className="dark-surface" style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(4,3,10,0.98)', overflowY: 'auto', padding: '1.5rem' }}>
       <div style={{ maxWidth: 480, margin: '0 auto' }}>
         <div className="font-display" style={{ color: '#00FFD1', fontSize: '0.9rem', letterSpacing: '0.15em', marginBottom: '1.5rem' }}>⬡ {t('adminPanel', lang)}</div>
 

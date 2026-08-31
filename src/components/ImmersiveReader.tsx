@@ -99,6 +99,7 @@ export default function ImmersiveReader() {
 
   return (
     <div
+      className="dark-surface"
       style={{
         position: 'fixed',
         inset: 0,

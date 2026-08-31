@@ -104,7 +104,7 @@ export default function InviteModal() {
       }}
     >
       <div
-        className="invite-family-modal"
+        className="dark-surface invite-family-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="invite-family-title"

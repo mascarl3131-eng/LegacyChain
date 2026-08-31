@@ -628,6 +628,39 @@
   }
 
   /* This modal keeps a dark surface even when the paper theme is active. */
+  .dark-surface {
+    color: #f7f1df !important;
+  }
+
+  .dark-surface p,
+  .dark-surface label,
+  .dark-surface small,
+  .dark-surface li,
+  .dark-surface td,
+  .dark-surface th,
+  .dark-surface [style*='rgba(239,246,255'],
+  .dark-surface [style*='rgba(224,235,255'] {
+    color: rgba(247, 241, 223, 0.86) !important;
+  }
+
+  .dark-surface h1,
+  .dark-surface h2,
+  .dark-surface h3,
+  .dark-surface h4,
+  .dark-surface h5,
+  .dark-surface h6 {
+    color: #f7f1df;
+  }
+
+  .dark-surface .glass-card {
+    background: rgba(247, 241, 223, 0.06) !important;
+    color: #f7f1df !important;
+  }
+
+  .dark-surface .btn-primary {
+    color: #70ffe5 !important;
+  }
+
   .invite-family-modal {
     color: #f7f1df !important;
   }
