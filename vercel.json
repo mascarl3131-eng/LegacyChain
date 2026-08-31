@@ -1,4 +1,14 @@
 {
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+    },
+    {
+      "source": "/",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+    }
+  ],
   "rewrites": [
     { "source": "/api/create-checkout-session", "destination": "/api/checkout-session?action=create" },
     { "source": "/api/verify-checkout-session", "destination": "/api/checkout-session?action=verify" },

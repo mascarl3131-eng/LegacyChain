@@ -13,7 +13,16 @@ createRoot(document.getElementById('root')!).render(
 )
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    void navigator.serviceWorker.register('/sw.js');
+  window.addEventListener('load', async () => {
+    const registration = await navigator.serviceWorker.register('/sw.js', {
+      updateViaCache: 'none',
+    });
+    await registration.update();
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (sessionStorage.getItem('legacychain-sw-reloaded')) return;
+      sessionStorage.setItem('legacychain-sw-reloaded', '1');
+      window.location.reload();
+    });
   });
 }

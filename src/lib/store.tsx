@@ -132,7 +132,7 @@ interface AppActions {
   setShowSubmitAnim: (s: boolean) => void;
   showNotif: (msg: string, color?: string) => void;
   login: (name: string, fb: boolean) => void;
-  loginWithGoogle: () => Promise<void>;
+  loginWithGoogle: (credential?: string) => Promise<void>;
   loginWithFacebook: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -219,16 +219,38 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   // Sync Supabase session
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        syncUserFromSupabase(session.user);
-          void loadPremium(session.user.id, session.user.email);
-      } else {
-        setPremium(false);
+    let active = true;
+    const sessionTimeout = window.setTimeout(() => {
+      if (active) {
+        console.warn('Supabase session timed out; continuing without a session.');
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    }, 5000);
+
+    supabase.auth.getSession()
+      .then(({ data: { session }, error }) => {
+        if (!active) return;
+        if (error) {
+          console.error('Unable to restore Supabase session:', error.message);
+          return;
+        }
+        setSession(session);
+        if (session?.user) {
+          syncUserFromSupabase(session.user);
+          void loadPremium(session.user.id, session.user.email);
+        } else {
+          setPremium(false);
+        }
+      })
+      .catch((error: unknown) => {
+        console.error('Unable to restore Supabase session:', error);
+      })
+      .finally(() => {
+        if (active) {
+          window.clearTimeout(sessionTimeout);
+          setLoading(false);
+        }
+      });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
@@ -241,7 +263,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      active = false;
+      window.clearTimeout(sessionTimeout);
+      subscription.unsubscribe();
+    };
   }, [loadPremium, syncUserFromSupabase]);
 
   useEffect(() => {
@@ -437,25 +463,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setHMsgs(getDemoHumanity(lang));
   }, [lang]);
 
-  const loginWithGoogle = useCallback(async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'select_account',
-          },
-        },
-      });
+  const loginWithGoogle = useCallback(async (credential?: string) => {
+    if (!credential) {
+      setPage('landing');
+      showNotif('Utilisez le bouton Google pour vous connecter.', '#00FFD1');
+      return;
+    }
 
-      if (error) {
-        showNotif('Erreur Google : ' + error.message, '#FF4444');
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Connexion impossible';
-      showNotif('Erreur Google : ' + message, '#FF4444');
+    const { error } = await supabase.auth.signInWithIdToken({
+      provider: 'google',
+      token: credential,
+    });
+
+    if (error) {
+      showNotif('Erreur Google : ' + error.message, '#FF4444');
     }
   }, [showNotif]);
 
